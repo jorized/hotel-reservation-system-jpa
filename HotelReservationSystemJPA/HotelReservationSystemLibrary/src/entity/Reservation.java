@@ -5,7 +5,7 @@
 package entity;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -23,31 +23,31 @@ public class Reservation implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reservationId;
     
-    private LocalDate checkInDate;
+    private Date checkInDate;
     
-    private LocalDate checkOutDate;
+    private Date checkOutDate;
 
     public Reservation() {
     }
 
-    public Reservation(LocalDate checkInDate, LocalDate checkOutDate) {
+    public Reservation(Date checkInDate, Date checkOutDate) {
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
     }
 
-    public LocalDate getCheckInDate() {
+    public Date getCheckInDate() {
         return checkInDate;
     }
 
-    public void setCheckInDate(LocalDate checkInDate) {
+    public void setCheckInDate(Date checkInDate) {
         this.checkInDate = checkInDate;
     }
 
-    public LocalDate getCheckOutDate() {
+    public Date getCheckOutDate() {
         return checkOutDate;
     }
 
-    public void setCheckOutDate(LocalDate checkOutDate) {
+    public void setCheckOutDate(Date checkOutDate) {
         this.checkOutDate = checkOutDate;
     }
 
