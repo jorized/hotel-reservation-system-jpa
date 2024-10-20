@@ -5,11 +5,19 @@
 package entity;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import util.enumeration.ReservationTypeEnum;
 
 /**
  *
@@ -22,18 +30,62 @@ public class Reservation implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reservationId;
-    
     private Date checkInDate;
-    
     private Date checkOutDate;
+    private ReservationTypeEnum reservationType;
+    private BigDecimal reservationAmount;
+    
+    @ManyToOne(optional = false) // reservation cannot exist without being linked to User
+    @JoinColumn
+    private User user;
+    
+    @OneToMany(mappedBy = "reservation")
+    private List<RoomRate> roomRates;
+    
+    @ManyToOne
+    @JoinColumn
+    private RoomType roomType;
+    
+    @OneToMany(mappedBy = "reservation")
+    private List<RoomReservation> roomReservations;
+    
+    @ManyToMany
+    private List<Partner> partners;
 
     public Reservation() {
+        this.roomRates = new ArrayList<RoomRate>();
+        this.roomReservations = new ArrayList<RoomReservation>();
+        this.partners = new ArrayList<Partner>();
     }
 
-    public Reservation(Date checkInDate, Date checkOutDate) {
+    public Reservation(Date checkInDate, Date checkOutDate, ReservationTypeEnum reservationType, BigDecimal reservationAmount) {
+        this();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
+        this.reservationType = reservationType;
+        this.reservationAmount = reservationAmount;
+        this.user = user;
     }
+    
+    
+
+    public ReservationTypeEnum getReservationType() {
+        return reservationType;
+    }
+
+    public void setReservationType(ReservationTypeEnum reservationType) {
+        this.reservationType = reservationType;
+    }
+
+    public BigDecimal getReservationAmount() {
+        return reservationAmount;
+    }
+
+    public void setReservationAmount(BigDecimal reservationAmount) {
+        this.reservationAmount = reservationAmount;
+    }
+    
+    
 
     public Date getCheckInDate() {
         return checkInDate;

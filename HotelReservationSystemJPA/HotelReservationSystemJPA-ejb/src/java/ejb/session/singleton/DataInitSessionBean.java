@@ -6,6 +6,7 @@ package ejb.session.singleton;
 
 import ejb.session.stateless.ReservationSessionBeanLocal;
 import entity.Reservation;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import javax.annotation.PostConstruct;
@@ -15,6 +16,7 @@ import javax.ejb.LocalBean;
 import javax.ejb.Startup;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import util.enumeration.ReservationTypeEnum;
 
 /**
  *
@@ -43,11 +45,13 @@ public class DataInitSessionBean {
 
         calendar.set(2024, Calendar.OCTOBER, 15);
         Date endDate = calendar.getTime();
+        
+        BigDecimal reservationAmount = new BigDecimal("1000");
 
         //To check whether data exist previously
         //We check if the first record exist
         if (em.find(Reservation.class, 1l) == null) {
-            reservationSessionBeanLocal.createNewReservation(new Reservation(startDate, endDate));
+            reservationSessionBeanLocal.createNewReservation(new Reservation(startDate, endDate, ReservationTypeEnum.ONLINE, reservationAmount));
         }
     }
 
