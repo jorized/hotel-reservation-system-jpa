@@ -12,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 
 /**
  *
@@ -28,7 +29,7 @@ public class Partner implements Serializable {
     private String password;
     private Boolean isActive;
     
-    @ManyToMany(mappedBy = "partners")
+    @OneToMany(mappedBy = "partner")
     private List<Reservation> reservations;
 
     public Partner() {
@@ -38,8 +39,14 @@ public class Partner implements Serializable {
     public Partner(String userName) {
         this.userName = userName;
     }
-    
-    
+
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }        
 
     public String getUserName() {
         return userName;

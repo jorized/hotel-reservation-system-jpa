@@ -36,26 +36,26 @@ public class Reservation implements Serializable {
     private BigDecimal reservationAmount;
     
     @ManyToOne(optional = false) // reservation cannot exist without being linked to User
-    @JoinColumn
+    @JoinColumn(nullable = false)
     private User user;
     
     @OneToMany(mappedBy = "reservation")
     private List<RoomRate> roomRates;
     
-    @ManyToOne
-    @JoinColumn
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private RoomType roomType;
     
     @OneToMany(mappedBy = "reservation")
     private List<RoomReservation> roomReservations;
     
-    @ManyToMany
-    private List<Partner> partners;
+    @ManyToOne
+    @JoinColumn
+    private Partner partner;
 
     public Reservation() {
         this.roomRates = new ArrayList<RoomRate>();
         this.roomReservations = new ArrayList<RoomReservation>();
-        this.partners = new ArrayList<Partner>();
     }
 
     public Reservation(Date checkInDate, Date checkOutDate, ReservationTypeEnum reservationType, BigDecimal reservationAmount) {
@@ -66,8 +66,46 @@ public class Reservation implements Serializable {
         this.reservationAmount = reservationAmount;
         this.user = user;
     }
-    
-    
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public List<RoomRate> getRoomRates() {
+        return roomRates;
+    }
+
+    public void setRoomRates(List<RoomRate> roomRates) {
+        this.roomRates = roomRates;
+    }
+
+    public RoomType getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(RoomType roomType) {
+        this.roomType = roomType;
+    }
+
+    public List<RoomReservation> getRoomReservations() {
+        return roomReservations;
+    }
+
+    public void setRoomReservations(List<RoomReservation> roomReservations) {
+        this.roomReservations = roomReservations;
+    }
+
+    public Partner getPartner() {
+        return partner;
+    }
+
+    public void setPartner(Partner partner) {
+        this.partner = partner;
+    }                
 
     public ReservationTypeEnum getReservationType() {
         return reservationType;
