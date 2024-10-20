@@ -6,8 +6,8 @@ package ejb.session.singleton;
 
 import ejb.session.stateless.ReservationSessionBeanLocal;
 import entity.Reservation;
-import java.time.LocalDate;
-import java.time.Month;
+import java.util.Calendar;
+import java.util.Date;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
@@ -31,14 +31,18 @@ public class DataInitSessionBean {
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
-    
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")
     @PostConstruct
     public void postConstruct() {
-        
-        LocalDate startDate = LocalDate.of(2024, 10, 14);
-        LocalDate endDate = LocalDate.of(2024, 10, 15);
+
+        // Create new dates using java.util.Date
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2024, Calendar.OCTOBER, 14);
+        Date startDate = calendar.getTime();
+
+        calendar.set(2024, Calendar.OCTOBER, 15);
+        Date endDate = calendar.getTime();
 
         //To check whether data exist previously
         //We check if the first record exist
@@ -46,5 +50,5 @@ public class DataInitSessionBean {
             reservationSessionBeanLocal.createNewReservation(new Reservation(startDate, endDate));
         }
     }
-    
+
 }
