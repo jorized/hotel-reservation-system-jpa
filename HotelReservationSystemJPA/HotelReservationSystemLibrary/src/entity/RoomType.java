@@ -8,12 +8,13 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import util.enumeration.RoomTypeNameEnum;
 import util.enumeration.RoomTypeStatusEnum;
@@ -29,13 +30,31 @@ public class RoomType implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomTypeId;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RoomTypeNameEnum typeName;
+    
+    @Column(length = 4, nullable = false)
     private String size;
+    
+    @Column(length = 12, nullable = false) //Max length is super single
     private String bed;
+    
+    @Column(nullable = false)
     private String description;
+    
+    @Column(precision = 3, nullable = false)
     private BigDecimal numOfAvailRooms;
+    
+    @Column(precision = 3, nullable = false)
     private BigDecimal capacity;
+    
+    @Column(nullable = false)
     private String amenities;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RoomTypeStatusEnum roomTypeStatus;
     
     @OneToMany(mappedBy="roomType")
@@ -44,14 +63,51 @@ public class RoomType implements Serializable {
     @OneToMany(mappedBy="roomType")
     private List<Reservation> reservations;
     
-    @ManyToOne(optional = false)
-    @JoinColumn
-    private Room room;
+    @OneToMany(mappedBy="roomType")
+    private List<Room> rooms;
 
     public RoomType() {
         this.roomRates = new ArrayList<RoomRate>();
         this.reservations = new ArrayList<Reservation>();
+        this.rooms = new ArrayList<Room>();
     }
+
+    public RoomType(RoomTypeNameEnum typeName, String size, String bed, String description, BigDecimal numOfAvailRooms, BigDecimal capacity, String amenities) {
+        this();
+        this.typeName = typeName;
+        this.size = size;
+        this.bed = bed;
+        this.description = description;
+        this.numOfAvailRooms = numOfAvailRooms;
+        this.capacity = capacity;
+        this.amenities = amenities;
+        this.roomTypeStatus = RoomTypeStatusEnum.ACTIVE;
+    }    
+
+    public List<Room> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(List<Room> rooms) {
+        this.rooms = rooms;
+    }            
+
+    public List<RoomRate> getRoomRates() {
+        return roomRates;
+    }
+
+    public void setRoomRates(List<RoomRate> roomRates) {
+        this.roomRates = roomRates;
+    }
+
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
+
     
     public RoomTypeNameEnum getTypeName() {
         return typeName;

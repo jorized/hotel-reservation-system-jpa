@@ -39,6 +39,30 @@ public class RoomReservation implements Serializable {
     public RoomReservation() {
     }
 
+    public Room getRoom() {
+        return room;
+    }
+
+    public void setRoom(Room room) {
+        this.room = room;
+    }
+
+    public Reservation getReservation() {
+        return reservation;
+    }
+
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+    }
+
+    public ExceptionReport getExceptionReport() {
+        return exceptionReport;
+    }
+
+    public void setExceptionReport(ExceptionReport exceptionReport) {
+        this.exceptionReport = exceptionReport;
+    }
+
     public Long getRoomReservationId() {
         return roomReservationId;
     }

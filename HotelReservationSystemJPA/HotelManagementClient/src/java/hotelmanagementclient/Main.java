@@ -16,17 +16,19 @@ import javax.ejb.EJB;
 public class Main {
 
     @EJB
-    private static ReservationSessionBeanRemote reservationSessionBeanRemote;
-
-    
-    
+    private static ReservationSessionBeanRemote reservationSessionBeanRemote;        
     
     public static void main(String[] args) {
         // TODO code application logic here
         List<Reservation> reservations = reservationSessionBeanRemote.retrieveAllReservations();
         
         for (Reservation reservation: reservations) {
-            System.out.println("reservation= " + reservation.getReservationId()+ "; checkindate= " + reservation.getCheckInDate() + "; checkoutdate= " + reservation.getCheckOutDate());
+            System.out.println("reservation= " + reservation.getReservationId() 
+                    + "; checkindate= " + reservation.getCheckInDate() 
+                    + "; checkoutdate= " + reservation.getCheckOutDate() 
+                    + "; customerfistname= " + reservation.getGuest().getFirstName()
+                    + "; roomtypename= " + reservation.getRoomType().getTypeName()
+            );
         }
     }
     
