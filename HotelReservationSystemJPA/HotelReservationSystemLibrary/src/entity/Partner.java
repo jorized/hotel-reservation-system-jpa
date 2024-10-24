@@ -7,12 +7,15 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import util.enumeration.PartnerTypeEnum;
 
 /**
  *
@@ -25,9 +28,16 @@ public class Partner implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long partnerId;
+    
+    @Column(length = 50, nullable = false, unique = true)
     private String userName;
+    
+    @Column(nullable = false)
     private String password;
-    private Boolean isActive;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PartnerTypeEnum partnerType;
     
     @OneToMany(mappedBy = "partner")
     private List<Reservation> reservations;
@@ -36,9 +46,22 @@ public class Partner implements Serializable {
         this.reservations = new ArrayList<Reservation>();
     }
 
-    public Partner(String userName) {
+    public Partner(String userName, String password, PartnerTypeEnum partnerType) {
+        this();
         this.userName = userName;
+        this.password = password;
+        this.partnerType = partnerType;
     }
+
+    
+    public PartnerTypeEnum getPartnerType() {
+        return partnerType;
+    }
+
+    public void setPartnerType(PartnerTypeEnum partnerType) {
+        this.partnerType = partnerType;
+    }
+
 
     public List<Reservation> getReservations() {
         return reservations;
@@ -62,14 +85,6 @@ public class Partner implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
     }
     
     
