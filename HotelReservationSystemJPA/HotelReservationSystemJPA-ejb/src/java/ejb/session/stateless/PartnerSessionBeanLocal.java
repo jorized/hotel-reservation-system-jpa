@@ -4,20 +4,21 @@
  */
 package ejb.session.stateless;
 
-import entity.Room;
-import entity.RoomType;
+import entity.Employee;
+import entity.Partner;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.AccountAlreadyExistException;
 
 /**
  *
  * @author JorJo
  */
 @Local
-public interface RoomSessionBeanLocal {
+public interface PartnerSessionBeanLocal {
 
-    public Room createNewRoom(Room newRoom);
+    public Partner createNewPartner(Partner newPartner) throws AccountAlreadyExistException;
 
-    public List<Room> retrieveAllRoomsByRoomType(RoomType roomType);
+    public List<Partner> retrieveAllPartners();
     
 }

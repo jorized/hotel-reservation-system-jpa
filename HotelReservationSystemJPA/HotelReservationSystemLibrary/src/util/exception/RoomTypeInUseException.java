@@ -2,13 +2,19 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package util.enumeration;
+package util.exception;
 
 /**
  *
  * @author JorJo
  */
-public enum PartnerTypeEnum {
-    EMPLOYEE,
-    MANAGER
+public class RoomTypeInUseException extends Exception { 
+
+    public RoomTypeInUseException() {
+    }
+    
+    public RoomTypeInUseException(String msg) {
+        super(msg);
+    }
+    
 }

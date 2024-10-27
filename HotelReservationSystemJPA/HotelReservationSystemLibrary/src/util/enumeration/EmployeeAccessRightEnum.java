@@ -9,8 +9,8 @@ package util.enumeration;
  * @author lim_z
  */
 public enum EmployeeAccessRightEnum {
-    SYSTEMADMIN,
-    OPERATIONSMANAGER,
-    SALESMANAGER,
-    GUESTRELATIONSOFFICER
+    SYSTEM_ADMINISTRATOR,
+    OPERATION_MANAGER,
+    SALES_MANAGER,
+    GUEST_RELATION_OFFICER
 }

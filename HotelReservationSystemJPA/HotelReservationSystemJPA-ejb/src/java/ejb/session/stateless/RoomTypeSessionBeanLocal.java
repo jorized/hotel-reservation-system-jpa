@@ -5,7 +5,13 @@
 package ejb.session.stateless;
 
 import entity.RoomType;
+import java.util.List;
 import javax.ejb.Local;
+import util.exception.InvalidRoomTypeCapacityException;
+import util.exception.InvalidRoomTypeNameException;
+import util.exception.InvalidRoomTypeTierNumberException;
+import util.exception.RoomTypeAlreadyExistException;
+import util.exception.RoomTypeInUseException;
 
 /**
  *
@@ -14,6 +20,14 @@ import javax.ejb.Local;
 @Local
 public interface RoomTypeSessionBeanLocal {
 
-    public RoomType createNewRoomType(RoomType newRoomType);
+    public RoomType createNewRoomType(RoomType newRoomType) throws RoomTypeAlreadyExistException, InvalidRoomTypeTierNumberException;
+
+    public List<RoomType> retrieveAllRoomTypes();
+
+    public RoomType retrieveRoomTypeByName(String typeName) throws InvalidRoomTypeNameException;
+
+    public RoomType updateRoomType(RoomType updatedRoomType) throws InvalidRoomTypeTierNumberException, InvalidRoomTypeCapacityException;
+
+    public void deleteRoomType(RoomType existingRoomType) throws RoomTypeInUseException;
     
 }
