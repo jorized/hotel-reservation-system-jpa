@@ -4,9 +4,14 @@
  */
 package hotelmanagementclient;
 
+import ejb.session.stateless.CustomerSessionBeanRemote;
+import ejb.session.stateless.EmployeeSessionBeanRemote;
+import ejb.session.stateless.ExceptionReportSessionBeanRemote;
+import ejb.session.stateless.PartnerSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
-import entity.Reservation;
-import java.util.List;
+import ejb.session.stateless.RoomRateSessionBeanRemote;
+import ejb.session.stateless.RoomSessionBeanRemote;
+import ejb.session.stateless.RoomTypeSessionBeanRemote;
 import javax.ejb.EJB;
 
 /**
@@ -16,20 +21,28 @@ import javax.ejb.EJB;
 public class Main {
 
     @EJB
-    private static ReservationSessionBeanRemote reservationSessionBeanRemote;        
+    private static EmployeeSessionBeanRemote employeeSessionBeanRemote;
+    @EJB
+    private static PartnerSessionBeanRemote partnerSessionBeanRemote;
+    @EJB
+    private static RoomTypeSessionBeanRemote roomTypeSessionBeanRemote;
+    @EJB
+    private static RoomSessionBeanRemote roomSessionBeanRemote;
+    @EJB
+    private static ExceptionReportSessionBeanRemote exceptionReportSessionBeanRemote;
+    @EJB
+    private static RoomRateSessionBeanRemote roomRateSessionBeanRemote;                 
     
     public static void main(String[] args) {
-        // TODO code application logic here
-        List<Reservation> reservations = reservationSessionBeanRemote.retrieveAllReservations();
-        
-        for (Reservation reservation: reservations) {
-            System.out.println("reservation= " + reservation.getReservationId() 
-                    + "; checkindate= " + reservation.getCheckInDate() 
-                    + "; checkoutdate= " + reservation.getCheckOutDate() 
-                    + "; customerfistname= " + reservation.getGuest().getFirstName()
-                    + "; roomtypename= " + reservation.getRoomType().getTypeName()
-            );
-        }
+        MainApp mainApp = new MainApp(
+                employeeSessionBeanRemote, 
+                partnerSessionBeanRemote,
+                roomTypeSessionBeanRemote,
+                roomSessionBeanRemote,
+                exceptionReportSessionBeanRemote,
+                roomRateSessionBeanRemote
+        );
+        mainApp.runApp();
     }
     
 }

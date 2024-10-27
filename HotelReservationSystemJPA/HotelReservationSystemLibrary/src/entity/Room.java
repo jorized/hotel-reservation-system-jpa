@@ -71,9 +71,7 @@ public class Room implements Serializable {
     public void setRoomType(RoomType roomType) {
         this.roomType = roomType;
     }
-    
-    
-
+        
     public String getRoomNum() {
         return roomNum;
     }
@@ -113,9 +111,7 @@ public class Room implements Serializable {
 
     public void setSequenceNum(String sequenceNum) {
         this.sequenceNum = sequenceNum;
-    }
-    
-    
+    }        
 
     public Long getRoomId() {
         return roomId;

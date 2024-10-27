@@ -5,11 +5,12 @@
 package ejb.session.singleton;
 
 import ejb.session.stateless.CustomerSessionBeanLocal;
+import ejb.session.stateless.EmployeeSessionBeanLocal;
 import ejb.session.stateless.ReservationSessionBeanLocal;
 import ejb.session.stateless.RoomSessionBeanLocal;
 import ejb.session.stateless.RoomTypeSessionBeanLocal;
 import entity.Customer;
-import entity.Guest;
+import entity.Employee;
 import entity.Reservation;
 import entity.Room;
 import entity.RoomType;
@@ -23,8 +24,8 @@ import javax.ejb.LocalBean;
 import javax.ejb.Startup;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import util.enumeration.EmployeeAccessRightEnum;
 import util.enumeration.ReservationTypeEnum;
-import util.enumeration.RoomTypeNameEnum;
 
 /**
  *
@@ -36,6 +37,9 @@ import util.enumeration.RoomTypeNameEnum;
 public class DataInitSessionBean {
 
     @EJB
+    private EmployeeSessionBeanLocal employeeSessionBeanLocal;
+
+    @EJB
     private RoomSessionBeanLocal roomSessionBeanLocal;
 
     @EJB
@@ -45,9 +49,8 @@ public class DataInitSessionBean {
     private CustomerSessionBeanLocal customerSessionBeanLocal;
 
     @EJB
-    private ReservationSessionBeanLocal reservationSessionBeanLocal;
+    private ReservationSessionBeanLocal reservationSessionBeanLocal;        
                 
-
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
@@ -66,7 +69,17 @@ public class DataInitSessionBean {
         
         BigDecimal reservationAmount = new BigDecimal("1000");                
         
-        BigDecimal testCapacity = new BigDecimal("500");
+        
+        //Test to create an employee
+        Employee testEmployee = new Employee("jordanemployee", "password", EmployeeAccessRightEnum.GUEST_RELATION_OFFICER);
+        if (em.createQuery("SELECT COUNT(e) FROM Employee e", Long.class).getSingleResult() == 0) {
+            try {
+                 employeeSessionBeanLocal.createNewEmployee(testEmployee);
+            } catch (Exception ex) {
+                System.out.println("Error creating employee: " + ex.getMessage()  + "\n");
+            }
+
+        }   
         
         //Test to create a reservation
         
@@ -76,17 +89,76 @@ public class DataInitSessionBean {
             customerSessionBeanLocal.createNewCustomer(testGuest);
         }                
         
-        RoomType testRoomType = new RoomType(RoomTypeNameEnum.DELUXE, "1000", "Super Single", "Very good", testCapacity, testCapacity, "amenities");
+        RoomType testDeluxeRoomType = new RoomType(
+            "Deluxe Room", 
+            "Large", 
+            "Super Single", 
+            "Spacious room with city view", 
+            500, 
+            "Wi-Fi, TV, Mini-bar", 
+            1
+        );
+
+        RoomType testPremierRoomType = new RoomType(
+            "Premier Room", 
+            "Large", 
+            "Queen", 
+            "Elegant room with luxurious amenities and city view", 
+            500, 
+            "Wi-Fi, TV, Mini-bar, Coffee Machine", 
+            2
+        );
+
+        RoomType testFamilyRoomType = new RoomType(
+            "Family Room", 
+            "Extra Large", 
+            "Double Queen", 
+            "Spacious room suitable for families, with extra bedding options", 
+            500, 
+            "Wi-Fi, TV, Mini-bar, Kid-friendly amenities, Microwave", 
+            3
+        );
+
+        RoomType testJuniorSuiteType = new RoomType(
+            "Junior Suite", 
+            "Suite", 
+            "King", 
+            "Luxurious suite with separate living area and stunning views", 
+            500, 
+            "Wi-Fi, TV, Mini-bar, Kitchenette, Living Room, Workspace", 
+            4
+        );
+
+        RoomType testGrandSuiteType = new RoomType(
+            "Grand Suite", 
+            "Suite", 
+            "King", 
+            "Expansive suite with premium amenities and panoramic views", 
+            500, 
+            "Wi-Fi, TV, Mini-bar, Full Kitchen, Dining Area, Private Balcony, Jacuzzi", 
+            5
+        );
+
+        //Inserting data for the 5 default room types
         if (em.createQuery("SELECT COUNT(rt) FROM RoomType rt", Long.class).getSingleResult() == 0) {
-            roomTypeSessionBeanLocal.createNewRoomType(testRoomType);
+            try {
+                roomTypeSessionBeanLocal.createNewRoomType(testDeluxeRoomType);
+                roomTypeSessionBeanLocal.createNewRoomType(testPremierRoomType);
+                roomTypeSessionBeanLocal.createNewRoomType(testFamilyRoomType);
+                roomTypeSessionBeanLocal.createNewRoomType(testJuniorSuiteType);
+                roomTypeSessionBeanLocal.createNewRoomType(testGrandSuiteType);
+            } catch (Exception ex) {
+                System.out.println("Error creating room type: " + ex.getMessage()  + "\n");
+            }
+
         }         
         
-        Room testRoom = new Room("20", "15", testRoomType);
+        Room testRoom = new Room("20", "15", testDeluxeRoomType);
         if (em.createQuery("SELECT COUNT(r) FROM Room r", Long.class).getSingleResult() == 0) {
             roomSessionBeanLocal.createNewRoom(testRoom);
         }                                                       
         
-        Reservation testReservation = new Reservation(startDate, endDate, ReservationTypeEnum.ONLINE, reservationAmount, testGuest, testRoomType);
+        Reservation testReservation = new Reservation(startDate, endDate, ReservationTypeEnum.ONLINE, reservationAmount, testGuest, testDeluxeRoomType);
         if (em.createQuery("SELECT COUNT(r) FROM Reservation r", Long.class).getSingleResult() == 0) {
             reservationSessionBeanLocal.createNewReservation(testReservation);
         }
