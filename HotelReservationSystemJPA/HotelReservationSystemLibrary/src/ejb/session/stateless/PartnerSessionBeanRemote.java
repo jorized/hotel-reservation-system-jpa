@@ -4,19 +4,20 @@
  */
 package ejb.session.stateless;
 
-import entity.Room;
-import entity.RoomType;
+import entity.Employee;
+import entity.Partner;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.AccountAlreadyExistException;
 
 /**
  *
  * @author JorJo
  */
 @Remote
-public interface RoomSessionBeanRemote {
+public interface PartnerSessionBeanRemote {
     
-    public Room createNewRoom(Room newRoom);
+    public Partner createNewPartner(Partner newPartner) throws AccountAlreadyExistException;
     
-    public List<Room> retrieveAllRoomsByRoomType(RoomType roomType);
+    public List<Partner> retrieveAllPartners();
 }

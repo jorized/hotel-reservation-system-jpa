@@ -15,7 +15,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import util.enumeration.PartnerTypeEnum;
+import util.enumeration.PartnerAccessRightEnum;
 
 /**
  *
@@ -30,14 +30,14 @@ public class Partner implements Serializable {
     private Long partnerId;
     
     @Column(length = 50, nullable = false, unique = true)
-    private String userName;
+    private String username;
     
     @Column(nullable = false)
     private String password;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PartnerTypeEnum partnerType;
+    private PartnerAccessRightEnum role;
     
     @OneToMany(mappedBy = "partner")
     private List<Reservation> reservations;
@@ -46,22 +46,21 @@ public class Partner implements Serializable {
         this.reservations = new ArrayList<Reservation>();
     }
 
-    public Partner(String userName, String password, PartnerTypeEnum partnerType) {
+    public Partner(String username, String password, PartnerAccessRightEnum role) {
         this();
-        this.userName = userName;
+        this.username = username;
         this.password = password;
-        this.partnerType = partnerType;
+        this.role = role;
     }
 
     
-    public PartnerTypeEnum getPartnerType() {
-        return partnerType;
+    public PartnerAccessRightEnum getRole() {
+        return role;
     }
 
-    public void setPartnerType(PartnerTypeEnum partnerType) {
-        this.partnerType = partnerType;
+    public void setRole(PartnerAccessRightEnum role) {
+        this.role = role;
     }
-
 
     public List<Reservation> getReservations() {
         return reservations;
@@ -71,12 +70,12 @@ public class Partner implements Serializable {
         this.reservations = reservations;
     }        
 
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -85,9 +84,7 @@ public class Partner implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-    
-    
+    }        
 
     public Long getPartnerId() {
         return partnerId;

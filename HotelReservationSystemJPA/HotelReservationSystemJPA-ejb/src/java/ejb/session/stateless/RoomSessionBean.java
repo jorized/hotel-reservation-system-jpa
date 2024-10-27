@@ -5,6 +5,8 @@
 package ejb.session.stateless;
 
 import entity.Room;
+import entity.RoomType;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -29,5 +31,12 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
 	em.flush();
 	
 	return newRoom;
+    }
+    
+    @Override
+    public List<Room> retrieveAllRoomsByRoomType(RoomType roomType) {
+        return em.createQuery("SELECT r FROM Room r WHERE r.roomType = :roomType", Room.class)
+                 .setParameter("roomType", roomType)
+                 .getResultList();
     }
 }
