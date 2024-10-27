@@ -7,7 +7,10 @@ package entity;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -27,46 +30,66 @@ public class RoomRate implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomRateId;
+    
+    @Column(length = 50, nullable = false)
     private String rateName;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RoomRateTypeEnum rateType;
+    
+    @Column(precision = 7, scale = 2, nullable = false)
     private BigDecimal ratePerNight;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RoomRateStatusEnum roomRateStatus;
+    
+    //All of these are optional because there will either be promotional or peak
     private Date promotionStartDate;
     private Date promotionEndDate;
     private Date peakStartDate;
     private Date peakEndDate;
     
     @ManyToOne(optional = false)
-    @JoinColumn
+    @JoinColumn(nullable = false)
     private Reservation reservation;
-    
+
     @ManyToOne(optional = false)
-    @JoinColumn
+    @JoinColumn(nullable = false)
     private RoomType roomType;
 
     public RoomRate() {
     }
 
-    public RoomRate(String rateName, RoomRateTypeEnum rateType, BigDecimal ratePerNight, RoomRateStatusEnum roomRateStatus,
+    public RoomRate(String rateName, RoomRateTypeEnum rateType, BigDecimal ratePerNight,
             Date promotionStartDate, Date promotionEndDate, Date peakStartDate, Date peakEndDate) {
-
         this.rateName = rateName;
         this.rateType = rateType;
         this.ratePerNight = ratePerNight;
-        this.roomRateStatus = roomRateStatus;
-
-        // Handle Promotion Case
-        if (promotionStartDate != null && promotionEndDate != null) {
-            this.promotionStartDate = promotionStartDate;
-            this.promotionEndDate = promotionEndDate;
-        }
-
-        // Handle Peak Case
-        if (peakStartDate != null && peakEndDate != null) {
-            this.peakStartDate = peakStartDate;
-            this.peakEndDate = peakEndDate;
-        }
+        this.roomRateStatus = RoomRateStatusEnum.ACTIVE;
+        this.promotionStartDate = promotionStartDate;
+        this.promotionEndDate = promotionEndDate;
+        this.peakStartDate = peakStartDate;
+        this.peakEndDate = peakEndDate;        
     }
+    
+    public Reservation getReservation() {
+        return reservation;
+    }
+
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+    }
+
+    public RoomType getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(RoomType roomType) {
+        this.roomType = roomType;
+    }
+    
 
     public String getRateName() {
         return rateName;

@@ -4,18 +4,20 @@
  */
 package ejb.session.stateless;
 
-import entity.Reservation;
+import entity.Employee;
+import entity.Partner;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.AccountAlreadyExistException;
 
 /**
  *
  * @author JorJo
  */
 @Remote
-public interface ReservationSessionBeanRemote {
+public interface PartnerSessionBeanRemote {
     
-    public Reservation createNewReservation(Reservation newReservation);
+    public Partner createNewPartner(Partner newPartner) throws AccountAlreadyExistException;
     
-    public List<Reservation> retrieveAllReservations();
+    public List<Partner> retrieveAllPartners();
 }

@@ -4,7 +4,8 @@
  */
 package ejb.session.stateless;
 
-import entity.Reservation;
+import entity.Room;
+import entity.RoomType;
 import java.util.List;
 import javax.ejb.Remote;
 
@@ -13,9 +14,9 @@ import javax.ejb.Remote;
  * @author JorJo
  */
 @Remote
-public interface ReservationSessionBeanRemote {
+public interface RoomSessionBeanRemote {
     
-    public Reservation createNewReservation(Reservation newReservation);
+    public Room createNewRoom(Room newRoom);
     
-    public List<Reservation> retrieveAllReservations();
+    public List<Room> retrieveAllRoomsByRoomType(RoomType roomType);
 }

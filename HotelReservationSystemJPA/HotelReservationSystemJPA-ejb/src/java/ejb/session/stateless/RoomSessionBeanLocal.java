@@ -4,7 +4,8 @@
  */
 package ejb.session.stateless;
 
-import entity.Reservation;
+import entity.Room;
+import entity.RoomType;
 import java.util.List;
 import javax.ejb.Local;
 
@@ -13,10 +14,10 @@ import javax.ejb.Local;
  * @author JorJo
  */
 @Local
-public interface ReservationSessionBeanLocal {
+public interface RoomSessionBeanLocal {
 
-    public Reservation createNewReservation(Reservation newReservation);
+    public Room createNewRoom(Room newRoom);
 
-    public List<Reservation> retrieveAllReservations();
+    public List<Room> retrieveAllRoomsByRoomType(RoomType roomType);
     
 }

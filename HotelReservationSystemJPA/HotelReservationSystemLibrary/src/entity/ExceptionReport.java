@@ -6,7 +6,10 @@ package entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -24,8 +27,12 @@ public class ExceptionReport implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reportId;
+    
+    @Column(nullable = false)
     private Date createdAt;
-    private String message;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ExceptionTypeReportEnum exceptionTypeReport;
     
     @OneToOne
@@ -33,6 +40,20 @@ public class ExceptionReport implements Serializable {
 
     public ExceptionReport() {
     }
+
+    public ExceptionReport(Date createdAt, ExceptionTypeReportEnum exceptionTypeReport, RoomReservation roomReservation) {
+        this.createdAt = createdAt;
+        this.exceptionTypeReport = exceptionTypeReport;
+        this.roomReservation = roomReservation;
+    }
+
+    public RoomReservation getRoomReservation() {
+        return roomReservation;
+    }
+
+    public void setRoomReservation(RoomReservation roomReservation) {
+        this.roomReservation = roomReservation;
+    }        
 
     public Date getCreatedAt() {
         return createdAt;
@@ -42,14 +63,6 @@ public class ExceptionReport implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
     public ExceptionTypeReportEnum getExceptionTypeReport() {
         return exceptionTypeReport;
     }
@@ -57,9 +70,7 @@ public class ExceptionReport implements Serializable {
     public void setExceptionTypeReport(ExceptionTypeReportEnum exceptionTypeReport) {
         this.exceptionTypeReport = exceptionTypeReport;
     }
-    
-    
-
+       
     public Long getReportId() {
         return reportId;
     }

@@ -7,11 +7,15 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import util.enumeration.PartnerAccessRightEnum;
 
 /**
  *
@@ -24,29 +28,54 @@ public class Partner implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long partnerId;
-    private String userName;
-    private String password;
-    private Boolean isActive;
     
-    @ManyToMany(mappedBy = "partners")
+    @Column(length = 50, nullable = false, unique = true)
+    private String username;
+    
+    @Column(nullable = false)
+    private String password;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PartnerAccessRightEnum role;
+    
+    @OneToMany(mappedBy = "partner")
     private List<Reservation> reservations;
 
     public Partner() {
         this.reservations = new ArrayList<Reservation>();
     }
 
-    public Partner(String userName) {
-        this.userName = userName;
-    }
-    
-    
-
-    public String getUserName() {
-        return userName;
+    public Partner(String username, String password, PartnerAccessRightEnum role) {
+        this();
+        this.username = username;
+        this.password = password;
+        this.role = role;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    
+    public PartnerAccessRightEnum getRole() {
+        return role;
+    }
+
+    public void setRole(PartnerAccessRightEnum role) {
+        this.role = role;
+    }
+
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }        
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -55,17 +84,7 @@ public class Partner implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-    
-    
+    }        
 
     public Long getPartnerId() {
         return partnerId;

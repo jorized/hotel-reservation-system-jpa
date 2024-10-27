@@ -4,19 +4,21 @@
  */
 package ejb.session.stateless;
 
-import entity.Reservation;
+import entity.Employee;
+import entity.Partner;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.AccountAlreadyExistException;
 
 /**
  *
  * @author JorJo
  */
 @Local
-public interface ReservationSessionBeanLocal {
+public interface PartnerSessionBeanLocal {
 
-    public Reservation createNewReservation(Reservation newReservation);
+    public Partner createNewPartner(Partner newPartner) throws AccountAlreadyExistException;
 
-    public List<Reservation> retrieveAllReservations();
+    public List<Partner> retrieveAllPartners();
     
 }

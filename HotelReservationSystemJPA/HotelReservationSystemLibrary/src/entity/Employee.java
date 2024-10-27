@@ -5,7 +5,10 @@
 package entity;
 
 import java.io.Serializable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -22,9 +25,49 @@ public class Employee implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long employeeId;
-    private EmployeeAccessRightEnum role;
+        
+    @Column(length = 50, nullable = false, unique = true)
     private String username;
+    
+    @Column(nullable = false)
     private String password;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EmployeeAccessRightEnum role;
+
+    public Employee() {
+    }
+
+    public Employee(String username, String password, EmployeeAccessRightEnum role) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public EmployeeAccessRightEnum getRole() {
+        return role;
+    }
+
+    public void setRole(EmployeeAccessRightEnum role) {
+        this.role = role;
+    }                
 
     public Long getEmployeeId() {
         return employeeId;

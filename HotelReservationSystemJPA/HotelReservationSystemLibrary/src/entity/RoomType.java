@@ -8,14 +8,14 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import util.enumeration.RoomTypeNameEnum;
 import util.enumeration.RoomTypeStatusEnum;
 
 /**
@@ -29,13 +29,33 @@ public class RoomType implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomTypeId;
-    private RoomTypeNameEnum typeName;
+    
+    @Column(length = 50, nullable = false)
+    private String typeName;
+    
+    @Column(length = 50, nullable = false)
     private String size;
+    
+    @Column(length = 12, nullable = false) 
     private String bed;
+    
+    @Column(nullable = false)
     private String description;
-    private BigDecimal numOfAvailRooms;
-    private BigDecimal capacity;
+    
+    @Column(nullable = false)
+    private Integer capacity;
+    
+    @Column(nullable = false)
+    private Integer numOfAvailRooms;    
+    
+    @Column(nullable = false)
     private String amenities;
+    
+    @Column(nullable = false)
+    private Integer tierNumber;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RoomTypeStatusEnum roomTypeStatus;
     
     @OneToMany(mappedBy="roomType")
@@ -44,20 +64,82 @@ public class RoomType implements Serializable {
     @OneToMany(mappedBy="roomType")
     private List<Reservation> reservations;
     
-    @ManyToOne(optional = false)
-    @JoinColumn
-    private Room room;
+    @OneToMany(mappedBy="roomType")
+    private List<Room> rooms;
 
     public RoomType() {
         this.roomRates = new ArrayList<RoomRate>();
         this.reservations = new ArrayList<Reservation>();
+        this.rooms = new ArrayList<Room>();
     }
+
+    public RoomType(String typeName, String size, String bed, String description, Integer capacity, String amenities, Integer tierNumber) {
+        this();
+        this.typeName = typeName;
+        this.size = size;
+        this.bed = bed;
+        this.description = description;
+        this.capacity = capacity;
+        this.numOfAvailRooms = capacity; //Upon creation, num of avail rooms should match capacity        
+        this.amenities = amenities;
+        this.tierNumber = tierNumber;
+        this.roomTypeStatus = RoomTypeStatusEnum.ACTIVE;
+    }    
+
+    public Integer getNumOfAvailRooms() {
+        return numOfAvailRooms;
+    }
+
+    public void setNumOfAvailRooms(Integer numOfAvailRooms) {
+        this.numOfAvailRooms = numOfAvailRooms;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    public Integer getTierNumber() {
+        return tierNumber;
+    }
+
+    public void setTierNumber(Integer tierNumber) {
+        this.tierNumber = tierNumber;
+    }                    
+
+    public List<Room> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(List<Room> rooms) {
+        this.rooms = rooms;
+    }            
+
+    public List<RoomRate> getRoomRates() {
+        return roomRates;
+    }
+
+    public void setRoomRates(List<RoomRate> roomRates) {
+        this.roomRates = roomRates;
+    }
+
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
+
     
-    public RoomTypeNameEnum getTypeName() {
+    public String getTypeName() {
         return typeName;
     }
 
-    public void setTypeName(RoomTypeNameEnum typeName) {
+    public void setTypeName(String typeName) {
         this.typeName = typeName;
     }
 
@@ -85,22 +167,6 @@ public class RoomType implements Serializable {
         this.description = description;
     }
 
-    public BigDecimal getNumOfAvailRooms() {
-        return numOfAvailRooms;
-    }
-
-    public void setNumOfAvailRooms(BigDecimal numOfAvailRooms) {
-        this.numOfAvailRooms = numOfAvailRooms;
-    }
-
-    public BigDecimal getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(BigDecimal capacity) {
-        this.capacity = capacity;
-    }
-
     public String getAmenities() {
         return amenities;
     }
@@ -115,9 +181,7 @@ public class RoomType implements Serializable {
 
     public void setRoomTypeStatus(RoomTypeStatusEnum roomTypeStatus) {
         this.roomTypeStatus = roomTypeStatus;
-    }
-    
-    
+    }        
 
     public Long getRoomTypeId() {
         return roomTypeId;
