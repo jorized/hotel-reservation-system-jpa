@@ -19,8 +19,8 @@ import util.enumeration.EmployeeAccessRightEnum;
 import util.enumeration.PartnerAccessRightEnum;
 import util.enumeration.RoomTypeStatusEnum;
 import util.exception.InvalidAccountCredentialsException;
-import util.exception.InvalidLoginCredentialsException;
-import util.exception.InvalidRoomTypeTierNumberException;
+import util.exception.InvalidRoomTypeCapacityException;
+import util.exception.InvalidRoomTypeDetailsException;
 
 /**
  *
@@ -102,6 +102,8 @@ public class MainApp {
             if (username.length() > 0 && password.length() > 0) {
                 currentEmployee = employeeSessionBeanRemote.employeeLogin(username, password);                
                 doAfterEmployeeLogin();
+            } else {
+                throw new InvalidAccountCredentialsException("Invalid account credentials");
             }
         } catch (Exception ex) {
             System.out.println("Error logging in: " + ex.getMessage() + "\n");
@@ -280,7 +282,7 @@ public class MainApp {
             int index = 1;
             
             //Do not need to check if list is empty because it will never happen 
-            //Because the current logged in employee will also be shown
+
             List<Employee> employees = employeeSessionBeanRemote.retrieveAllEmployees();
             for (Employee employee : employees) {
                 System.out.printf("%-5d %-20s %-20s\n", 
@@ -543,19 +545,29 @@ public class MainApp {
             String description = scanner.nextLine().trim();
 
             System.out.print("Enter room type capacity: ");
-            Integer capacity = scanner.nextInt();
-            scanner.nextLine();
+            String capacity = scanner.nextLine().trim();
 
             System.out.print("Enter room type amenities: ");
             String amenities = scanner.nextLine().trim();
 
             System.out.print("Enter room type tier number: ");
-            Integer tierNumber = scanner.nextInt();
-            scanner.nextLine();
+            String tierNumber = scanner.nextLine().trim();
+            
+            //If all inputs are filled in
+            if (name.length() > 0 && size.length() > 0 && bed.length() > 0 && description.length() > 0 && 
+                    capacity.length() > 0 && amenities.length() > 0 && tierNumber.length() > 0) {
+                //If capacity is more than 0
+                if (Integer.parseInt(capacity) > 0) {
+                    RoomType newRoomType = new RoomType(name, size, bed, description, Integer.parseInt(capacity), amenities, Integer.parseInt(tierNumber));
+                    roomTypeSessionBeanRemote.createNewRoomType(newRoomType);
+                } else {
+                    throw new InvalidRoomTypeCapacityException("Invalid room type capacity");
+                }
 
-            RoomType newRoomType = new RoomType(name, size, bed, description, capacity, amenities, tierNumber);
+            } else {
+                throw new InvalidRoomTypeDetailsException("Invalid room type details");
+            }
 
-            roomTypeSessionBeanRemote.createNewRoomType(newRoomType);
 
             System.out.println("New room type '" + name + "' has successfully been created.");
 
