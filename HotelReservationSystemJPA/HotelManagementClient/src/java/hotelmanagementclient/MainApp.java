@@ -35,6 +35,7 @@ import java.util.Date;
 import util.exception.InvalidRoomTypeNameException;
 import util.exception.RoomAlreadyExistException;
 
+
 /**
  *
  * @author JorJo
@@ -295,7 +296,7 @@ public class MainApp {
             int index = 1;
 
             //Do not need to check if list is empty because it will never happen 
-            //Because the current logged in employee will also be shown
+
             List<Employee> employees = employeeSessionBeanRemote.retrieveAllEmployees();
             for (Employee employee : employees) {
                 System.out.printf("%-5d %-20s %-20s\n",
