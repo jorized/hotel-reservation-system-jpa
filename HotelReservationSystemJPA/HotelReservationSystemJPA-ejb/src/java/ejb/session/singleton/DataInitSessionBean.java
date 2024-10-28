@@ -68,13 +68,13 @@ public class DataInitSessionBean {
         Date endDate = calendar.getTime();
         
         BigDecimal reservationAmount = new BigDecimal("1000");                
-        
-        
+                
         //Test to create an employee
         Employee testEmployee = new Employee("jordanemployee", "password", EmployeeAccessRightEnum.GUEST_RELATION_OFFICER);
         Employee testEmployee1 = new Employee("zhengjieemployee", "password", EmployeeAccessRightEnum.SYSTEM_ADMINISTRATOR);
         Employee testEmployee2 = new Employee("feltonemployee", "password", EmployeeAccessRightEnum.OPERATION_MANAGER);
         Employee testEmployee3 = new Employee("jarenemployee", "password", EmployeeAccessRightEnum.SALES_MANAGER);
+
         if (em.createQuery("SELECT COUNT(e) FROM Employee e", Long.class).getSingleResult() == 0) {
             try {
                  employeeSessionBeanLocal.createNewEmployee(testEmployee);
