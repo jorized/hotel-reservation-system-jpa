@@ -6,7 +6,9 @@ package entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -16,6 +18,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import util.enumeration.RoomRateStatusEnum;
 import util.enumeration.RoomRateTypeEnum;
 
@@ -30,40 +33,41 @@ public class RoomRate implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomRateId;
-    
+
     @Column(length = 50, nullable = false)
     private String rateName;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomRateTypeEnum rateType;
-    
+
     @Column(precision = 7, scale = 2, nullable = false)
     private BigDecimal ratePerNight;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomRateStatusEnum roomRateStatus;
-    
+
     //All of these are optional because there will either be promotional or peak
     private Date promotionStartDate;
     private Date promotionEndDate;
     private Date peakStartDate;
     private Date peakEndDate;
-    
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    private Reservation reservation;
+
+    @OneToMany(mappedBy = "roomRate")
+    private List<Reservation> reservations;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private RoomType roomType;
 
     public RoomRate() {
+        this.reservations = new ArrayList<Reservation>();
     }
 
     public RoomRate(String rateName, RoomRateTypeEnum rateType, BigDecimal ratePerNight,
-            Date promotionStartDate, Date promotionEndDate, Date peakStartDate, Date peakEndDate) {
+            Date promotionStartDate, Date promotionEndDate, Date peakStartDate, Date peakEndDate, RoomType roomType) {
+        this();
         this.rateName = rateName;
         this.rateType = rateType;
         this.ratePerNight = ratePerNight;
@@ -71,15 +75,16 @@ public class RoomRate implements Serializable {
         this.promotionStartDate = promotionStartDate;
         this.promotionEndDate = promotionEndDate;
         this.peakStartDate = peakStartDate;
-        this.peakEndDate = peakEndDate;        
-    }
-    
-    public Reservation getReservation() {
-        return reservation;
+        this.peakEndDate = peakEndDate;
+        this.roomType = roomType;
     }
 
-    public void setReservation(Reservation reservation) {
-        this.reservation = reservation;
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
     }
 
     public RoomType getRoomType() {
@@ -89,7 +94,6 @@ public class RoomRate implements Serializable {
     public void setRoomType(RoomType roomType) {
         this.roomType = roomType;
     }
-    
 
     public String getRateName() {
         return rateName;

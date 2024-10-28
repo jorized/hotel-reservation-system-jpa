@@ -50,8 +50,9 @@ public class Reservation implements Serializable {
     @JoinColumn(nullable = false)
     private Guest guest;
     
-    @OneToMany(mappedBy = "reservation")
-    private List<RoomRate> roomRates;
+    @ManyToOne // later should change to optional = false
+    @JoinColumn
+    private RoomRate roomRate;
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -65,7 +66,6 @@ public class Reservation implements Serializable {
     private Partner partner;
 
     public Reservation() {
-        this.roomRates = new ArrayList<RoomRate>();
         this.roomReservations = new ArrayList<RoomReservation>();
     }
 
@@ -88,12 +88,12 @@ public class Reservation implements Serializable {
         this.guest = guest;
     }
 
-    public List<RoomRate> getRoomRates() {
-        return roomRates;
+    public RoomRate getRoomRate() {
+        return roomRate;
     }
 
-    public void setRoomRates(List<RoomRate> roomRates) {
-        this.roomRates = roomRates;
+    public void setRoomRate(RoomRate roomRate) {
+        this.roomRate = roomRate;
     }
 
     public RoomType getRoomType() {
