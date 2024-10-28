@@ -4,7 +4,11 @@
  */
 package ejb.session.stateless;
 
+import entity.RoomRate;
 import javax.ejb.Remote;
+import util.exception.InvalidRoomRateNameException;
+import util.exception.RoomRateAlreadyExistException;
+import util.exception.UpdateRoomRateException;
 
 /**
  *
@@ -12,5 +16,10 @@ import javax.ejb.Remote;
  */
 @Remote
 public interface RoomRateSessionBeanRemote {
-    
+
+    public RoomRate createNewRoomRate(RoomRate newRoomRate) throws RoomRateAlreadyExistException;
+
+    public RoomRate retrieveRoomRateByRoomName(String rateName) throws InvalidRoomRateNameException;
+
+    public RoomRate updateRoomRate(RoomRate updatedRoomRate) throws UpdateRoomRateException;
 }
