@@ -161,7 +161,11 @@ public class DataInitSessionBean {
         
         Room testRoom = new Room("20", "15", testDeluxeRoomType);
         if (em.createQuery("SELECT COUNT(r) FROM Room r", Long.class).getSingleResult() == 0) {
-            roomSessionBeanLocal.createNewRoom(testRoom);
+            try {
+                roomSessionBeanLocal.createNewRoom(testRoom);
+            } catch (Exception ex) {
+                System.out.println("Error creating room: " + ex.getMessage()  + "\n");
+            }
         }                                                       
         
         Reservation testReservation = new Reservation(startDate, endDate, ReservationTypeEnum.ONLINE, reservationAmount, testGuest, testDeluxeRoomType);

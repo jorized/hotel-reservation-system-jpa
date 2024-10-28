@@ -8,6 +8,7 @@ import entity.Room;
 import entity.RoomType;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.RoomAlreadyExistException;
 
 /**
  *
@@ -16,7 +17,7 @@ import javax.ejb.Remote;
 @Remote
 public interface RoomSessionBeanRemote {
     
-    public Room createNewRoom(Room newRoom);
+    public Room createNewRoom(Room newRoom) throws RoomAlreadyExistException;
     
     public List<Room> retrieveAllRoomsByRoomType(RoomType roomType);
 }
