@@ -89,7 +89,7 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     }
 
     @Override
-    public String deleteRoom(Room existingRoom) throws RoomInUseException {
+    public String deleteRoom(Room existingRoom) {
         // Find the managed room entity
         Room managedRoom = em.find(Room.class, existingRoom.getRoomId());
 

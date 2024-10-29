@@ -6,13 +6,18 @@ package ejb.session.stateless;
 
 import entity.RoomRate;
 import java.util.Date;
+import java.util.List;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import util.enumeration.RoomRateStatusEnum;
 import util.enumeration.RoomRateTypeEnum;
 import util.exception.InvalidRoomRateException;
 import util.exception.InvalidRoomRateNameException;
+import util.exception.ReservationInUseException;
 import util.exception.RoomRateAlreadyExistException;
 import util.exception.UpdateRoomRateException;
 
@@ -22,6 +27,10 @@ import util.exception.UpdateRoomRateException;
  */
 @Stateless
 public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateSessionBeanLocal {
+
+    @EJB
+    private ReservationSessionBeanLocal reservationSessionBeanLocal;
+    
 
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
@@ -69,7 +78,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
             if (updatedRoomRate.getRateType() != null) {
                 existingRoomRate.setRateType(updatedRoomRate.getRateType());
             }
-            
+
             // these dates may be null
             existingRoomRate.setPromotionStartDate(updatedRoomRate.getPromotionStartDate());
 
@@ -92,5 +101,29 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         }
 
     }
+
+    @Override
+    public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException {
+        //Check if existing room type is linked to any rooms. (Get all rooms linked to that room type)
+        //Not sure what they mean by "if room type is not used", but for now assume that it means no rooms are linked
+        //But could potentially need to change to check check-in/check-out date?
+        RoomRate managedRoomRate = em.find(RoomRate.class, existingRoomRate.getRoomRateId());
+
+        if (reservationSessionBeanLocal.retrieveAllReservationsByRoomRate(managedRoomRate).isEmpty()) {
+            em.remove(managedRoomRate);
+            em.flush();
+        } else {
+            throw new ReservationInUseException("Room type is currently in use. Unable to delete.");
+        }
+
+    }
+    
+    @Override
+    public List<RoomRate> retrieveAllRoomRates() {
+        Query query = em.createQuery("SELECT r FROM RoomRate r");
+        
+        return query.getResultList();
+        
+    }   
 
 }

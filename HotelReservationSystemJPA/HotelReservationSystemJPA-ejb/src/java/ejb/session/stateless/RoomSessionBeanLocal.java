@@ -10,7 +10,6 @@ import java.util.List;
 import javax.ejb.Local;
 import util.exception.InvalidRoomNumException;
 import util.exception.RoomAlreadyExistException;
-import util.exception.RoomInUseException;
 import util.exception.UpdateRoomException;
 
 /**
@@ -28,7 +27,7 @@ public interface RoomSessionBeanLocal {
     
     public Room updateRoom(Room updatedRoom) throws UpdateRoomException;
     
-    public String deleteRoom(Room existingRoom) throws RoomInUseException;
+    public String deleteRoom(Room existingRoom);
     
     public List<Room> retrieveAllRooms();
 }

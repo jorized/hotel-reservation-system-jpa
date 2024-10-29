@@ -28,7 +28,7 @@ public interface RoomSessionBeanRemote {
     
     public Room updateRoom(Room updatedRoom) throws UpdateRoomException;
     
-    public String deleteRoom(Room existingRoom) throws RoomInUseException;
+    public String deleteRoom(Room existingRoom);
     
     public List<Room> retrieveAllRooms();
 
