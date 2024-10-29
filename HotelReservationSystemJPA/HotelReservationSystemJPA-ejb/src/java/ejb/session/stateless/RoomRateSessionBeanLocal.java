@@ -5,8 +5,10 @@
 package ejb.session.stateless;
 
 import entity.RoomRate;
+import java.util.List;
 import javax.ejb.Local;
 import util.exception.InvalidRoomRateNameException;
+import util.exception.ReservationInUseException;
 import util.exception.RoomRateAlreadyExistException;
 import util.exception.UpdateRoomRateException;
 
@@ -16,11 +18,15 @@ import util.exception.UpdateRoomRateException;
  */
 @Local
 public interface RoomRateSessionBeanLocal {
-    
+
     public RoomRate createNewRoomRate(RoomRate newRoomRate) throws RoomRateAlreadyExistException;
-    
+
     public RoomRate retrieveRoomRateByRoomName(String rateName) throws InvalidRoomRateNameException;
 
     public RoomRate updateRoomRate(RoomRate updatedRoomRate) throws UpdateRoomRateException;
+
+    public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException;
+
+    public List<RoomRate> retrieveAllRoomRates();
     
 }

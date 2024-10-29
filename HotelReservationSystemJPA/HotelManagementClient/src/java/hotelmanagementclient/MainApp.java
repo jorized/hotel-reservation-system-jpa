@@ -35,7 +35,6 @@ import java.util.Date;
 import util.exception.InvalidRoomTypeNameException;
 import util.exception.RoomAlreadyExistException;
 
-
 /**
  *
  * @author JorJo
@@ -296,7 +295,6 @@ public class MainApp {
             int index = 1;
 
             //Do not need to check if list is empty because it will never happen 
-
             List<Employee> employees = employeeSessionBeanRemote.retrieveAllEmployees();
             for (Employee employee : employees) {
                 System.out.printf("%-5d %-20s %-20s\n",
@@ -1290,9 +1288,82 @@ public class MainApp {
 
     private void doDeleteRoomRate() {
 
+        try {
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.println("*** HoRS Management Client :: Update room rate ***\n");
+
+            System.out.print("Enter room rate name: ");
+            String rateNameString = scanner.nextLine().trim();
+
+            RoomRate existingRoomRate = roomRateSessionBeanRemote.retrieveRoomRateByRoomName(rateNameString);
+
+            System.out.println("\nRoom type found. Details for room rate name: " + existingRoomRate.getRateName() + "");
+            System.out.println("Room Type: " + existingRoomRate.getRoomType().getTypeName());
+            System.out.println("Room Rate Type: " + formatEnumString(existingRoomRate.getRateType().toString()));
+
+            // check if rate is PROMOTION or PEAK
+            if (existingRoomRate.getRateType() == RoomRateTypeEnum.PROMOTION) {
+                System.out.println("Promotion Start Date: " + existingRoomRate.getPromotionStartDate());
+                System.out.println("Promotion End Date: " + existingRoomRate.getPromotionEndDate());
+            } else if (existingRoomRate.getRateType() == RoomRateTypeEnum.PEAK) {
+                System.out.println("Peak Start Date: " + existingRoomRate.getPeakStartDate());
+                System.out.println("Peak End Date: " + existingRoomRate.getPeakEndDate());
+            }
+
+            System.out.println("Rate Per Night: $" + existingRoomRate.getRatePerNight());
+
+            System.out.print("\nAre you sure you want to delete this room rate? (Y/N): ");
+            String response = scanner.nextLine().trim();
+
+            if (response.toLowerCase().equals("y")) {
+                roomRateSessionBeanRemote.deleteRoomRate(existingRoomRate);
+                System.out.println("Room type has successfully been removed.\n");
+            } else if (response.toLowerCase().equals("n")) {
+                System.out.println("\n");
+            } else {
+                System.out.println("Invalid option. Please try again. \n");
+            }
+
+        } catch (Exception ex) {
+            System.out.println("Error deleting room: " + ex.getMessage() + "\n");
+        }
+
     }
 
     private void doViewAllRoomRates() {
+
+        try {
+            System.out.println("*** HoRS Management Client :: View all room rates***\n");
+            System.out.printf("%-5s %-20s %-20s %-20s %-20s %-20s %-40s %-40s %-40s %-40s\n",
+                    "No.", "Rate Name", "Rate Type", "Rate Per Night", "Room Rate Status", "Room Type", "Promotion Start Date", "Promotion End Date", "Peak Start Date", "Peak End Date");
+            int index = 1;
+
+            List<RoomRate> roomRates = roomRateSessionBeanRemote.retrieveAllRoomRates();
+            
+            if (roomRates.isEmpty()) {
+                System.out.println("No room rates found.");
+            } else {
+                for (RoomRate roomRate : roomRates) {
+                    System.out.printf("%-5d %-20s %-20s %-20s %-20s %-20s %-40s %-40s %-40s %-40s\n",
+                            index++,
+                            roomRate.getRateName(),
+                            formatEnumString(roomRate.getRateType().toString()),
+                            roomRate.getRatePerNight(),
+                            formatEnumString(roomRate.getRoomRateStatus().toString()),
+                            roomRate.getRoomType().getTypeName(),
+                            roomRate.getPromotionStartDate(),
+                            roomRate.getPromotionEndDate(),
+                            roomRate.getPeakStartDate(),
+                            roomRate.getPeakEndDate());
+                }
+            }
+
+            System.out.print("\n");
+
+        } catch (Exception ex) {
+            System.out.println("Error viewing all rooms: " + ex.getMessage() + "\n");
+        }
 
     }
 

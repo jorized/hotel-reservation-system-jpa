@@ -5,6 +5,7 @@
 package ejb.session.stateless;
 
 import entity.Reservation;
+import entity.RoomRate;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -37,5 +38,11 @@ public class ReservationSessionBean implements ReservationSessionBeanRemote, Res
 	
 	return query.getResultList();
 		
+    }
+    
+    public List<RoomRate> retrieveAllReservationsByRoomRate(RoomRate roomRate) {
+        return em.createQuery("SELECT r FROM Reservation r WHERE r.roomRate = :roomRate", RoomRate.class)
+                .setParameter("roomRate", roomRate)
+                .getResultList();
     }
 }

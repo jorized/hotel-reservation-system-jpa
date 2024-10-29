@@ -5,8 +5,10 @@
 package ejb.session.stateless;
 
 import entity.Reservation;
+import entity.RoomRate;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.ReservationInUseException;
 
 /**
  *
@@ -18,4 +20,7 @@ public interface ReservationSessionBeanRemote {
     public Reservation createNewReservation(Reservation newReservation);
     
     public List<Reservation> retrieveAllReservations();
+    
+    public List<RoomRate> retrieveAllReservationsByRoomRate(RoomRate roomRate);
+    
 }
