@@ -5,8 +5,6 @@
 package entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,7 +12,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.OneToMany;
 
 /**
  *
@@ -44,11 +41,8 @@ public abstract class Guest implements Serializable {
     @Column(length = 50, nullable = false, unique = true)
     private String passportNumber;
     
-    @OneToMany(mappedBy="guest")
-    private List<Reservation> reservations;
 
     public Guest() {
-        this.reservations = new ArrayList<Reservation>();
     }
 
     public Guest(String firstName, String lastName, String email, String phoneNumber, String passportNumber) {
@@ -107,14 +101,6 @@ public abstract class Guest implements Serializable {
 
     public void setGuestId(Long guestId) {
         this.guestId = guestId;
-    }
-    
-    public List<Reservation> getReservations() {
-        return reservations;
-    }
-
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations = reservations;
     }
 
     @Override
