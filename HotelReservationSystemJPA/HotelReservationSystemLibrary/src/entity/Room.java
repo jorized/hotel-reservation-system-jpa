@@ -5,8 +5,7 @@
 package entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -16,7 +15,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import util.enumeration.RoomStatusEnum;
 
 /**
@@ -48,11 +46,8 @@ public class Room implements Serializable {
     @JoinColumn(nullable = false)
     private RoomType roomType;
     
-    @OneToMany(mappedBy = "room")
-    private List<RoomReservation> roomReservations;
 
     public Room() {
-        this.roomReservations = new ArrayList<RoomReservation>();
     }
 
     public Room(String floorNum, String sequenceNum, RoomType roomType) {
@@ -78,16 +73,7 @@ public class Room implements Serializable {
 
     public void setRoomNum(String roomNum) {
         this.roomNum = roomNum;
-    }        
-    
-
-    public List<RoomReservation> getRoomReservations() {
-        return roomReservations;
-    }
-
-    public void setRoomReservations(List<RoomReservation> roomReservations) {
-        this.roomReservations = roomReservations;
-    }
+    }            
 
     public RoomStatusEnum getRoomStatus() {
         return roomStatus;

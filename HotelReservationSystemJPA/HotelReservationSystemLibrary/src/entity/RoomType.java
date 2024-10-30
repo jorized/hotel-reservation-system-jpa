@@ -5,9 +5,6 @@
 package entity;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -15,7 +12,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import util.enumeration.RoomTypeStatusEnum;
 
 /**
@@ -56,21 +52,9 @@ public class RoomType implements Serializable {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RoomTypeStatusEnum roomTypeStatus;
-    
-    @OneToMany(mappedBy="roomType")
-    private List<RoomRate> roomRates;
-    
-    @OneToMany(mappedBy="roomType")
-    private List<Reservation> reservations;
-    
-    @OneToMany(mappedBy="roomType")
-    private List<Room> rooms;
+    private RoomTypeStatusEnum roomTypeStatus;          
 
     public RoomType() {
-        this.roomRates = new ArrayList<RoomRate>();
-        this.reservations = new ArrayList<Reservation>();
-        this.rooms = new ArrayList<Room>();
     }
 
     public RoomType(String typeName, String size, String bed, String description, Integer capacity, String amenities, Integer tierNumber) {
@@ -110,31 +94,6 @@ public class RoomType implements Serializable {
         this.tierNumber = tierNumber;
     }                    
 
-    public List<Room> getRooms() {
-        return rooms;
-    }
-
-    public void setRooms(List<Room> rooms) {
-        this.rooms = rooms;
-    }            
-
-    public List<RoomRate> getRoomRates() {
-        return roomRates;
-    }
-
-    public void setRoomRates(List<RoomRate> roomRates) {
-        this.roomRates = roomRates;
-    }
-
-    public List<Reservation> getReservations() {
-        return reservations;
-    }
-
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations = reservations;
-    }
-
-    
     public String getTypeName() {
         return typeName;
     }

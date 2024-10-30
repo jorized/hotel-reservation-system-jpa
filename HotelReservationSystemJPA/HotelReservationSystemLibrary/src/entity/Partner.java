@@ -5,8 +5,6 @@
 package entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -14,7 +12,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import util.enumeration.PartnerAccessRightEnum;
 
 /**
@@ -38,12 +35,8 @@ public class Partner implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PartnerAccessRightEnum role;
-    
-    @OneToMany(mappedBy = "partner")
-    private List<Reservation> reservations;
 
     public Partner() {
-        this.reservations = new ArrayList<Reservation>();
     }
 
     public Partner(String username, String password, PartnerAccessRightEnum role) {
@@ -61,14 +54,6 @@ public class Partner implements Serializable {
     public void setRole(PartnerAccessRightEnum role) {
         this.role = role;
     }
-
-    public List<Reservation> getReservations() {
-        return reservations;
-    }
-
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations = reservations;
-    }        
 
     public String getUsername() {
         return username;

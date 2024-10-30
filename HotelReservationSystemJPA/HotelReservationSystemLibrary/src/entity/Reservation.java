@@ -6,9 +6,7 @@ package entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -18,7 +16,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
 import util.enumeration.ReservationTypeEnum;
 
 /**
@@ -46,11 +44,14 @@ public class Reservation implements Serializable {
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal reservationAmount;
     
+    @Column(nullable = false)
+    private Date createdAt;
+    
     @ManyToOne(optional = false) // reservation cannot exist without being linked to User
     @JoinColumn(nullable = false)
     private Guest guest;
     
-    @ManyToOne // later should change to optional = false
+    @ManyToOne //By right supposed to be optional and nullable false, but no room rate logic yet so for now nvm
     @JoinColumn
     private RoomRate roomRate;
     
@@ -58,15 +59,11 @@ public class Reservation implements Serializable {
     @JoinColumn(nullable = false)
     private RoomType roomType;
     
-    @OneToMany(mappedBy = "reservation")
-    private List<RoomReservation> roomReservations;
-    
     @ManyToOne
     @JoinColumn
     private Partner partner;
 
     public Reservation() {
-        this.roomReservations = new ArrayList<RoomReservation>();
     }
 
     public Reservation(Date checkInDate, Date checkOutDate, ReservationTypeEnum reservationType, BigDecimal reservationAmount, Guest guest, RoomType roomType) {
@@ -77,8 +74,15 @@ public class Reservation implements Serializable {
         this.reservationAmount = reservationAmount;
         this.guest = guest;
         this.roomType = roomType;
-    }        
+    }
     
+    //Will set the current datetime right before persisting. 
+    //Not wise to store it in constructor because createdAt would be initialized every time a Reservation object is instantiated, 
+    //Regardless of whether it will be saved or not.
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Date();
+    }    
 
     public Guest getGuest() {
         return guest;
@@ -104,14 +108,6 @@ public class Reservation implements Serializable {
         this.roomType = roomType;
     }
 
-    public List<RoomReservation> getRoomReservations() {
-        return roomReservations;
-    }
-
-    public void setRoomReservations(List<RoomReservation> roomReservations) {
-        this.roomReservations = roomReservations;
-    }
-
     public Partner getPartner() {
         return partner;
     }
@@ -134,9 +130,7 @@ public class Reservation implements Serializable {
 
     public void setReservationAmount(BigDecimal reservationAmount) {
         this.reservationAmount = reservationAmount;
-    }
-    
-    
+    }        
 
     public Date getCheckInDate() {
         return checkInDate;

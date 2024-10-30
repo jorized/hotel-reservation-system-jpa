@@ -18,7 +18,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import util.enumeration.RoomRateStatusEnum;
 import util.enumeration.RoomRateTypeEnum;
 
@@ -54,15 +53,11 @@ public class RoomRate implements Serializable {
     private Date peakStartDate;
     private Date peakEndDate;
 
-    @OneToMany(mappedBy = "roomRate")
-    private List<Reservation> reservations;
-
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private RoomType roomType;
 
     public RoomRate() {
-        this.reservations = new ArrayList<Reservation>();
     }
 
     public RoomRate(String rateName, RoomRateTypeEnum rateType, BigDecimal ratePerNight,
@@ -77,14 +72,6 @@ public class RoomRate implements Serializable {
         this.peakStartDate = peakStartDate;
         this.peakEndDate = peakEndDate;
         this.roomType = roomType;
-    }
-
-    public List<Reservation> getReservations() {
-        return reservations;
-    }
-
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations = reservations;
     }
 
     public RoomType getRoomType() {
