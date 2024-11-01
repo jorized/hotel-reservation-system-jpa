@@ -11,7 +11,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import util.enumeration.RoomReservationStatus;
 
 /**
  *
@@ -23,9 +22,7 @@ public class RoomReservation implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long roomReservationId;
-    
-    private RoomReservationStatus roomReservationStatus;
+    private Long roomReservationId;    
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -36,14 +33,6 @@ public class RoomReservation implements Serializable {
     private Reservation reservation;        
 
     public RoomReservation() {
-    }
-
-    public RoomReservationStatus getRoomReservationStatus() {
-        return roomReservationStatus;
-    }
-
-    public void setRoomReservationStatus(RoomReservationStatus roomReservationStatus) {
-        this.roomReservationStatus = roomReservationStatus;
     }        
 
     public Room getRoom() {

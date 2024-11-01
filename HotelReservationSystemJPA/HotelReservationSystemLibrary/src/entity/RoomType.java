@@ -39,10 +39,7 @@ public class RoomType implements Serializable {
     private String description;
     
     @Column(nullable = false)
-    private Integer capacity;
-    
-    @Column(nullable = false)
-    private Integer numOfAvailRooms;    
+    private Integer capacity;    
     
     @Column(nullable = false)
     private String amenities;
@@ -64,19 +61,10 @@ public class RoomType implements Serializable {
         this.bed = bed;
         this.description = description;
         this.capacity = capacity;
-        this.numOfAvailRooms = capacity; //Upon creation, num of avail rooms should match capacity        
         this.amenities = amenities;
         this.tierNumber = tierNumber;
         this.roomTypeStatus = RoomTypeStatusEnum.ACTIVE;
     }    
-
-    public Integer getNumOfAvailRooms() {
-        return numOfAvailRooms;
-    }
-
-    public void setNumOfAvailRooms(Integer numOfAvailRooms) {
-        this.numOfAvailRooms = numOfAvailRooms;
-    }
 
     public Integer getCapacity() {
         return capacity;

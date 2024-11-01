@@ -7,12 +7,14 @@ package ejb.session.singleton;
 import ejb.session.stateless.CustomerSessionBeanLocal;
 import ejb.session.stateless.EmployeeSessionBeanLocal;
 import ejb.session.stateless.ReservationSessionBeanLocal;
+import ejb.session.stateless.RoomRateSessionBeanLocal;
 import ejb.session.stateless.RoomSessionBeanLocal;
 import ejb.session.stateless.RoomTypeSessionBeanLocal;
 import entity.Customer;
 import entity.Employee;
 import entity.Reservation;
 import entity.Room;
+import entity.RoomRate;
 import entity.RoomType;
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -26,6 +28,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import util.enumeration.EmployeeAccessRightEnum;
 import util.enumeration.ReservationTypeEnum;
+import util.enumeration.RoomRateTypeEnum;
 
 /**
  *
@@ -35,6 +38,9 @@ import util.enumeration.ReservationTypeEnum;
 @LocalBean
 @Startup
 public class DataInitSessionBean {
+
+    @EJB
+    private RoomRateSessionBeanLocal roomRateSessionBeanLocal;
 
     @EJB
     private EmployeeSessionBeanLocal employeeSessionBeanLocal;
@@ -49,7 +55,9 @@ public class DataInitSessionBean {
     private CustomerSessionBeanLocal customerSessionBeanLocal;
 
     @EJB
-    private ReservationSessionBeanLocal reservationSessionBeanLocal;        
+    private ReservationSessionBeanLocal reservationSessionBeanLocal;
+    
+    
                 
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
@@ -66,8 +74,7 @@ public class DataInitSessionBean {
 
         calendar.set(2024, Calendar.OCTOBER, 15);
         Date endDate = calendar.getTime();
-        
-        BigDecimal reservationAmount = new BigDecimal("1000");                
+               
                 
         //Test to create an employee
         Employee testEmployee = new Employee("jordanemployee", "password", EmployeeAccessRightEnum.GUEST_RELATION_OFFICER);
@@ -90,9 +97,14 @@ public class DataInitSessionBean {
         //Test to create a reservation
         
         
-        Customer testGuest = new Customer("Jordan", "Lim", "jorized@gmail.com", "98337602", "PASSPORTNO123", "jorized", "password123");
+        Customer testGuest = new Customer("John", "Doe", "john.doe@example.com", "1234567890", "A1234567", "johndoe", "pass123");
         if (em.createQuery("SELECT COUNT(c) FROM Customer c", Long.class).getSingleResult() == 0) {
-            customerSessionBeanLocal.createNewCustomer(testGuest);
+            try {
+                customerSessionBeanLocal.createNewCustomer(testGuest);
+            } catch (Exception ex) {
+                System.out.println("Error creating customer: " + ex.getMessage()  + "\n");
+            }
+
         }                
         
         RoomType testDeluxeRoomType = new RoomType(
@@ -166,9 +178,28 @@ public class DataInitSessionBean {
             } catch (Exception ex) {
                 System.out.println("Error creating room: " + ex.getMessage()  + "\n");
             }
-        }                                                       
+        }
         
-        Reservation testReservation = new Reservation(startDate, endDate, ReservationTypeEnum.ONLINE, reservationAmount, testGuest, testDeluxeRoomType);
+        //By right supposed to have logic to check for reservation type. If it's walk-in, no peak or promo (These are for online only)
+        //If it's online, need to check it's check-in date and check-out date and if there's a peak/promo rate which lies in the period, assign it
+        //There must be no overlapping between peak and peak dates, and promo and promo dates. 
+        //If a peak rate and promo rate has dates which are same, promo will take precedence.
+        //A room type can have only one walk-in and one normal rate (Since these are no dates by default).
+        //But for demonstration purposes, we are just use Normal Rate (Online base rate)
+        RoomRate testNormalRoomRateForDeluxe = new RoomRate("Normal Rate for Deluxe Room", RoomRateTypeEnum.NORMAL, new BigDecimal("60"), null, null, null, null, testDeluxeRoomType);
+        if (em.createQuery("SELECT COUNT(rr) FROM RoomRate rr", Long.class).getSingleResult() == 0) {
+            try {
+                roomRateSessionBeanLocal.createNewRoomRate(testNormalRoomRateForDeluxe);
+            } catch (Exception ex) {
+                System.out.println("Error creating employee: " + ex.getMessage()  + "\n");
+            }
+        }
+        //Number of prevailing nights * rate per night
+        long diffInMillis = endDate.getTime() - startDate.getTime();        
+        long numOfNights = diffInMillis / (1000 * 60 * 60 * 24);
+        BigDecimal reservationAmount = testNormalRoomRateForDeluxe.getRatePerNight().multiply(BigDecimal.valueOf(numOfNights));
+        
+        Reservation testReservation = new Reservation(startDate, endDate, ReservationTypeEnum.ONLINE, reservationAmount, testGuest, testDeluxeRoomType, testNormalRoomRateForDeluxe);
         if (em.createQuery("SELECT COUNT(r) FROM Reservation r", Long.class).getSingleResult() == 0) {
             reservationSessionBeanLocal.createNewReservation(testReservation);
         }

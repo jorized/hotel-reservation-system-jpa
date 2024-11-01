@@ -65,8 +65,6 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
 
         return newRoomType;
     }
-
-
     
     @Override
     public RoomType updateRoomType(RoomType updatedRoomType) throws InvalidRoomTypeTierNumberException, InvalidRoomTypeCapacityException {
@@ -94,10 +92,6 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
             existingRoomType.setTierNumber(newTierNumber);
         }
         
-        //Check for valid capacity
-        if (updatedRoomType.getCapacity() != null && updatedRoomType.getCapacity() < existingRoomType.getNumOfAvailRooms()) {
-            throw new InvalidRoomTypeCapacityException("Capacity cannot be less than the number of available rooms (" + existingRoomType.getNumOfAvailRooms() + ").");
-        }
 
         if (updatedRoomType.getSize() != null && !updatedRoomType.getSize().isEmpty()) {
             existingRoomType.setSize(updatedRoomType.getSize());
@@ -110,9 +104,6 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
         }
         if (updatedRoomType.getCapacity() != null) {
             existingRoomType.setCapacity(updatedRoomType.getCapacity());
-        }
-        if (updatedRoomType.getNumOfAvailRooms() != null) {
-            existingRoomType.setNumOfAvailRooms(updatedRoomType.getNumOfAvailRooms());
         }
         if (updatedRoomType.getAmenities() != null && !updatedRoomType.getAmenities().isEmpty()) {
             existingRoomType.setAmenities(updatedRoomType.getAmenities());

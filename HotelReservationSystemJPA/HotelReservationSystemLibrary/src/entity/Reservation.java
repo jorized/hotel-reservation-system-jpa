@@ -51,8 +51,8 @@ public class Reservation implements Serializable {
     @JoinColumn(nullable = false)
     private Guest guest;
     
-    @ManyToOne //By right supposed to be optional and nullable false, but no room rate logic yet so for now nvm
-    @JoinColumn
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private RoomRate roomRate;
     
     @ManyToOne(optional = false)
@@ -66,14 +66,15 @@ public class Reservation implements Serializable {
     public Reservation() {
     }
 
-    public Reservation(Date checkInDate, Date checkOutDate, ReservationTypeEnum reservationType, BigDecimal reservationAmount, Guest guest, RoomType roomType) {
+    public Reservation(Date checkInDate, Date checkOutDate, ReservationTypeEnum reservationType, BigDecimal reservationAmount, Guest guest, RoomType roomType, RoomRate roomRate) {
         this();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.reservationType = reservationType;
         this.reservationAmount = reservationAmount;
         this.guest = guest;
-        this.roomType = roomType;
+        this.roomType = roomType; 
+        this.roomRate = roomRate;
     }
     
     //Will set the current datetime right before persisting. 

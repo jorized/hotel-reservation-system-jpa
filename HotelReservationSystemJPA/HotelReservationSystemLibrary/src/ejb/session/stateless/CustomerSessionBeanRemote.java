@@ -6,6 +6,8 @@ package ejb.session.stateless;
 
 import entity.Customer;
 import javax.ejb.Remote;
+import util.exception.AccountAlreadyExistException;
+import util.exception.InvalidLoginCredentialsException;
 
 /**
  *
@@ -14,6 +16,9 @@ import javax.ejb.Remote;
 @Remote
 public interface CustomerSessionBeanRemote {
     
-    public Customer createNewCustomer(Customer newCustomer);
+    public Customer createNewCustomer(Customer newCustomer) throws AccountAlreadyExistException;
+    
+    public Customer customerLogin(String username, String password) throws InvalidLoginCredentialsException;
+    
     
 }

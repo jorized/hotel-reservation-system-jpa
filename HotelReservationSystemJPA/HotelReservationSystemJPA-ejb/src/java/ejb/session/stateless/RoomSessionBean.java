@@ -6,7 +6,10 @@ package ejb.session.stateless;
 
 import entity.Room;
 import entity.RoomType;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import javax.ejb.Schedule;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -129,6 +132,13 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
         Query query = em.createQuery("SELECT r FROM Room r ORDER BY r.roomNum");
 	
 	return query.getResultList();
+    }
+    
+    //Room allocation method (EJB timer method that runs at 2am)
+    @Schedule(hour = "2", minute = "0", second = "0", info = "allocateRooms")
+    public void allocateRooms() {
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        System.out.println("*****************Testing: " + timeStamp + " **************************");
     }
     
 }
