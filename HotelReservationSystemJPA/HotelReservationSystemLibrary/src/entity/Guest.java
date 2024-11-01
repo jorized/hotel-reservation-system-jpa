@@ -41,7 +41,6 @@ public abstract class Guest implements Serializable {
     @Column(length = 50, nullable = false, unique = true)
     private String passportNumber;
     
-
     public Guest() {
     }
 

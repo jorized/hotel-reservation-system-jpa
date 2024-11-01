@@ -602,7 +602,7 @@ public class MainApp {
             System.out.println("Bed: " + roomType.getBed());
             System.out.println("Description: " + roomType.getDescription());
             System.out.println("Total capacity: " + roomType.getCapacity());
-            System.out.println("Number of available rooms left: " + roomType.getNumOfAvailRooms());
+            System.out.println("Number of available rooms left: "); 
             System.out.println("Amenities: " + roomType.getAmenities());
             System.out.println("Tier number: " + roomType.getTierNumber());
             System.out.println("Status: " + formatEnumString(roomType.getRoomTypeStatus().toString()) + "\n");
@@ -628,7 +628,7 @@ public class MainApp {
             System.out.println("Bed: " + existingRoomType.getBed());
             System.out.println("Description: " + existingRoomType.getDescription());
             System.out.println("Total capacity: " + existingRoomType.getCapacity());
-            System.out.println("Number of available rooms left: " + existingRoomType.getNumOfAvailRooms());
+            System.out.println("Number of available rooms left: ");
             System.out.println("Amenities: " + existingRoomType.getAmenities());
             System.out.println("Tier number: " + existingRoomType.getTierNumber());
             System.out.println("Status: " + formatEnumString(existingRoomType.getRoomTypeStatus().toString()));
@@ -703,7 +703,7 @@ public class MainApp {
             System.out.println("Bed: " + existingRoomType.getBed());
             System.out.println("Description: " + existingRoomType.getDescription());
             System.out.println("Total capacity: " + existingRoomType.getCapacity());
-            System.out.println("Number of available rooms left: " + existingRoomType.getNumOfAvailRooms());
+            System.out.println("Number of available rooms left: ");
             System.out.println("Amenities: " + existingRoomType.getAmenities());
             System.out.println("Tier number: " + existingRoomType.getTierNumber());
             System.out.println("Status: " + formatEnumString(existingRoomType.getRoomTypeStatus().toString()));
@@ -742,7 +742,7 @@ public class MainApp {
                             index++,
                             roomType.getTypeName(),
                             roomType.getCapacity(),
-                            roomType.getNumOfAvailRooms(),
+                            0, //Rmb to change it to the correct method for get number of available rooms left
                             roomType.getTierNumber(),
                             formatEnumString(roomType.getRoomTypeStatus().toString()));
                 }
