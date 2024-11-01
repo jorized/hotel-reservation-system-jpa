@@ -4,7 +4,7 @@
  */
 package ejb.session.stateless;
 
-import entity.ExceptionReport;
+import entity.RoomReservation;
 import javax.ejb.Local;
 
 /**
@@ -12,8 +12,8 @@ import javax.ejb.Local;
  * @author JorJo
  */
 @Local
-public interface ExceptionReportSessionBeanLocal {
+public interface RoomReservationSessionBeanLocal {
 
-    public ExceptionReport createNewExceptionReport(ExceptionReport exceptionReport);
+    public RoomReservation createNewRoomReservation(RoomReservation newRoomReservation);
     
 }

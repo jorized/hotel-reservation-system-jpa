@@ -4,21 +4,27 @@
  */
 package ejb.session.stateless;
 
+import entity.ExceptionReport;
+import entity.Reservation;
 import entity.Room;
+import entity.RoomReservation;
 import entity.RoomType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import util.enumeration.ExceptionTypeReportEnum;
 import util.exception.InvalidRoomNumException;
 import util.exception.RoomAlreadyExistException;
 import util.exception.RoomInUseException;
 import util.enumeration.RoomStatusEnum;
+import util.exception.InvalidRoomTypeTierNumberException;
 import util.exception.UpdateRoomException;
 
 /**
@@ -28,10 +34,24 @@ import util.exception.UpdateRoomException;
 @Stateless
 public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLocal {
 
+    @EJB
+    private ExceptionReportSessionBeanLocal exceptionReportSessionBeanLocal;
+
+    @EJB
+    private RoomTypeSessionBeanLocal roomTypeSessionBeanLocal;
+
+    @EJB
+    private RoomReservationSessionBeanLocal roomReservationSessionBeanLocal;
+    
+    
+    
+    
+
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
-    private EntityManager em;
+    private EntityManager em;        
+    
 
     @Override
     public Room createNewRoom(Room newRoom) throws RoomAlreadyExistException {
@@ -134,11 +154,79 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
 	return query.getResultList();
     }
     
+    @Override
+    public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType) {
+        return em.createQuery("SELECT r FROM Room r WHERE r.roomType = :roomType AND r.roomStatus = :roomStatus", Room.class)
+        .setParameter("roomType", roomType)
+        .setParameter("roomStatus", RoomStatusEnum.AVAILABLE)
+        .getResultList();
+    }
+    
     //Room allocation method (EJB timer method that runs at 2am)
     @Schedule(hour = "2", minute = "0", second = "0", info = "allocateRooms")
-    public void allocateRooms() {
-        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-        System.out.println("*****************Testing: " + timeStamp + " **************************");
+    public void allocateRooms() throws InvalidRoomTypeTierNumberException {
+
+        List<Reservation> reservations = em.createQuery(
+            "SELECT r FROM Reservation r WHERE r.checkInDate = CURRENT_DATE AND r.roomReservations IS EMPTY",
+            Reservation.class
+        ).getResultList();
+
+        for (Reservation reservation : reservations) {
+            RoomType currentRoomType = reservation.getRoomType();
+            int roomsNeeded = reservation.getNumOfRooms();
+            int roomsAllocated = 0;
+
+            while (roomsAllocated < roomsNeeded) {
+                List<Room> listOfAvailRooms = retrieveAllAvailableRoomsByRoomType(currentRoomType);
+
+                if (!listOfAvailRooms.isEmpty()) {
+                    // Allocate available rooms in current room type
+                    Room room = listOfAvailRooms.get(0);
+                    RoomReservation newRoomReservation = new RoomReservation(room, reservation);
+                    room.setRoomStatus(RoomStatusEnum.ACTIVE); // Update room status
+                    roomReservationSessionBeanLocal.createNewRoomReservation(newRoomReservation);
+                    roomsAllocated++;
+                } else {
+                    // Upgrade to next tier if available
+                    RoomType upgradedRoomType = roomTypeSessionBeanLocal.retrieveRoomTypeByTierNumber(currentRoomType.getTierNumber() + 1);
+
+                    if (upgradedRoomType != null) {
+                        List<Room> upgradedAvailRooms = retrieveAllAvailableRoomsByRoomType(upgradedRoomType);
+
+                        if (!upgradedAvailRooms.isEmpty()) {
+                            Room upgradedRoom = upgradedAvailRooms.get(0);
+                            RoomReservation newRoomReservation = new RoomReservation(upgradedRoom, reservation);
+                            upgradedRoom.setRoomStatus(RoomStatusEnum.ACTIVE);
+                            roomReservationSessionBeanLocal.createNewRoomReservation(newRoomReservation);
+                            roomsAllocated++;
+
+                            // Persist a type 1 exception report for upgrade
+                            ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE1, newRoomReservation);
+                            exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
+                        } else {
+                            // Persist reservation with type 2 exception if no availability in upgraded tier
+                            RoomReservation emptyRoomReservation = new RoomReservation(null, reservation);
+                            roomReservationSessionBeanLocal.createNewRoomReservation(emptyRoomReservation);
+
+                            // Persist a type 2 exception report
+                            ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE2, emptyRoomReservation);
+                            exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
+                            break; // Stop allocation for this reservation since upgrade was not possible
+                        }
+                    } else {
+                        // No higher tier room type available, persist a type 2 exception report
+                        RoomReservation emptyRoomReservation = new RoomReservation(null, reservation);
+                        roomReservationSessionBeanLocal.createNewRoomReservation(emptyRoomReservation);
+
+                        // Persist a type 2 exception report
+                        ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE2, emptyRoomReservation);
+                        exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
+                        break; // Stop allocation for this reservation
+                    }
+                }
+            }
+        }
     }
+
     
 }

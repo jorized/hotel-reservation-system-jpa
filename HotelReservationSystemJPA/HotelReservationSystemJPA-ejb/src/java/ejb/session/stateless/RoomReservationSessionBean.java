@@ -4,7 +4,7 @@
  */
 package ejb.session.stateless;
 
-import entity.ExceptionReport;
+import entity.RoomReservation;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -14,21 +14,18 @@ import javax.persistence.PersistenceContext;
  * @author JorJo
  */
 @Stateless
-public class ExceptionReportSessionBean implements ExceptionReportSessionBeanRemote, ExceptionReportSessionBeanLocal {
+public class RoomReservationSessionBean implements RoomReservationSessionBeanRemote, RoomReservationSessionBeanLocal {
 
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
-
-    
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
+        
     @Override
-    public ExceptionReport createNewExceptionReport(ExceptionReport exceptionReport) {
+    public RoomReservation createNewRoomReservation(RoomReservation newRoomReservation) {
 
-        em.persist(exceptionReport);
+        em.persist(newRoomReservation);
         em.flush();
 
-        return exceptionReport;
+        return newRoomReservation;
     }
-    
+
 }

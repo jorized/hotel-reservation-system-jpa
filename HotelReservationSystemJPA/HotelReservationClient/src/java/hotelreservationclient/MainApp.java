@@ -48,7 +48,7 @@ public class MainApp {
         Integer response = 0;
         
         while (true) {
-            System.out.println("*** Welcome to the HoRS Management Client ***\n");
+            System.out.println("*** Welcome to the HoRS Reservation Client ***\n");
             System.out.println("1: Login as guest");
             System.out.println("2: Register as guest");
             System.out.println("3: Search hotel room");

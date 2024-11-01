@@ -16,7 +16,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
 import util.enumeration.ReservationTypeEnum;
 
 /**
@@ -37,15 +36,15 @@ public class Reservation implements Serializable {
     @Column(nullable = false)
     private Date checkOutDate;
     
+    @Column(nullable = false)
+    private Integer numOfRooms;
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationTypeEnum reservationType;
     
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal reservationAmount;
-    
-    @Column(nullable = false)
-    private Date createdAt;
     
     @ManyToOne(optional = false) // reservation cannot exist without being linked to User
     @JoinColumn(nullable = false)
@@ -66,24 +65,25 @@ public class Reservation implements Serializable {
     public Reservation() {
     }
 
-    public Reservation(Date checkInDate, Date checkOutDate, ReservationTypeEnum reservationType, BigDecimal reservationAmount, Guest guest, RoomType roomType, RoomRate roomRate) {
+    public Reservation(Date checkInDate, Date checkOutDate, Integer numOfRooms, ReservationTypeEnum reservationType, BigDecimal reservationAmount, Guest guest, RoomType roomType, RoomRate roomRate) {
         this();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
+        this.numOfRooms = numOfRooms;
         this.reservationType = reservationType;
         this.reservationAmount = reservationAmount;
         this.guest = guest;
         this.roomType = roomType; 
         this.roomRate = roomRate;
     }
-    
-    //Will set the current datetime right before persisting. 
-    //Not wise to store it in constructor because createdAt would be initialized every time a Reservation object is instantiated, 
-    //Regardless of whether it will be saved or not.
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = new Date();
-    }    
+
+    public Integer getNumOfRooms() {
+        return numOfRooms;
+    }
+
+    public void setNumOfRooms(Integer numOfRooms) {
+        this.numOfRooms = numOfRooms;
+    }        
 
     public Guest getGuest() {
         return guest;

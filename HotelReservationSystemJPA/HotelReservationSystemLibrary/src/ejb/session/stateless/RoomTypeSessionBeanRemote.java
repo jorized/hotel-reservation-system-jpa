@@ -29,4 +29,6 @@ public interface RoomTypeSessionBeanRemote {
     public RoomType updateRoomType(RoomType updatedRoomType) throws InvalidRoomTypeTierNumberException, InvalidRoomTypeCapacityException;
     
     public void deleteRoomType(RoomType existingRoomType) throws RoomTypeInUseException;
+    
+    public RoomType retrieveRoomTypeByTierNumber(Integer tierNumber) throws InvalidRoomTypeTierNumberException;
 }

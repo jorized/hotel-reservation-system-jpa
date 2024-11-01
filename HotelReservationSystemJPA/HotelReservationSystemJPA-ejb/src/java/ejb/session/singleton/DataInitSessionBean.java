@@ -199,7 +199,7 @@ public class DataInitSessionBean {
         long numOfNights = diffInMillis / (1000 * 60 * 60 * 24);
         BigDecimal reservationAmount = testNormalRoomRateForDeluxe.getRatePerNight().multiply(BigDecimal.valueOf(numOfNights));
         
-        Reservation testReservation = new Reservation(startDate, endDate, ReservationTypeEnum.ONLINE, reservationAmount, testGuest, testDeluxeRoomType, testNormalRoomRateForDeluxe);
+        Reservation testReservation = new Reservation(startDate, endDate, 3, ReservationTypeEnum.ONLINE, reservationAmount, testGuest, testDeluxeRoomType, testNormalRoomRateForDeluxe);
         if (em.createQuery("SELECT COUNT(r) FROM Reservation r", Long.class).getSingleResult() == 0) {
             reservationSessionBeanLocal.createNewReservation(testReservation);
         }

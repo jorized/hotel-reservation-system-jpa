@@ -31,5 +31,7 @@ public interface RoomSessionBeanRemote {
     public String deleteRoom(Room existingRoom);
     
     public List<Room> retrieveAllRooms();
+    
+    public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
 
 }

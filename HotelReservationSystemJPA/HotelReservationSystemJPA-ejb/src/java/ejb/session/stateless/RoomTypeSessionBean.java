@@ -138,6 +138,17 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     }
     
     @Override
+    public RoomType retrieveRoomTypeByTierNumber(Integer tierNumber) throws InvalidRoomTypeTierNumberException {
+        try {
+            return em.createQuery("SELECT rt FROM RoomType rt WHERE rt.tierNumber = :tierNumber", RoomType.class)
+                     .setParameter("tierNumber", tierNumber)
+                     .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidRoomTypeTierNumberException("Invalid room type tier number.");
+        }
+    }
+    
+    @Override
     public void deleteRoomType(RoomType existingRoomType) throws RoomTypeInUseException {
         //Check if existing room type is linked to any rooms. (Get all rooms linked to that room type)
         //Not sure what they mean by "if room type is not used", but for now assume that it means no rooms are linked
@@ -152,7 +163,6 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
         } else {
             throw new RoomTypeInUseException("Room type is currently in use. Unable to delete.");
         }        
-
     }
     
     private void shiftTierNumberUpForCreate(Integer fromTier) {
