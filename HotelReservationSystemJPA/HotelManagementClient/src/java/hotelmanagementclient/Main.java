@@ -4,11 +4,10 @@
  */
 package hotelmanagementclient;
 
-import ejb.session.stateless.CustomerSessionBeanRemote;
+
 import ejb.session.stateless.EmployeeSessionBeanRemote;
 import ejb.session.stateless.ExceptionReportSessionBeanRemote;
 import ejb.session.stateless.PartnerSessionBeanRemote;
-import ejb.session.stateless.ReservationSessionBeanRemote;
 import ejb.session.stateless.RoomRateSessionBeanRemote;
 import ejb.session.stateless.RoomSessionBeanRemote;
 import ejb.session.stateless.RoomTypeSessionBeanRemote;
