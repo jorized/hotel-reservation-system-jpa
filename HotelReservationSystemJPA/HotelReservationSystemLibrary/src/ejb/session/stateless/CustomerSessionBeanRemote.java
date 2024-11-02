@@ -9,16 +9,16 @@ import javax.ejb.Remote;
 import util.exception.AccountAlreadyExistException;
 import util.exception.InvalidLoginCredentialsException;
 
+
 /**
  *
  * @author JorJo
  */
 @Remote
 public interface CustomerSessionBeanRemote {
-    
+
     public Customer createNewCustomer(Customer newCustomer) throws AccountAlreadyExistException;
-    
+
     public Customer customerLogin(String username, String password) throws InvalidLoginCredentialsException;
-    
-    
+
 }

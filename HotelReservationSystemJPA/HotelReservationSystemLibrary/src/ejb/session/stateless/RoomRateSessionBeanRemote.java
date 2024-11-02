@@ -5,8 +5,13 @@
 package ejb.session.stateless;
 
 import entity.RoomRate;
+import entity.RoomType;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
+import util.enumeration.ReservationTypeEnum;
+import util.exception.InvalidRoomRateException;
 import util.exception.InvalidRoomRateNameException;
 import util.exception.ReservationInUseException;
 import util.exception.RoomRateAlreadyExistException;
@@ -28,5 +33,9 @@ public interface RoomRateSessionBeanRemote {
     public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException;
 
     public List<RoomRate> retrieveAllRoomRates();
+
+    public BigDecimal getDailyRate(Date date, RoomType roomType, ReservationTypeEnum reservationTypeEnum);
+
+    public RoomRate getRoomRateForType(RoomType roomType, Date currentDate) throws InvalidRoomRateException;
     
 }
