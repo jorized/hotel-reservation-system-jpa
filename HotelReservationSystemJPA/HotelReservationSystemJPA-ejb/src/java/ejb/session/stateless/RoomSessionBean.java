@@ -141,4 +141,23 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
         System.out.println("*****************Testing: " + timeStamp + " **************************");
     }
     
+    @Override
+    public List<Room> retrieveAllAvailableRooms() {
+        Query query = em.createQuery("SELECT r FROM Room r WHERE r.roomStatus = :availableStatus", Room.class)
+                        .setParameter("availableStatus", RoomStatusEnum.AVAILABLE);
+        
+        List<Room> rooms = query.getResultList();
+        System.out.println("Rooms retrieved: " + rooms);
+        return query.getResultList();
+    }
+    
+    @Override
+    public boolean checkRoomNum(String roomNum) {
+        return em.createQuery("SELECT COUNT(r) FROM Room r WHERE r.roomNum = :roomNum", Long.class)
+                 .setParameter("roomNum", roomNum)
+                 .getSingleResult() > 0;
+    }
+    
+    
+    
 }

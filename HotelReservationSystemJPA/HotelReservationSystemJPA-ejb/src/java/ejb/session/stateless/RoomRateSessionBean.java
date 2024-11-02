@@ -5,6 +5,9 @@
 package ejb.session.stateless;
 
 import entity.RoomRate;
+import entity.RoomType;
+import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
@@ -13,6 +16,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import util.enumeration.ReservationTypeEnum;
 import util.enumeration.RoomRateStatusEnum;
 import util.enumeration.RoomRateTypeEnum;
 import util.exception.InvalidRoomRateException;
@@ -30,7 +34,6 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
 
     @EJB
     private ReservationSessionBeanLocal reservationSessionBeanLocal;
-    
 
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
@@ -117,13 +120,86 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         }
 
     }
-    
+
     @Override
     public List<RoomRate> retrieveAllRoomRates() {
         Query query = em.createQuery("SELECT r FROM RoomRate r");
-        
+
         return query.getResultList();
-        
-    }   
+
+    }
+
+    @Override
+    public BigDecimal getDailyRate(Date date, RoomType roomType, ReservationTypeEnum reservationTypeEnum) {
+        BigDecimal rate = null;
+        List<RoomRate> roomRates = retrieveAllRoomRates();
+
+        for (RoomRate roomRate : roomRates) {
+            if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
+
+                // Published Rate (for walk-in reservations)
+                if (reservationTypeEnum == ReservationTypeEnum.WALKIN
+                        && roomRate.getRateType() == RoomRateTypeEnum.PUBLISHED) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+                }
+                //1st-priority
+                if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
+                        && isWithinPeriod(date, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+
+                }
+                //2nd-priority
+                if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
+                        && isWithinPeriod(date, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+                }
+                // Normal Rate (for walk-in reservations)
+                if (reservationTypeEnum == ReservationTypeEnum.ONLINE
+                        && roomRate.getRateType() == RoomRateTypeEnum.NORMAL) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+                }
+            }
+        }
+        return rate;
+    }
+
+    private boolean isWithinPeriod(Date date, Date startDate, Date endDate) {
+        if (startDate == null || endDate == null) {
+            return false;
+        }
+
+        return !date.before(startDate) && !date.after(endDate);
+    }
+
+    public RoomRate getRoomRateForType(RoomType roomType, Date currentDate) throws InvalidRoomRateException {
+        List<RoomRate> roomRates = retrieveAllRoomRates();
+
+        for (RoomRate roomRate : roomRates) {
+            // Ensure rate is active and matches the room type
+            if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
+
+                // Priority 1: Promotion rate
+                if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
+                        && isWithinPeriod(currentDate, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
+                    return roomRate;
+
+                    // Priority 2: Peak rate
+                } else if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
+                        && isWithinPeriod(currentDate, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
+                    return roomRate;
+
+                    // Priority 3: Normal rate
+                } else if (roomRate.getRateType() == RoomRateTypeEnum.NORMAL) {
+                    return roomRate;
+                }
+            }
+        }
+        throw new InvalidRoomRateException("No valid rate found for RoomType: " + roomType.getTypeName() + " on date: " + currentDate);
+
+    }
 
 }

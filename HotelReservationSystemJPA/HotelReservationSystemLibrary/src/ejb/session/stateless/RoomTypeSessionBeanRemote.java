@@ -4,10 +4,16 @@
  */
 package ejb.session.stateless;
 
+import entity.Room;
 import entity.RoomType;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
+import util.enumeration.ReservationTypeEnum;
+import util.exception.InvalidRoomException;
 import util.exception.InvalidRoomTypeCapacityException;
+import util.exception.InvalidRoomTypeException;
 import util.exception.InvalidRoomTypeNameException;
 import util.exception.InvalidRoomTypeTierNumberException;
 import util.exception.RoomTypeAlreadyExistException;
@@ -29,4 +35,7 @@ public interface RoomTypeSessionBeanRemote {
     public RoomType updateRoomType(RoomType updatedRoomType) throws InvalidRoomTypeTierNumberException, InvalidRoomTypeCapacityException;
     
     public void deleteRoomType(RoomType existingRoomType) throws RoomTypeInUseException;
+
+    public BigDecimal getLowestTierDailyRate(Date date, ReservationTypeEnum reservationType, List<Room> rooms) throws InvalidRoomTypeException, InvalidRoomException;
+    
 }

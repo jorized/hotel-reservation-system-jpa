@@ -8,7 +8,11 @@ import entity.Customer;
 import entity.Guest;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import util.exception.InvalidGuestEmailException;
+import util.exception.InvalidGuestPassportNumberException;
+import util.exception.InvalidGuestPhoneNumberException;
 
 /**
  *
@@ -28,5 +32,38 @@ public class GuestSessionBean implements GuestSessionBeanRemote, GuestSessionBea
 	em.flush();
 	
 	return newGuest;
+    }
+    
+    @Override
+    public Guest retrieveGuestByEmail(String email) throws InvalidGuestEmailException {
+        try {
+            return em.createQuery("SELECT g FROM Guest g WHERE g.email = :email", Guest.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidGuestEmailException("Invalid customer email.");
+        }
+    }
+    
+    @Override
+    public Guest retrieveGuestByPhoneNumber(String phoneNumber) throws InvalidGuestPhoneNumberException {
+        try {
+            return em.createQuery("SELECT g FROM Guest g WHERE g.phoneNumber = :phoneNumber", Guest.class)
+                    .setParameter("phoneNumber", phoneNumber)
+                    .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidGuestPhoneNumberException("Invalid customer phone number.");
+        }
+    }
+    
+    @Override
+    public Guest retrieveGuestByPassportNumber(String passportNumber) throws InvalidGuestPassportNumberException {
+        try {
+            return em.createQuery("SELECT g FROM Guest g WHERE g.passportNumber = :passportNumber", Guest.class)
+                    .setParameter("passportNumber", passportNumber)
+                    .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidGuestPassportNumberException("Invalid customer passport number.");
+        }
     }
 }
