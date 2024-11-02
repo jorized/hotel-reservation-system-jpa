@@ -13,6 +13,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import util.enumeration.ExceptionTypeReportEnum;
 
@@ -36,6 +37,7 @@ public class ExceptionReport implements Serializable {
     private ExceptionTypeReportEnum exceptionTypeReport;
     
     @OneToOne
+    @JoinColumn
     private RoomReservation roomReservation;
 
     public ExceptionReport() {

@@ -4,7 +4,26 @@
  */
 package ejb.session.stateless;
 
+import entity.RoomRate;
+import entity.RoomType;
+import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import util.enumeration.ReservationTypeEnum;
+import util.enumeration.RoomRateStatusEnum;
+import util.enumeration.RoomRateTypeEnum;
+import util.exception.InvalidRoomRateException;
+import util.exception.InvalidRoomRateNameException;
+import util.exception.ReservationInUseException;
+import util.exception.RoomRateAlreadyExistException;
+import util.exception.UpdateRoomRateException;
 
 /**
  *
@@ -13,6 +32,174 @@ import javax.ejb.Stateless;
 @Stateless
 public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateSessionBeanLocal {
 
+    @EJB
+    private ReservationSessionBeanLocal reservationSessionBeanLocal;
+
+    @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
+    private EntityManager em;
+
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")
+    @Override
+    public RoomRate createNewRoomRate(RoomRate newRoomRate) throws RoomRateAlreadyExistException {
+
+        // Check if a room type with the same name already exists
+        RoomRate existingRoomRate = em.createQuery("SELECT rR FROM RoomRate rR WHERE rR.rateName = :rateName", RoomRate.class)
+                .setParameter("rateName", newRoomRate.getRateName())
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
+
+        if (existingRoomRate != null) {
+            throw new RoomRateAlreadyExistException("Room rate '" + newRoomRate.getRateName() + "' already exists.");
+        }
+
+        em.persist(newRoomRate);
+        em.flush();
+
+        return newRoomRate;
+    }
+
+    @Override
+    public RoomRate retrieveRoomRateByRoomName(String rateName) throws InvalidRoomRateNameException {
+        try {
+            return em.createQuery("SELECT rR FROM RoomRate rR WHERE rR.rateName = :rateName", RoomRate.class)
+                    .setParameter("rateName", rateName)
+                    .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidRoomRateNameException("Invalid room rate name");
+        }
+    }
+
+    public RoomRate updateRoomRate(RoomRate updatedRoomRate) throws UpdateRoomRateException {
+        try {
+            RoomRate existingRoomRate = em.find(RoomRate.class, updatedRoomRate.getRoomRateId());
+
+            if (updatedRoomRate.getRoomType() != null) {
+                existingRoomRate.setRoomType(updatedRoomRate.getRoomType());
+            }
+            if (updatedRoomRate.getRateType() != null) {
+                existingRoomRate.setRateType(updatedRoomRate.getRateType());
+            }
+
+            // these dates may be null
+            existingRoomRate.setPromotionStartDate(updatedRoomRate.getPromotionStartDate());
+
+            existingRoomRate.setPromotionEndDate(updatedRoomRate.getPromotionEndDate());
+
+            existingRoomRate.setPeakStartDate(updatedRoomRate.getPeakStartDate());
+
+            existingRoomRate.setPeakEndDate(updatedRoomRate.getPeakEndDate());
+
+            if (updatedRoomRate.getRatePerNight() != null) {
+                existingRoomRate.setRatePerNight(updatedRoomRate.getRatePerNight());
+            }
+
+            em.merge(existingRoomRate);
+            em.flush();
+
+            return existingRoomRate;
+        } catch (Exception e) {
+            throw new UpdateRoomRateException("Error updating room rate details: " + e.getMessage());
+        }
+
+    }
+
+    @Override
+    public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException {
+        //Check if existing room type is linked to any rooms. (Get all rooms linked to that room type)
+        //Not sure what they mean by "if room type is not used", but for now assume that it means no rooms are linked
+        //But could potentially need to change to check check-in/check-out date?
+        RoomRate managedRoomRate = em.find(RoomRate.class, existingRoomRate.getRoomRateId());
+
+        if (reservationSessionBeanLocal.retrieveAllReservationsByRoomRate(managedRoomRate).isEmpty()) {
+            em.remove(managedRoomRate);
+            em.flush();
+        } else {
+            throw new ReservationInUseException("Room type is currently in use. Unable to delete.");
+        }
+
+    }
+
+    @Override
+    public List<RoomRate> retrieveAllRoomRates() {
+        Query query = em.createQuery("SELECT r FROM RoomRate r");
+
+        return query.getResultList();
+
+    }
+
+    @Override
+    public BigDecimal getDailyRate(Date date, RoomType roomType, ReservationTypeEnum reservationTypeEnum) {
+        BigDecimal rate = null;
+        List<RoomRate> roomRates = retrieveAllRoomRates();
+
+        for (RoomRate roomRate : roomRates) {
+            if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
+
+                // Published Rate (for walk-in reservations)
+                if (reservationTypeEnum == ReservationTypeEnum.WALKIN
+                        && roomRate.getRateType() == RoomRateTypeEnum.PUBLISHED) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+                }
+                //1st-priority
+                if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
+                        && isWithinPeriod(date, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+
+                }
+                //2nd-priority
+                if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
+                        && isWithinPeriod(date, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+                }
+                // Normal Rate (for walk-in reservations)
+                if (reservationTypeEnum == ReservationTypeEnum.ONLINE
+                        && roomRate.getRateType() == RoomRateTypeEnum.NORMAL) {
+                    rate = roomRate.getRatePerNight();
+                    return rate;
+                }
+            }
+        }
+        return rate;
+    }
+
+    private boolean isWithinPeriod(Date date, Date startDate, Date endDate) {
+        if (startDate == null || endDate == null) {
+            return false;
+        }
+
+        return !date.before(startDate) && !date.after(endDate);
+    }
+
+    public RoomRate getRoomRateForType(RoomType roomType, Date currentDate) throws InvalidRoomRateException {
+        List<RoomRate> roomRates = retrieveAllRoomRates();
+
+        for (RoomRate roomRate : roomRates) {
+            // Ensure rate is active and matches the room type
+            if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
+
+                // Priority 1: Promotion rate
+                if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
+                        && isWithinPeriod(currentDate, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
+                    return roomRate;
+
+                    // Priority 2: Peak rate
+                } else if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
+                        && isWithinPeriod(currentDate, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
+                    return roomRate;
+
+                    // Priority 3: Normal rate
+                } else if (roomRate.getRateType() == RoomRateTypeEnum.NORMAL) {
+                    return roomRate;
+                }
+            }
+        }
+        throw new InvalidRoomRateException("No valid rate found for RoomType: " + roomType.getTypeName() + " on date: " + currentDate);
+
+    }
+
 }

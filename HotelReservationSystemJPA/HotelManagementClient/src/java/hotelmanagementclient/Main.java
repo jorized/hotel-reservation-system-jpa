@@ -4,9 +4,9 @@
  */
 package hotelmanagementclient;
 
-import ejb.session.stateless.CustomerSessionBeanRemote;
 import ejb.session.stateless.EmployeeSessionBeanRemote;
 import ejb.session.stateless.ExceptionReportSessionBeanRemote;
+import ejb.session.stateless.GuestSessionBeanRemote;
 import ejb.session.stateless.PartnerSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
 import ejb.session.stateless.RoomRateSessionBeanRemote;
@@ -31,18 +31,25 @@ public class Main {
     @EJB
     private static ExceptionReportSessionBeanRemote exceptionReportSessionBeanRemote;
     @EJB
-    private static RoomRateSessionBeanRemote roomRateSessionBeanRemote;                 
+    private static RoomRateSessionBeanRemote roomRateSessionBeanRemote;
+    @EJB
+    private static ReservationSessionBeanRemote reservationSessionBeanRemote;
+    @EJB
+    private static GuestSessionBeanRemote guestSessionBeanRemote;
     
+
     public static void main(String[] args) {
         MainApp mainApp = new MainApp(
-                employeeSessionBeanRemote, 
+                employeeSessionBeanRemote,
                 partnerSessionBeanRemote,
                 roomTypeSessionBeanRemote,
                 roomSessionBeanRemote,
                 exceptionReportSessionBeanRemote,
-                roomRateSessionBeanRemote
+                roomRateSessionBeanRemote,
+                reservationSessionBeanRemote,
+                guestSessionBeanRemote
         );
         mainApp.runApp();
     }
-    
+
 }

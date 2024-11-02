@@ -11,5 +11,6 @@ package util.enumeration;
  */
 public enum RoomRateStatusEnum {
     ACTIVE,
-    DISABLED
+    DISABLED,
+    NOT_AVAILABLE
 }

@@ -1,4 +1,4 @@
-    /*
+/*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Enum.java to edit this template
  */
@@ -8,10 +8,8 @@ package util.enumeration;
  *
  * @author lim_z
  */
-public enum RoomStatusEnum {
-    ACTIVE,
-    DISABLED,
-    AVAILABLE,
-    NOT_AVAILABLE,
-    RESERVED
+public enum ReservationStatusEnum {
+    CONFIRMED,
+    CHECKED_IN,
+    CHECKED_OUT
 }

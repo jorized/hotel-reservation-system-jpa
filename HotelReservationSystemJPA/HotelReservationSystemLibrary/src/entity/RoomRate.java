@@ -30,30 +30,26 @@ public class RoomRate implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomRateId;
-    
+
     @Column(length = 50, nullable = false)
     private String rateName;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomRateTypeEnum rateType;
-    
+
     @Column(precision = 7, scale = 2, nullable = false)
     private BigDecimal ratePerNight;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomRateStatusEnum roomRateStatus;
-    
+
     //All of these are optional because there will either be promotional or peak
     private Date promotionStartDate;
     private Date promotionEndDate;
     private Date peakStartDate;
     private Date peakEndDate;
-    
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    private Reservation reservation;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -63,7 +59,8 @@ public class RoomRate implements Serializable {
     }
 
     public RoomRate(String rateName, RoomRateTypeEnum rateType, BigDecimal ratePerNight,
-            Date promotionStartDate, Date promotionEndDate, Date peakStartDate, Date peakEndDate) {
+            Date promotionStartDate, Date promotionEndDate, Date peakStartDate, Date peakEndDate, RoomType roomType) {
+        this();
         this.rateName = rateName;
         this.rateType = rateType;
         this.ratePerNight = ratePerNight;
@@ -71,15 +68,8 @@ public class RoomRate implements Serializable {
         this.promotionStartDate = promotionStartDate;
         this.promotionEndDate = promotionEndDate;
         this.peakStartDate = peakStartDate;
-        this.peakEndDate = peakEndDate;        
-    }
-    
-    public Reservation getReservation() {
-        return reservation;
-    }
-
-    public void setReservation(Reservation reservation) {
-        this.reservation = reservation;
+        this.peakEndDate = peakEndDate;
+        this.roomType = roomType;
     }
 
     public RoomType getRoomType() {
@@ -89,7 +79,6 @@ public class RoomRate implements Serializable {
     public void setRoomType(RoomType roomType) {
         this.roomType = roomType;
     }
-    
 
     public String getRateName() {
         return rateName;

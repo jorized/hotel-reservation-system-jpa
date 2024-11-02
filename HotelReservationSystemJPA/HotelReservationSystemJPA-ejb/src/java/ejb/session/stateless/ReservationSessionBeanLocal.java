@@ -4,9 +4,14 @@
  */
 package ejb.session.stateless;
 
+import entity.Guest;
 import entity.Reservation;
+import entity.Room;
+import entity.RoomRate;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.UpdateRoomException;
 
 /**
  *
@@ -18,5 +23,15 @@ public interface ReservationSessionBeanLocal {
     public Reservation createNewReservation(Reservation newReservation);
 
     public List<Reservation> retrieveAllReservations();
+
+    public List<RoomRate> retrieveAllReservationsByRoomRate(RoomRate roomRate);
+
+    public boolean isSameDayCheckIn(Date checkInDate, Date currentDate);
+
+    public void allocateRoomImmediately(Reservation reservation, int noOfRooms, List<Room> availableRooms) throws UpdateRoomException;
+
+    public Reservation getReservationByReservationId(Long reservationId);
+    
+    public List<Reservation> retrieveAllReservationsByGuest(Guest guest);
     
 }

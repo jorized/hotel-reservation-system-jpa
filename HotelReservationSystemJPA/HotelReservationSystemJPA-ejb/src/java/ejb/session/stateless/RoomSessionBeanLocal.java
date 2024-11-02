@@ -8,6 +8,9 @@ import entity.Room;
 import entity.RoomType;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.InvalidRoomNumException;
+import util.exception.RoomAlreadyExistException;
+import util.exception.UpdateRoomException;
 
 /**
  *
@@ -16,8 +19,20 @@ import javax.ejb.Local;
 @Local
 public interface RoomSessionBeanLocal {
 
-    public Room createNewRoom(Room newRoom);
+    public Room createNewRoom(Room newRoom) throws RoomAlreadyExistException;
 
     public List<Room> retrieveAllRoomsByRoomType(RoomType roomType);
+    
+    public Room retrieveRoomByRoomNum(String roomNum) throws InvalidRoomNumException;
+    
+    public Room updateRoom(Room updatedRoom) throws UpdateRoomException;
+    
+    public String deleteRoom(Room existingRoom);
+    
+    public List<Room> retrieveAllRooms();
+    
+    public List<Room> retrieveAllAvailableRooms();
+        
+    public boolean checkRoomNum(String roomNum);
     
 }

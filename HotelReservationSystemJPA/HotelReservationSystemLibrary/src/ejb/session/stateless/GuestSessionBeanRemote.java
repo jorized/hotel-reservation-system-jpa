@@ -6,6 +6,9 @@ package ejb.session.stateless;
 
 import entity.Guest;
 import javax.ejb.Remote;
+import util.exception.InvalidGuestEmailException;
+import util.exception.InvalidGuestPassportNumberException;
+import util.exception.InvalidGuestPhoneNumberException;
 
 /**
  *
@@ -15,4 +18,10 @@ import javax.ejb.Remote;
 public interface GuestSessionBeanRemote {
     
     public Guest createNewGuest(Guest newGuest);
+    
+    public Guest retrieveGuestByEmail(String email) throws InvalidGuestEmailException;
+    
+    public Guest retrieveGuestByPhoneNumber(String phoneNumber) throws InvalidGuestPhoneNumberException;
+    
+    public Guest retrieveGuestByPassportNumber(String passportNumber) throws InvalidGuestPassportNumberException;
 }
