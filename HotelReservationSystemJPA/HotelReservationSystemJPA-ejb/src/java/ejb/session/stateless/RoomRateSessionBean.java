@@ -137,33 +137,29 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         for (RoomRate roomRate : roomRates) {
             if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
 
-                // Published Rate (for walk-in reservations)
+                // Online reservations: Promotion -> Peak -> Normal priority
+                if (reservationTypeEnum == ReservationTypeEnum.ONLINE) {
+                    if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
+                            && isWithinPeriod(date, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
+                        return roomRate.getRatePerNight(); // Highest priority
+                    }
+                    if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
+                            && isWithinPeriod(date, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
+                        rate = roomRate.getRatePerNight(); // Next priority if no promotion is available
+                    }
+                    if (roomRate.getRateType() == RoomRateTypeEnum.NORMAL && rate == null) {
+                        rate = roomRate.getRatePerNight(); // Default rate if neither promotion nor peak is available
+                    }
+                }
+
+                // Walk-in reservations: Published rate only
                 if (reservationTypeEnum == ReservationTypeEnum.WALKIN
                         && roomRate.getRateType() == RoomRateTypeEnum.PUBLISHED) {
-                    rate = roomRate.getRatePerNight();
-                    return rate;
-                }
-                //1st-priority
-                if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
-                        && isWithinPeriod(date, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
-                    rate = roomRate.getRatePerNight();
-                    return rate;
-
-                }
-                //2nd-priority
-                if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
-                        && isWithinPeriod(date, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
-                    rate = roomRate.getRatePerNight();
-                    return rate;
-                }
-                // Normal Rate (for walk-in reservations)
-                if (reservationTypeEnum == ReservationTypeEnum.ONLINE
-                        && roomRate.getRateType() == RoomRateTypeEnum.NORMAL) {
-                    rate = roomRate.getRatePerNight();
-                    return rate;
+                    return roomRate.getRatePerNight();
                 }
             }
         }
+
         return rate;
     }
 

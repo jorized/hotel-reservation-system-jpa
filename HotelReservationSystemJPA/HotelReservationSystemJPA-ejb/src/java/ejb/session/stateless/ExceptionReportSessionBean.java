@@ -5,9 +5,11 @@
 package ejb.session.stateless;
 
 import entity.ExceptionReport;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 /**
  *
@@ -29,6 +31,13 @@ public class ExceptionReportSessionBean implements ExceptionReportSessionBeanRem
         em.flush();
 
         return exceptionReport;
+    }
+    
+    @Override
+    public List<ExceptionReport> retrieveAllExceptionReports() {
+        Query query = em.createQuery("SELECT er FROM ExceptionReport er");
+	
+	return query.getResultList();
     }
     
 }

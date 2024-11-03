@@ -5,6 +5,7 @@
 package ejb.session.stateless;
 
 import entity.ExceptionReport;
+import java.util.List;
 import javax.ejb.Remote;
 
 /**
@@ -15,5 +16,7 @@ import javax.ejb.Remote;
 public interface ExceptionReportSessionBeanRemote {
     
     public ExceptionReport createNewExceptionReport(ExceptionReport exceptionReport);
+    
+    public List<ExceptionReport> retrieveAllExceptionReports();
     
 }

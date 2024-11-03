@@ -9,6 +9,7 @@ import entity.RoomType;
 import java.util.List;
 import javax.ejb.Remote;
 import util.exception.InvalidRoomNumException;
+import util.exception.InvalidRoomTypeTierNumberException;
 import util.exception.RoomAlreadyExistException;
 import util.exception.RoomInUseException;
 import util.exception.UpdateRoomException;
@@ -32,9 +33,14 @@ public interface RoomSessionBeanRemote {
     
     public List<Room> retrieveAllRooms();
     
-    public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
+    public List<Room> retrieveAllReservedRoomsByRoomType(RoomType roomType);
+    
     public List<Room> retrieveAllAvailableRooms();
 
     public boolean checkRoomNum(String roomNum);
+    
+    public void allocateRooms() throws InvalidRoomTypeTierNumberException;
+    
+    public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
 
 }

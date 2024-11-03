@@ -8,9 +8,11 @@ import entity.Guest;
 import entity.Reservation;
 import entity.Room;
 import entity.RoomRate;
+import entity.RoomType;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.InvalidReservationIdException;
 import util.exception.UpdateRoomException;
 
 /**
@@ -28,10 +30,12 @@ public interface ReservationSessionBeanLocal {
 
     public boolean isSameDayCheckIn(Date checkInDate, Date currentDate);
 
-    public void allocateRoomImmediately(Reservation reservation, int noOfRooms, List<Room> availableRooms) throws UpdateRoomException;
-
-    public Reservation getReservationByReservationId(Long reservationId);
+    public Reservation getReservationByReservationId(Long reservationId) throws InvalidReservationIdException;
     
     public List<Reservation> retrieveAllReservationsByGuest(Guest guest);
+
+    public Reservation updateReservation(Reservation updatedReservation) throws InvalidReservationIdException;
+
+    
     
 }

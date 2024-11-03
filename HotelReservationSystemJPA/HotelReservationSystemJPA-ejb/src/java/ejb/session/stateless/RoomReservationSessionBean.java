@@ -4,7 +4,9 @@
  */
 package ejb.session.stateless;
 
+import entity.Reservation;
 import entity.RoomReservation;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -26,6 +28,13 @@ public class RoomReservationSessionBean implements RoomReservationSessionBeanRem
         em.flush();
 
         return newRoomReservation;
+    }
+    
+    @Override
+    public List<RoomReservation> retrieveRoomReservationsByReservation(Reservation reservation) {
+        return em.createQuery("SELECT rr FROM RoomReservation rr WHERE rr.reservation.reservationId = :reservationId", RoomReservation.class)
+                .setParameter("reservationId", reservation.getReservationId())
+                .getResultList();
     }
 
 }

@@ -170,9 +170,7 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
         } else {
             throw new RoomTypeInUseException("Room type is currently in use. Unable to delete.");
         }        
-        }
-
-    }
+    }    
 
     private void shiftTierNumberUpForCreate(Integer fromTier) {
         List<RoomType> affectedRoomTypes = em.createQuery(

@@ -4,7 +4,9 @@
  */
 package ejb.session.stateless;
 
+import entity.Reservation;
 import entity.RoomReservation;
+import java.util.List;
 import javax.ejb.Local;
 
 /**
@@ -15,5 +17,7 @@ import javax.ejb.Local;
 public interface RoomReservationSessionBeanLocal {
 
     public RoomReservation createNewRoomReservation(RoomReservation newRoomReservation);
+
+    public List<RoomReservation> retrieveRoomReservationsByReservation(Reservation reservation);
     
 }

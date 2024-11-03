@@ -16,7 +16,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
 import util.enumeration.ReservationStatusEnum;
 import util.enumeration.ReservationTypeEnum;
 
@@ -48,14 +47,9 @@ public class Reservation implements Serializable {
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal reservationAmount;
     
-    @ManyToOne(optional = false) // reservation cannot exist without being linked to User
-    @JoinColumn(nullable = false)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatusEnum reservationStatusEnum;
-    
-    @Column(nullable = false)
-    private Date createdAt;
     
     @ManyToOne // can be null
     @JoinColumn
@@ -76,7 +70,6 @@ public class Reservation implements Serializable {
     public Reservation() {
     }
 
-    public Reservation(Date checkInDate, Date checkOutDate, Integer numOfRooms, ReservationTypeEnum reservationType, BigDecimal reservationAmount, Guest guest, RoomType roomType, RoomRate roomRate) {
     public Reservation(Date checkInDate, Date checkOutDate, Integer numOfRooms, ReservationTypeEnum reservationType, BigDecimal reservationAmount, ReservationStatusEnum reservationStatusEnum, Date createdAt, Guest guest, RoomType roomType, Partner partner) {
         this();
         this.checkInDate = checkInDate;
@@ -85,7 +78,6 @@ public class Reservation implements Serializable {
         this.reservationType = reservationType;
         this.reservationStatusEnum = reservationStatusEnum;
         this.reservationAmount = reservationAmount;
-        this.createdAt = createdAt;
         this.guest = guest;
         this.roomType = roomType;
         this.partner = partner;
@@ -112,22 +104,7 @@ public class Reservation implements Serializable {
     public void setNumOfRooms(Integer numOfRooms) {
         this.numOfRooms = numOfRooms;
     }        
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
     
-    
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = new Date();
-    }    
-
     public Guest getGuest() {
         return guest;
     }

@@ -13,5 +13,6 @@ public enum RoomStatusEnum {
     DISABLED,
     AVAILABLE,
     NOT_AVAILABLE,
-    RESERVED
+    RESERVED,
+    ALLOCATED
 }
