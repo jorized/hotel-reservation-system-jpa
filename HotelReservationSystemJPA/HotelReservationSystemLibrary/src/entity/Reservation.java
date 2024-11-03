@@ -16,6 +16,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import util.enumeration.ReservationStatusEnum;
 import util.enumeration.ReservationTypeEnum;
 
 /**
@@ -48,11 +50,20 @@ public class Reservation implements Serializable {
     
     @ManyToOne(optional = false) // reservation cannot exist without being linked to User
     @JoinColumn(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReservationStatusEnum reservationStatusEnum;
+    
+    @Column(nullable = false)
+    private Date createdAt;
+    
+    @ManyToOne // can be null
+    @JoinColumn
     private Guest guest;
     
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    private RoomRate roomRate;
+//    @ManyToOne(optional = false)
+//    @JoinColumn(nullable = false)
+//    private RoomRate roomRate;
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -66,16 +77,33 @@ public class Reservation implements Serializable {
     }
 
     public Reservation(Date checkInDate, Date checkOutDate, Integer numOfRooms, ReservationTypeEnum reservationType, BigDecimal reservationAmount, Guest guest, RoomType roomType, RoomRate roomRate) {
+    public Reservation(Date checkInDate, Date checkOutDate, Integer numOfRooms, ReservationTypeEnum reservationType, BigDecimal reservationAmount, ReservationStatusEnum reservationStatusEnum, Date createdAt, Guest guest, RoomType roomType, Partner partner) {
         this();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
         this.numOfRooms = numOfRooms;
         this.reservationType = reservationType;
+        this.reservationStatusEnum = reservationStatusEnum;
         this.reservationAmount = reservationAmount;
+        this.createdAt = createdAt;
         this.guest = guest;
-        this.roomType = roomType; 
-        this.roomRate = roomRate;
+        this.roomType = roomType;
+        this.partner = partner;
     }
+    
+    
+    //Will set the current datetime right before persisting. 
+    //Not wise to store it in constructor because createdAt would be initialized every time a Reservation object is instantiated, 
+    //Regardless of whether it will be saved or not.
+
+    public ReservationStatusEnum getReservationStatusEnum() {
+        return reservationStatusEnum;
+    }
+
+    public void setReservationStatusEnum(ReservationStatusEnum reservationStatusEnum) {
+        this.reservationStatusEnum = reservationStatusEnum;
+    }
+    
 
     public Integer getNumOfRooms() {
         return numOfRooms;
@@ -84,6 +112,21 @@ public class Reservation implements Serializable {
     public void setNumOfRooms(Integer numOfRooms) {
         this.numOfRooms = numOfRooms;
     }        
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Date();
+    }    
 
     public Guest getGuest() {
         return guest;
@@ -91,14 +134,6 @@ public class Reservation implements Serializable {
 
     public void setGuest(Guest guest) {
         this.guest = guest;
-    }
-
-    public RoomRate getRoomRate() {
-        return roomRate;
-    }
-
-    public void setRoomRate(RoomRate roomRate) {
-        this.roomRate = roomRate;
     }
 
     public RoomType getRoomType() {

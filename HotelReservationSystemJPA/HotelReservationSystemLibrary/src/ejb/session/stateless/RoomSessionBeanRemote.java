@@ -33,5 +33,8 @@ public interface RoomSessionBeanRemote {
     public List<Room> retrieveAllRooms();
     
     public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
+    public List<Room> retrieveAllAvailableRooms();
+
+    public boolean checkRoomNum(String roomNum);
 
 }
