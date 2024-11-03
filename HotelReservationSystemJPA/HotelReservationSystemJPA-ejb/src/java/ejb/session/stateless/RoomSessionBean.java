@@ -167,7 +167,7 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     public void allocateRooms() throws InvalidRoomTypeTierNumberException {
 
         List<Reservation> reservations = em.createQuery(
-            "SELECT r FROM Reservation r WHERE r.checkInDate = CURRENT_DATE AND r.roomReservations IS EMPTY",
+            "SELECT r FROM Reservation r WHERE r.roomReservations IS EMPTY",
             Reservation.class
         ).getResultList();
 
@@ -183,7 +183,7 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
                     // Allocate available rooms in current room type
                     Room room = listOfAvailRooms.get(0);
                     RoomReservation newRoomReservation = new RoomReservation(room, reservation);
-                    room.setRoomStatus(RoomStatusEnum.ACTIVE); // Update room status
+                    room.setRoomStatus(RoomStatusEnum.RESERVED); // Update room status
                     roomReservationSessionBeanLocal.createNewRoomReservation(newRoomReservation);
                     roomsAllocated++;
                 } else {
@@ -196,32 +196,30 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
                         if (!upgradedAvailRooms.isEmpty()) {
                             Room upgradedRoom = upgradedAvailRooms.get(0);
                             RoomReservation newRoomReservation = new RoomReservation(upgradedRoom, reservation);
-                            upgradedRoom.setRoomStatus(RoomStatusEnum.ACTIVE);
+                            upgradedRoom.setRoomStatus(RoomStatusEnum.RESERVED);
                             roomReservationSessionBeanLocal.createNewRoomReservation(newRoomReservation);
                             roomsAllocated++;
 
-                            // Persist a type 1 exception report for upgrade
                             ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE1, newRoomReservation);
                             exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
                         } else {
-                            // Persist reservation with type 2 exception if no availability in upgraded tier
+
                             RoomReservation emptyRoomReservation = new RoomReservation(null, reservation);
                             roomReservationSessionBeanLocal.createNewRoomReservation(emptyRoomReservation);
 
                             // Persist a type 2 exception report
                             ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE2, emptyRoomReservation);
                             exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
-                            break; // Stop allocation for this reservation since upgrade was not possible
+                            break;
                         }
                     } else {
-                        // No higher tier room type available, persist a type 2 exception report
+
                         RoomReservation emptyRoomReservation = new RoomReservation(null, reservation);
                         roomReservationSessionBeanLocal.createNewRoomReservation(emptyRoomReservation);
 
-                        // Persist a type 2 exception report
                         ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE2, emptyRoomReservation);
                         exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
-                        break; // Stop allocation for this reservation
+                        break; 
                     }
                 }
             }

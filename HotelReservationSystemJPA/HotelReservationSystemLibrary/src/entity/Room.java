@@ -52,7 +52,7 @@ public class Room implements Serializable {
 
     public Room(String floorNum, String sequenceNum, RoomType roomType) {
         this();
-        this.roomStatus = RoomStatusEnum.ACTIVE;
+        this.roomStatus = RoomStatusEnum.AVAILABLE;
         this.floorNum = floorNum;
         this.sequenceNum = sequenceNum;
         this.roomNum = floorNum + sequenceNum;
