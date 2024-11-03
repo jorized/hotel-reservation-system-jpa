@@ -16,7 +16,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
 import util.enumeration.ReservationStatusEnum;
 import util.enumeration.ReservationTypeEnum;
 
@@ -52,9 +51,6 @@ public class Reservation implements Serializable {
     @Column(nullable = false)
     private ReservationStatusEnum reservationStatusEnum;
     
-    @Column(nullable = false)
-    private Date createdAt;
-    
     @ManyToOne // can be null
     @JoinColumn
     private Guest guest;
@@ -82,7 +78,6 @@ public class Reservation implements Serializable {
         this.reservationType = reservationType;
         this.reservationStatusEnum = reservationStatusEnum;
         this.reservationAmount = reservationAmount;
-        this.createdAt = createdAt;
         this.guest = guest;
         this.roomType = roomType;
         this.partner = partner;
@@ -108,22 +103,8 @@ public class Reservation implements Serializable {
 
     public void setNumOfRooms(Integer numOfRooms) {
         this.numOfRooms = numOfRooms;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
+    }        
     
-    
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = new Date();
-    }    
-
     public Guest getGuest() {
         return guest;
     }

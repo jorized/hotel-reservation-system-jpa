@@ -4,7 +4,8 @@
  */
 package ejb.session.stateless;
 
-import entity.ExceptionReport;
+import entity.Reservation;
+import entity.RoomReservation;
 import java.util.List;
 import javax.ejb.Local;
 
@@ -13,10 +14,10 @@ import javax.ejb.Local;
  * @author JorJo
  */
 @Local
-public interface ExceptionReportSessionBeanLocal {
+public interface RoomReservationSessionBeanLocal {
 
-    public ExceptionReport createNewExceptionReport(ExceptionReport exceptionReport);
+    public RoomReservation createNewRoomReservation(RoomReservation newRoomReservation);
 
-    public List<ExceptionReport> retrieveAllExceptionReports();
+    public List<RoomReservation> retrieveRoomReservationsByReservation(Reservation reservation);
     
 }

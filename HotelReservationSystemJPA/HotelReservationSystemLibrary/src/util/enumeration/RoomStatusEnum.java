@@ -9,9 +9,10 @@ package util.enumeration;
  * @author lim_z
  */
 public enum RoomStatusEnum {
-    ACTIVE,
+    OCCUPIED,
     DISABLED,
     AVAILABLE,
     NOT_AVAILABLE,
-    RESERVED
+    RESERVED,
+    ALLOCATED
 }

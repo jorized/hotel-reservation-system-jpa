@@ -272,8 +272,6 @@ public class MainApp {
                         String responseString = scanner.nextLine().trim();
                         if (responseString.toLowerCase().equals("y")) {
                             reserveRooms(checkInDate, checkOutDate, noOfRooms, availableRooms);
-                            System.out.println("Returning to the main menu...\n");
-                            break;
                         } else if (responseString.toLowerCase().equals("n")) {
                             System.out.println("Reservation cancelled.\n");
                         } else {
@@ -402,7 +400,7 @@ public class MainApp {
                     // Move to the next day
                     calendar.add(Calendar.DATE, 1);
                 }
-
+                
                 System.out.println("Total reservation amount for Room Type: " + roomType.getTypeName()
                         + " with " + roomsToBookFromThisType + " room(s) and total amount: $" + totalAmountForType);
 
@@ -420,8 +418,8 @@ public class MainApp {
                         null
                 );
 
-                reservationSessionBeanRemote.createNewReservation(reservation);
-                // System.out.println("Reservation created successfully for Room Type: " + roomType.getTypeName());
+                Reservation newReservation = reservationSessionBeanRemote.createNewReservation(reservation);
+                System.out.println("Reservation with Reservation ID : " +  newReservation.getReservationId() + " created successfully for Room Type '" + roomType.getTypeName() + "'");
 
                 //mark the selected rooms as "reserved"
                 for (int i = 0; i < roomsToBookFromThisType && i < roomsOfThisType.size(); i++) {
@@ -435,7 +433,7 @@ public class MainApp {
                 //check if allocation is same-day check-in after 2 am
                 Calendar currentCal = Calendar.getInstance();
                 if (reservationSessionBeanRemote.isSameDayCheckIn(checkInDate, currentCal.getTime()) && currentCal.get(Calendar.HOUR_OF_DAY) >= 2) {
-                    reservationSessionBeanRemote.allocateRoomImmediately(reservation, roomsToBookFromThisType, roomsOfThisType);
+                    roomSessionBeanRemote.allocateRooms();
                 }
             }
 
@@ -445,7 +443,6 @@ public class MainApp {
 
         } catch (Exception ex) {
             System.out.println("Error reserving hotel room: " + ex.getMessage());
-            ex.printStackTrace();
         }
     }
 

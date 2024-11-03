@@ -24,8 +24,8 @@ public class RoomReservation implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomReservationId;    
     
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
+    @ManyToOne
+    @JoinColumn
     private Room room;
     
     @ManyToOne(optional = false)
@@ -33,6 +33,11 @@ public class RoomReservation implements Serializable {
     private Reservation reservation;        
 
     public RoomReservation() {
+    }        
+
+    public RoomReservation(Room room, Reservation reservation) {
+        this.room = room;
+        this.reservation = reservation;
     }        
 
     public Room getRoom() {

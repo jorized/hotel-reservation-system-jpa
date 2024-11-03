@@ -9,6 +9,6 @@ package util.enumeration;
  * @author lim_z
  */
 public enum ExceptionTypeReportEnum {
-    TYPE1,
-    TYPE2
+    TYPE_1,
+    TYPE_2
 }

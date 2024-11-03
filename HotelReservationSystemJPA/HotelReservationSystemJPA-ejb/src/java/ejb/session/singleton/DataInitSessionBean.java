@@ -228,10 +228,6 @@ public class DataInitSessionBean {
             }
         }
 
-        //Number of prevailing nights * rate per night
-//        long diffInMillis = endDate.getTime() - startDate.getTime();
-//        long numOfNights = diffInMillis / (1000 * 60 * 60 * 24);
-//        BigDecimal reservationAmount = testNormalRoomRateForDeluxe.getRatePerNight()
         Partner testPartner = new Partner("jojo", "password", PartnerAccessRightEnum.EMPLOYEE);
         if (em.createQuery("SELECT COUNT(p) FROM Partner p", Long.class).getSingleResult() == 0) {
             try {
@@ -242,10 +238,10 @@ public class DataInitSessionBean {
             }
         }
 
-        Reservation testReservation = new Reservation(startDate, endDate, 3, ReservationTypeEnum.ONLINE, testdeluxeNormalRate.getRatePerNight(), ReservationStatusEnum.CONFIRMED, new Date(), testGuest, testDeluxeRoomType, testPartner);
-        if (em.createQuery("SELECT COUNT(r) FROM Reservation r", Long.class).getSingleResult() == 0) {
-            reservationSessionBeanLocal.createNewReservation(testReservation);
-        }
+        //Reservation testReservation = new Reservation(startDate, endDate, 3, ReservationTypeEnum.ONLINE, testdeluxeNormalRate.getRatePerNight(), ReservationStatusEnum.CONFIRMED, new Date(), testGuest, testDeluxeRoomType, testPartner);
+        //if (em.createQuery("SELECT COUNT(r) FROM Reservation r", Long.class).getSingleResult() == 0) {
+        //    reservationSessionBeanLocal.createNewReservation(testReservation);
+        //}
 
     }
 

@@ -8,15 +8,19 @@ import entity.Guest;
 import entity.Reservation;
 import entity.Room;
 import entity.RoomRate;
+import entity.RoomType;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import util.enumeration.ReservationStatusEnum;
 import util.enumeration.RoomStatusEnum;
+import util.exception.InvalidReservationIdException;
 import util.exception.UpdateRoomException;
 
 /**
@@ -43,6 +47,7 @@ public class ReservationSessionBean implements ReservationSessionBeanRemote, Res
 
         return newReservation;
     }
+    
 
     @Override
     public List<Reservation> retrieveAllReservations() {
@@ -70,27 +75,30 @@ public class ReservationSessionBean implements ReservationSessionBeanRemote, Res
         return checkInCal.get(Calendar.YEAR) == currentCal.get(Calendar.YEAR)
                 && checkInCal.get(Calendar.DAY_OF_YEAR) == currentCal.get(Calendar.DAY_OF_YEAR);
     }
-
+    
     @Override
-    public void allocateRoomImmediately(Reservation reservation, int noOfRooms, List<Room> availableRooms) throws UpdateRoomException {
-        int roomsAllocated = 0;
-        for (Room room : availableRooms) {
-            if (roomsAllocated >= noOfRooms) {
-                break;
-            }
-            room.setRoomStatus(RoomStatusEnum.NOT_AVAILABLE);
-            roomSessionBeanLocal.updateRoom(room);
-            roomsAllocated++;
+    public Reservation getReservationByReservationId(Long reservationId) throws InvalidReservationIdException {
+        try {
+            return em.createQuery("SELECT r FROM Reservation r WHERE r.reservationId = :reservationId", Reservation.class)
+                .setParameter("reservationId", reservationId)
+                .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidReservationIdException("Invalid reservation ID");
         }
-        System.out.println("Rooms allocated immediately for reservation ID: " + reservation.getReservationId());
+
     }
     
     @Override
-    public Reservation getReservationByReservationId(Long reservationId) {
-        return em.createQuery("SELECT r FROM Reservation r WHERE r.reservationId = :reservationId", Reservation.class)
-                 .setParameter("reservationId", reservationId)
-                 .getSingleResult();
+    public Reservation updateReservation(Reservation updatedReservation) throws InvalidReservationIdException {
+        try {
+
+            return em.merge(updatedReservation);
+
+        } catch (Exception ex) {
+            throw new InvalidReservationIdException("Unable to update reservation: " + ex.getMessage());
+        }
     }
+
 
     @Override
     public List<Reservation> retrieveAllReservationsByGuest(Guest guest) {
@@ -98,5 +106,8 @@ public class ReservationSessionBean implements ReservationSessionBeanRemote, Res
                  .setParameter("guest", guest)
                  .getResultList();
     }
+    
+
+    
 
 }

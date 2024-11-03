@@ -27,10 +27,7 @@ public class ExceptionReport implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reportId;
-    
-    @Column(nullable = false)
-    private Date createdAt;
+    private Long reportId;    
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,8 +40,7 @@ public class ExceptionReport implements Serializable {
     public ExceptionReport() {
     }
 
-    public ExceptionReport(Date createdAt, ExceptionTypeReportEnum exceptionTypeReport, RoomReservation roomReservation) {
-        this.createdAt = createdAt;
+    public ExceptionReport(ExceptionTypeReportEnum exceptionTypeReport, RoomReservation roomReservation) {
         this.exceptionTypeReport = exceptionTypeReport;
         this.roomReservation = roomReservation;
     }
@@ -56,14 +52,6 @@ public class ExceptionReport implements Serializable {
     public void setRoomReservation(RoomReservation roomReservation) {
         this.roomReservation = roomReservation;
     }        
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
 
     public ExceptionTypeReportEnum getExceptionTypeReport() {
         return exceptionTypeReport;

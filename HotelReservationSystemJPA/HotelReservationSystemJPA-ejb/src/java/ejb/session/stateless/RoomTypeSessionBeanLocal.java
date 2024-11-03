@@ -35,6 +35,8 @@ public interface RoomTypeSessionBeanLocal {
     public RoomType updateRoomType(RoomType updatedRoomType) throws InvalidRoomTypeTierNumberException, InvalidRoomTypeCapacityException;
 
     public void deleteRoomType(RoomType existingRoomType) throws RoomTypeInUseException;
+
+    public RoomType retrieveRoomTypeByTierNumber(Integer tierNumber) throws InvalidRoomTypeTierNumberException;
     
     public BigDecimal getLowestTierDailyRate(Date date, ReservationTypeEnum reservationType, List<Room> rooms) throws InvalidRoomTypeException, InvalidRoomException;
 

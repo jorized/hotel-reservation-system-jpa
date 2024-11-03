@@ -4,7 +4,8 @@
  */
 package ejb.session.stateless;
 
-import entity.ExceptionReport;
+import entity.Reservation;
+import entity.RoomReservation;
 import java.util.List;
 import javax.ejb.Remote;
 
@@ -13,10 +14,10 @@ import javax.ejb.Remote;
  * @author JorJo
  */
 @Remote
-public interface ExceptionReportSessionBeanRemote {
+public interface RoomReservationSessionBeanRemote {
     
-    public ExceptionReport createNewExceptionReport(ExceptionReport exceptionReport);
+    public RoomReservation createNewRoomReservation(RoomReservation newRoomReservation);
     
-    public List<ExceptionReport> retrieveAllExceptionReports();
+    public List<RoomReservation> retrieveRoomReservationsByReservation(Reservation reservation);
     
 }
