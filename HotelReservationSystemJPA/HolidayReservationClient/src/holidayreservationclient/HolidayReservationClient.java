@@ -4,6 +4,13 @@
  */
 package holidayreservationclient;
 
+import java.util.List;
+import ws.partner.PartnerWebService_Service;
+import ws.reservation.ReservationWebService_Service;
+import ws.room.RoomWebService_Service;
+import ws.roomrate.RoomRateWebService_Service;
+import ws.roomtype.RoomType;
+import ws.roomtype.RoomTypeWebService_Service;
 /**
  *
  * @author JorJo
@@ -14,7 +21,17 @@ public class HolidayReservationClient {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        
+        //Initialising all the web services we need
+        ReservationWebService_Service reservationService = new ReservationWebService_Service();
+        RoomTypeWebService_Service roomTypeService = new RoomTypeWebService_Service();
+        PartnerWebService_Service partnerService = new PartnerWebService_Service();
+        RoomWebService_Service roomService = new RoomWebService_Service();
+        RoomRateWebService_Service roomRateService = new RoomRateWebService_Service();
+        
+        HolidayApp holidayApp = new HolidayApp(reservationService, roomTypeService, partnerService, roomService, roomRateService);
+        holidayApp.runApp();
+        
     }
     
 }
