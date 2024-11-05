@@ -53,4 +53,17 @@ public class PartnerSessionBean implements PartnerSessionBeanRemote, PartnerSess
 	
 	return query.getResultList();
     }
+    
+    
+    @Override
+    public Partner partnerLogin(String username, String password) throws InvalidLoginCredentialsException {
+        try {
+            return em.createQuery("SELECT p FROM Partner p WHERE p.username = :username AND p.password = :password", Partner.class)
+                     .setParameter("username", username)
+                     .setParameter("password", password)
+                     .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidLoginCredentialsException("Invalid login credentials.");
+        }
+    }
 }
