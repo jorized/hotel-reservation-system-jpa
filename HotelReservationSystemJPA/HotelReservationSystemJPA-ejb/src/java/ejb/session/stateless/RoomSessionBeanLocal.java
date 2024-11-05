@@ -6,6 +6,7 @@ package ejb.session.stateless;
 
 import entity.Room;
 import entity.RoomType;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
 import util.exception.InvalidRoomNumException;
@@ -41,5 +42,7 @@ public interface RoomSessionBeanLocal {
     public void allocateRooms() throws InvalidRoomTypeTierNumberException;
 
     public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
+
+    public void scheduleRoomAllocation(Date scheduledDate);
     
 }

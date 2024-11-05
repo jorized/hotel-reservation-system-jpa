@@ -4,6 +4,7 @@
  */
 package hotelmanagementclient;
 
+import ejb.session.stateless.CustomerSessionBeanRemote;
 import ejb.session.stateless.EmployeeSessionBeanRemote;
 import ejb.session.stateless.ExceptionReportSessionBeanRemote;
 import ejb.session.stateless.GuestSessionBeanRemote;
@@ -13,6 +14,7 @@ import ejb.session.stateless.RoomRateSessionBeanRemote;
 import ejb.session.stateless.RoomReservationSessionBeanRemote;
 import ejb.session.stateless.RoomSessionBeanRemote;
 import ejb.session.stateless.RoomTypeSessionBeanRemote;
+import entity.Customer;
 import entity.Employee;
 import entity.ExceptionReport;
 import entity.Guest;
@@ -26,7 +28,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Scanner;
 import util.enumeration.EmployeeAccessRightEnum;
-import util.enumeration.PartnerAccessRightEnum;
 import util.enumeration.RoomStatusEnum;
 import util.enumeration.RoomTypeStatusEnum;
 import util.enumeration.RoomRateTypeEnum;
@@ -44,6 +45,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.ejb.TimerConfig;
 import util.enumeration.ExceptionTypeReportEnum;
 import util.enumeration.ReservationStatusEnum;
 import util.enumeration.ReservationTypeEnum;
@@ -62,6 +64,7 @@ public class MainApp {
     private RoomRateSessionBeanRemote roomRateSessionBeanRemote;
     private ReservationSessionBeanRemote reservationSessionBeanRemote;
     private GuestSessionBeanRemote guestSessionBeanRemote;
+    private CustomerSessionBeanRemote customerSessionBeanRemote;
     private RoomReservationSessionBeanRemote roomReservationSessionBeanRemote;
 
     private Employee currentEmployee;
@@ -79,6 +82,7 @@ public class MainApp {
             RoomRateSessionBeanRemote roomRateSessionBeanRemote,
             ReservationSessionBeanRemote reservationSessionBeanRemote,
             GuestSessionBeanRemote guestSessionBeanRemote,
+            CustomerSessionBeanRemote customerSessionBeanRemote,
             RoomReservationSessionBeanRemote roomReservationSessionBeanRemote
     ) {
         this();
@@ -90,6 +94,7 @@ public class MainApp {
         this.roomRateSessionBeanRemote = roomRateSessionBeanRemote;
         this.reservationSessionBeanRemote = reservationSessionBeanRemote;
         this.guestSessionBeanRemote = guestSessionBeanRemote;
+        this.customerSessionBeanRemote = customerSessionBeanRemote;
         this.roomReservationSessionBeanRemote = roomReservationSessionBeanRemote;
     }
 
@@ -389,34 +394,13 @@ public class MainApp {
             System.out.print("Enter partner password: ");
             String password = scanner.nextLine().trim();
 
-            System.out.println("Select partner role: ");
-            PartnerAccessRightEnum[] roles = PartnerAccessRightEnum.values();
-            for (int i = 0; i < roles.length; i++) {
-                System.out.println((i + 1) + ") " + formatEnumString(roles[i].toString()));
-            }
-
-            int response = 0;
-            while (true) {
-                System.out.print("Enter your choice > ");
-                response = scanner.nextInt();
-
-                if (response >= 1 && response <= roles.length) {
-                    PartnerAccessRightEnum role = roles[response - 1];
-                    scanner.nextLine();
-
-                    if (username.length() > 0 && password.length() > 0) {
-                        Partner newPartner = new Partner(username, password, role);
-                        partnerSessionBeanRemote.createNewPartner(newPartner);
-                        System.out.println("Partner has successfully been created!\n");
-                    } else {
-                        throw new InvalidAccountCredentialsException("Invalid account credentials");
-                    }
-
-                    break;
-                } else {
-                    System.out.println("Invalid option. Please try again.\n");
-                }
-            }
+            if (username.length() > 0 && password.length() > 0) {
+                Partner newPartner = new Partner(username, password);
+                partnerSessionBeanRemote.createNewPartner(newPartner);
+                System.out.println("Partner has successfully been created!\n");
+            } else {
+                throw new InvalidAccountCredentialsException("Invalid account credentials");
+            }            
 
         } catch (Exception ex) {
             System.out.println("Error creating new employee: " + ex.getMessage() + "\n");
@@ -433,14 +417,13 @@ public class MainApp {
             if (partners.isEmpty()) {
                 System.out.println("No partners found.");
             } else {
-                System.out.printf("%-5s %-20s %-20s\n", "No.", "Username", "Role");
+                System.out.printf("%-5s %-20s\n", "No.", "Username");
                 int index = 1;
 
                 for (Partner partner : partners) {
-                    System.out.printf("%-5d %-20s %-20s\n",
+                    System.out.printf("%-5d %-20s\n",
                             index++,
-                            partner.getUsername(),
-                            formatEnumString(partner.getRole().toString()));
+                            partner.getUsername());
                 }
             }
             System.out.print("\n");
@@ -470,10 +453,11 @@ public class MainApp {
                 System.out.println("1: Manage room types");
                 System.out.println("2: Manage rooms");
                 System.out.println("3: View room allocation exception report");
-                System.out.println("4: Logout\n");
+                System.out.println("4: Trigger room allocation for a specific date");
+                System.out.println("5: Logout\n");
                 response = 0;
 
-                while (response < 1 || response > 4) {
+                while (response < 1 || response > 5) {
                     System.out.print("Enter your choice > ");
                     response = scanner.nextInt();
 
@@ -483,7 +467,9 @@ public class MainApp {
                         doManageRooms();
                     } else if (response == 3) {
                         doViewRoomAllocationExceptionReport();
-                    } else if (response == 4) { //Since before this is the first screen, can just do a break
+                    } else if (response == 4) {
+                        doTriggerRoomAllocationForSpecificDate();
+                    } else if (response == 5) { //Since before this is the first screen, can just do a break
                         System.out.println("Logging out...\n");
                         currentEmployee = null;
                         break;
@@ -1065,6 +1051,33 @@ public class MainApp {
             System.out.println("Error viewing room allocation exception reports: " + ex.getMessage() + "\n");
         }
     }
+    
+    private void doTriggerRoomAllocationForSpecificDate() {
+        try {
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.println("*** HoRS Management Client :: Trigger room allocation for specific date ***\n");
+
+            System.out.print("Enter date and time (yyyy-MM-dd HH:mm):");
+            String enteredDateTime = scanner.nextLine().trim();
+            
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            Date userDate = dateFormat.parse(enteredDateTime);
+            Date currentDate = new Date();
+
+            // Check if the entered date is in the past
+            if (userDate.before(currentDate)) {
+                System.out.println("The entered date and time are in the past. Please enter a future date and time.");
+            } else {
+                roomSessionBeanRemote.scheduleRoomAllocation(userDate);
+                System.out.println("Room allocation scheduled for: " + userDate);
+            }
+            
+            
+        } catch (Exception ex) {
+            System.out.println("Error triggering room allocation for specific date: " + ex.getMessage() + "\n");
+        }
+    }
 
     /**
      * ALL SALES MANAGER METHODS *
@@ -1609,27 +1622,12 @@ public class MainApp {
 
     private void reserveWalkInRoom(Date checkInDate, Date checkOutDate, int noOfRooms, List<Room> availableRooms) {
         try {
-            if (reservationSessionBeanRemote == null) {
-                System.out.println("Error: reservationSessionBeanRemote is not initialized.");
-                return;
-            }
-            if (roomRateSessionBeanRemote == null) {
-                System.out.println("Error: roomRateSessionBeanRemote is not initialized.");
-                return;
-            }
 
-            if (availableRooms == null || availableRooms.isEmpty()) {
-                System.out.println("Error: No available rooms provided.");
-                return;
-            }
-
-            Scanner scanner = new Scanner(System.in);
-
-            // Verify guest information
             Guest verifiedGuest = doGuestVerification();
-//            if (verifiedGuest == null) {
-//                System.out.println("Guest verification failed. Reservation process terminated.");
-//            }
+            if (verifiedGuest == null) {
+                System.out.println("Unable to verify guest");
+                return;
+            }
 
             // Group rooms by RoomType
             Map<RoomType, List<Room>> roomsByType = availableRooms.stream()
@@ -1706,6 +1704,7 @@ public class MainApp {
                     roomSessionBeanRemote.allocateRooms();
                 }
             }
+            System.out.println("Your reservation has successfully been made!");
 
             if (roomsToBook > 0) {
                 System.out.println("Warning: Could not fulfill the complete room request. Remaining rooms needed: " + roomsToBook);
@@ -1723,57 +1722,72 @@ public class MainApp {
 
             System.out.println("*** HoRS Management Client :: Check-in guest ***\n");
 
-            System.out.print("Enter reservation ID: ");
-            Long reservationId = scanner.nextLong();
-            scanner.nextLine();
-                    
-            Reservation reservation = reservationSessionBeanRemote.getReservationByReservationId(reservationId);
-
-            Date checkInDate = stripTime(reservation.getCheckInDate());
-            Date today = stripTime(new Date());
-            
-            if (checkInDate.equals(today)) {
-                // Check if the current time is before 2 pm
-                Calendar currentTime = Calendar.getInstance();
-                int currentHour = currentTime.get(Calendar.HOUR_OF_DAY); //Check with prof about house keeping and early/late checkin-out
-                
-                System.out.print("\nReservation found. Do you want to check-in? (Y/N): ");
-                String response = scanner.nextLine().trim();
-                if (response.toLowerCase().equals("y")) {
-                    List<RoomReservation> roomReservations = roomReservationSessionBeanRemote.retrieveRoomReservationsByReservation(reservation);
-                    List<RoomReservation> allocatedRooms = new ArrayList<>();
-
-                    for (RoomReservation roomReservation : roomReservations) {
-                        if (roomReservation.getRoom() != null && roomReservation.getRoom().getRoomStatus() == RoomStatusEnum.ALLOCATED) {
-                            allocatedRooms.add(roomReservation);
-                        }
-                    }
-
-                    if (!allocatedRooms.isEmpty()) {
-                        System.out.println("The following rooms are ready for check-in:");
-                        for (RoomReservation allocatedRoom : allocatedRooms) {
-                            System.out.println("Room Number: " + allocatedRoom.getRoom().getRoomNum());
-                            //Update the room's status to OCCUPIED
-                            allocatedRoom.getRoom().setRoomStatus(RoomStatusEnum.OCCUPIED);
-                            roomSessionBeanRemote.updateRoom(allocatedRoom.getRoom());
-                        }
-                        
-                        //Then update the reservation status to checked-in
-                        reservation.setReservationStatusEnum(ReservationStatusEnum.CHECKED_IN);
-                        reservationSessionBeanRemote.updateReservation(reservation);
-                        System.out.println("You have successfully checked in to this reservation.");
-                    } else { //If all rooms are not of the status 'ALLOCATED'
-                        System.out.println("Your rooms are not ready yet. Unable to check you in."); 
-                    }
-                } else if (response.toLowerCase().equals("n")) {
-                    System.out.println("\n");
-                } else {
-                    System.out.println("Invalid option. Please try again. \n");
-                }
-                
-            } else {
-                System.out.println("Unable to check-in. The reservation's check-in date is not today.");
+            Guest guest = doCheckInAndOutVerification();
+            if (guest == null) {
+                System.out.println("Unable to verify guest");
+                return;
             }
+            
+            // Retrieve all reservations for the guest and filter those with today's check-in date
+            List<Reservation> reservations = reservationSessionBeanRemote.retrieveAllReservationsByGuest(guest);
+            List<Reservation> todayReservations = new ArrayList<>();
+            Date today = stripTime(new Date());
+
+            for (Reservation reservation : reservations) {
+                if (stripTime(reservation.getCheckInDate()).equals(today)) {
+                    todayReservations.add(reservation);
+                }
+            }
+
+            // If there are any reservations for today, ask if they want to check in to all
+            if (!todayReservations.isEmpty()) {
+                System.out.println("\nYou have reservations scheduled for today:");
+                for (Reservation reservation : todayReservations) {
+                    System.out.println("- Reservation ID: " + reservation.getReservationId() + ", Room Type: " + reservation.getRoomType());
+                }
+
+                System.out.print("\nDo you want to check in to all available rooms for these reservations? (Y/N): ");
+                String response = scanner.nextLine().trim().toLowerCase();
+
+                if (response.equals("y")) {
+                    // Process each reservation for check-in
+                    for (Reservation reservation : todayReservations) {
+                        List<RoomReservation> roomReservations = roomReservationSessionBeanRemote.retrieveRoomReservationsByReservation(reservation);
+                        List<RoomReservation> allocatedRooms = new ArrayList<>();
+
+                        for (RoomReservation roomReservation : roomReservations) {
+                            if (roomReservation.getRoom() != null && roomReservation.getRoom().getRoomStatus() == RoomStatusEnum.ALLOCATED) {
+                                allocatedRooms.add(roomReservation);
+                            }
+                        }
+
+                        if (!allocatedRooms.isEmpty()) {
+                            System.out.println("Checking in to reservation ID: " + reservation.getReservationId());
+                            System.out.println("The following rooms are ready for check-in:");
+
+                            for (RoomReservation allocatedRoom : allocatedRooms) {
+                                System.out.println("Room Number: " + allocatedRoom.getRoom().getRoomNum());
+                                // Update the room's status to OCCUPIED
+                                allocatedRoom.getRoom().setRoomStatus(RoomStatusEnum.OCCUPIED);
+                                roomSessionBeanRemote.updateRoom(allocatedRoom.getRoom());
+                            }
+
+                            // Update reservation status to CHECKED_IN
+                            reservation.setReservationStatusEnum(ReservationStatusEnum.CHECKED_IN);
+                            reservationSessionBeanRemote.updateReservation(reservation);
+                            System.out.println("Successfully checked in to reservation ID: " + reservation.getReservationId() + "\n");
+                        } else {
+                            System.out.println("Reservation ID: " + reservation.getReservationId() + " - Your rooms are not ready yet. Unable to check you in.");
+                        }
+                    }
+                } else {
+                    System.out.println("Check-in canceled.\n");
+                }
+            } else {
+                System.out.println("No reservations scheduled for today.");
+            }
+
+
 
         } catch (Exception ex) {
             System.out.println("Error checking in: " + ex.getMessage());
@@ -1787,53 +1801,72 @@ public class MainApp {
 
             System.out.println("*** HoRS Management Client :: Check-out guest ***\n");
 
-            System.out.print("Enter reservation ID: ");
-            Long reservationId = scanner.nextLong();
-            scanner.nextLine();
+            // Verify the guest
+            Guest guest = doCheckInAndOutVerification();
+            if (guest == null) {
+                System.out.println("Unable to verify guest");
+                return;
+            }
 
-            Reservation reservation = reservationSessionBeanRemote.getReservationByReservationId(reservationId);
-
-            Date checkOutDate = stripTime(reservation.getCheckOutDate());
+            // Retrieve all reservations for the guest and filter those with today's check-out date
+            List<Reservation> reservations = reservationSessionBeanRemote.retrieveAllReservationsByGuest(guest);
+            List<Reservation> todayCheckOutReservations = new ArrayList<>();
             Date today = stripTime(new Date());
 
-            if (checkOutDate.equals(today)) {
-                System.out.print("\nReservation found. Do you want to check-out? (Y/N): ");
-                String response = scanner.nextLine().trim();
+            for (Reservation reservation : reservations) {
+                if (stripTime(reservation.getCheckOutDate()).equals(today)) {
+                    todayCheckOutReservations.add(reservation);
+                }
+            }
 
-                if (response.toLowerCase().equals("y")) {
-                    List<RoomReservation> roomReservations = roomReservationSessionBeanRemote.retrieveRoomReservationsByReservation(reservation);
-                    List<RoomReservation> occupiedRooms = new ArrayList<>();
+            // If there are any reservations for check-out today, ask if they want to check out of all
+            if (!todayCheckOutReservations.isEmpty()) {
+                System.out.println("\nYou have reservations scheduled for check-out today:");
+                for (Reservation reservation : todayCheckOutReservations) {
+                    System.out.println("- Reservation ID: " + reservation.getReservationId() + ", Room Type: " + reservation.getRoomType());
+                }
 
-                    for (RoomReservation roomReservation : roomReservations) {
-                        if (roomReservation.getRoom() != null && roomReservation.getRoom().getRoomStatus() == RoomStatusEnum.OCCUPIED) {
-                            occupiedRooms.add(roomReservation);
+                System.out.print("\nDo you want to check out of all these reservations? (Y/N): ");
+                String response = scanner.nextLine().trim().toLowerCase();
+
+                if (response.equals("y")) {
+                    // Process each reservation for check-out
+                    for (Reservation reservation : todayCheckOutReservations) {
+                        List<RoomReservation> roomReservations = roomReservationSessionBeanRemote.retrieveRoomReservationsByReservation(reservation);
+                        List<RoomReservation> occupiedRooms = new ArrayList<>();
+
+                        for (RoomReservation roomReservation : roomReservations) {
+                            if (roomReservation.getRoom() != null && roomReservation.getRoom().getRoomStatus() == RoomStatusEnum.OCCUPIED) {
+                                occupiedRooms.add(roomReservation);
+                            }
+                        }
+
+                        if (!occupiedRooms.isEmpty()) {
+                            System.out.println("Checking out of reservation ID: " + reservation.getReservationId());
+                            System.out.println("The following rooms are being checked out:");
+
+                            for (RoomReservation occupiedRoom : occupiedRooms) {
+                                System.out.println("Room Number: " + occupiedRoom.getRoom().getRoomNum());
+                                // Update the room's status to AVAILABLE
+                                occupiedRoom.getRoom().setRoomStatus(RoomStatusEnum.AVAILABLE);
+                                roomSessionBeanRemote.updateRoom(occupiedRoom.getRoom());
+                            }
+
+                            // Update reservation status to CHECKED_OUT
+                            reservation.setReservationStatusEnum(ReservationStatusEnum.CHECKED_OUT);
+                            reservationSessionBeanRemote.updateReservation(reservation);
+                            System.out.println("Successfully checked out of reservation ID: " + reservation.getReservationId() + "\n");
+                        } else {
+                            System.out.println("Reservation ID: " + reservation.getReservationId() + " - No occupied rooms found for this reservation.");
                         }
                     }
-
-                    if (!occupiedRooms.isEmpty()) {
-                        System.out.println("The following rooms are being checked out:");
-                        for (RoomReservation occupiedRoom : occupiedRooms) {
-                            System.out.println("Room Number: " + occupiedRoom.getRoom().getRoomNum());
-                            // Update the room's status to AVAILABLE
-                            occupiedRoom.getRoom().setRoomStatus(RoomStatusEnum.AVAILABLE);
-                            roomSessionBeanRemote.updateRoom(occupiedRoom.getRoom());
-                        }
-
-                        // Then update the reservation status to checked-out
-                        reservation.setReservationStatusEnum(ReservationStatusEnum.CHECKED_OUT);
-                        reservationSessionBeanRemote.updateReservation(reservation);
-                        System.out.println("You have successfully checked out of this reservation.");
-                    } else { // If rooms are not in the status 'OCCUPIED'
-                        System.out.println("No rooms are currently occupied for this reservation.");
-                    }
-                } else if (response.toLowerCase().equals("n")) {
-                    System.out.println("\n");
                 } else {
-                    System.out.println("Invalid option. Please try again.\n");
+                    System.out.println("Check-out canceled.\n");
                 }
             } else {
-                System.out.println("Unable to check-out. The reservation's check-out date is not today.");
+                System.out.println("No reservations scheduled for check-out today.");
             }
+
 
         } catch (Exception ex) {
             System.out.println("Error checking out: " + ex.getMessage());
@@ -1890,40 +1923,177 @@ public class MainApp {
 
     private Guest doGuestVerification() {
 
-        Scanner scanner = new Scanner(System.in);
+        try {
+            Scanner scanner = new Scanner(System.in);
 
-        System.out.println("\n*** HoRS Management Client :: Guest Verification ***");
-        System.out.println("Please select an option to verify your identity:");
-        System.out.println("1: Verify by Email");
-        System.out.println("2: Verify by Phone Number");
-        System.out.println("3: Verify by Passport Number");
-        System.out.println("4: Not a guest");
+            System.out.println("*** HoRS Management Client :: Guest verification ***\n");
 
-        int choice = 0;
-        while (choice < 1 || choice > 3) {
-            System.out.print("Enter your choice > ");
-            choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline left-over
+            System.out.print("Are you a registered guest? (Y/N): ");
+            String response = scanner.nextLine().trim();
 
-            switch (choice) {
-                case 1:
-                    System.out.print("Enter your email: ");
-                    String email = scanner.nextLine().trim();
-                    return verifyGuestByEmail(email);
-                case 2:
-                    System.out.print("Enter your phone number: ");
-                    String phoneNumber = scanner.nextLine().trim();
-                    return verifyGuestByPhoneNumber(phoneNumber);
-                case 3:
-                    System.out.print("Enter your passport number: ");
-                    String passportNumber = scanner.nextLine().trim();
-                    return verifyGuestByPassportNumber(passportNumber);
-                case 4:
-                    return null;
-                default:
-                    System.out.println("Invalid choice. Please try again.");
+            if (response.toLowerCase().equals("y")) {
+                return doRegisteredGuestReservation();
+                
+            } else if (response.toLowerCase().equals("n")) {
+                return doNonRegisteredGuestReservation();
+            } else {
+                System.out.println("Invalid option. Please try again. \n");
             }
+
+        } catch (Exception ex) {
+            System.out.println("Error verifying guest: " + ex.getMessage() + "\n");
         }
+        
+        return null;
+    }
+    
+    private Guest doRegisteredGuestReservation() {
+        try {
+            Scanner scanner = new Scanner(System.in);
+            Integer response = 0;
+
+            while (true) {
+
+                System.out.println("*** HoRS Management Client ::  Registered guest verification***\n");
+                System.out.println("1: Verify by email");
+                System.out.println("2: Verify by phone number");
+                System.out.println("3: Verify by passport number");
+                System.out.println("4: Go back\n");
+                response = 0;
+
+                while (response < 1 || response > 4) {
+                    System.out.print("Enter your choice > ");
+                    response = scanner.nextInt();
+                    
+                    if (response == 1) {
+                        System.out.print("Enter email address: ");
+                        scanner.nextLine();  // Consume the leftover newline
+                        String email = scanner.nextLine().trim();
+                        return verifyGuestByEmail(email);                        
+                    } else if (response == 2) {
+                        System.out.print("Enter phone number: ");
+                        scanner.nextLine();  // Consume the leftover newline
+                        String phoneNumber = scanner.nextLine().trim();
+                        return verifyGuestByPhoneNumber(phoneNumber);                       
+                        
+                    } else if (response == 3) {
+                        System.out.print("Enter passport number: ");
+                        scanner.nextLine();  // Consume the leftover newline
+                        String passportNumber = scanner.nextLine().trim();
+                        return verifyGuestByPassportNumber(passportNumber);
+
+                    } else if (response == 4) {
+                        break;
+                    } else {
+                        System.out.println("Invalid option. Please try again.\n");
+                    }
+
+                }
+                
+                if (response == 4) {
+                    break;
+                }
+                
+                
+            }
+            
+        } catch (Exception ex) {
+            System.out.println("Error verifying registered guest: " + ex.getMessage() + "\n");
+        }
+        
+        return null;
+    }
+    
+    private Guest doNonRegisteredGuestReservation() {
+        try {
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.println("*** HoRS Management Client :: Non-registered guest verification ***\n");
+
+            System.out.print("Enter guest first name: ");
+            String firstName = scanner.nextLine().trim();
+
+            System.out.print("Enter guest last name: ");
+            String lastName = scanner.nextLine().trim();
+            
+            System.out.print("Enter guest email address: ");
+            String emailAddress = scanner.nextLine().trim();
+            
+            System.out.print("Enter guest phone number: ");
+            String phoneNumber = scanner.nextLine().trim();
+            
+            System.out.print("Enter guest passport number: ");
+            String passportNumber = scanner.nextLine().trim();
+            
+            if (firstName.length() > 0 && lastName.length() > 0 && emailAddress.length() > 0 && phoneNumber.length() > 0 && passportNumber.length() > 0) {
+                Guest guest = customerSessionBeanRemote.createNewCustomer(new Customer(firstName, lastName, emailAddress, passportNumber, passportNumber));
+                System.out.println("Guest verified successfully.");
+                return guest;
+            } else {
+                throw new InvalidAccountCredentialsException("Invalid guest credentials");
+            }            
+            
+        } catch (Exception ex) {
+            System.out.println("Error verifying non-registered guest: " + ex.getMessage() + "\n");
+        }
+        
+        return null;
+    }
+    
+    private Guest doCheckInAndOutVerification() {
+        try {
+            Scanner scanner = new Scanner(System.in);
+            Integer response = 0;
+
+            while (true) {
+
+                System.out.println("*** HoRS Management Client ::  Guest verification***\n");
+                System.out.println("1: Verify by email");
+                System.out.println("2: Verify by phone number");
+                System.out.println("3: Verify by passport number");
+                System.out.println("4: Go back\n");
+                response = 0;
+
+                while (response < 1 || response > 4) {
+                    System.out.print("Enter your choice > ");
+                    response = scanner.nextInt();
+                    
+                    if (response == 1) {
+                        System.out.print("Enter email address: ");
+                        scanner.nextLine();  // Consume the leftover newline
+                        String email = scanner.nextLine().trim();
+                        return verifyGuestByEmail(email);
+
+                    } else if (response == 2) {
+                        System.out.print("Enter phone number: ");
+                        scanner.nextLine();  // Consume the leftover newline
+                        String phoneNumber = scanner.nextLine().trim();
+                        return verifyGuestByPhoneNumber(phoneNumber);
+                        
+                    } else if (response == 3) {
+                        System.out.print("Enter passport number: ");
+                        scanner.nextLine();  // Consume the leftover newline
+                        String passportNumber = scanner.nextLine().trim();
+                        return verifyGuestByPassportNumber(passportNumber);
+
+                    } else if (response == 4) {
+                        break;
+                    } else {
+                        System.out.println("Invalid option. Please try again.\n");
+                    }
+                }
+                
+                if (response == 4) {
+                    break;
+                }
+                
+                
+            }
+            
+        } catch (Exception ex) {
+            System.out.println("Error verifying guest: " + ex.getMessage() + "\n");
+        }
+        
         return null;
     }
 
@@ -1931,7 +2101,7 @@ public class MainApp {
         try {
             Guest guest = guestSessionBeanRemote.retrieveGuestByEmail(email);
             if (guest != null) {
-                System.out.println("Guest verified successfully. Welcome, " + guest.getFirstName() + " " + guest.getLastName() + "!");
+                System.out.println("Guest verified successfully");                           
                 return guest;
             } else {
                 System.out.println("No matching customer found for the provided email.");
@@ -1946,7 +2116,7 @@ public class MainApp {
         try {
             Guest guest = guestSessionBeanRemote.retrieveGuestByPhoneNumber(phoneNumber);
             if (guest != null) {
-                System.out.println("Guest verified successfully. Welcome, " + guest.getFirstName() + " " + guest.getLastName() + "!");
+                System.out.println("Guest verified successfully");
                 return guest;
             } else {
                 System.out.println("No matching customer found for the provided phone number.");
@@ -1961,7 +2131,7 @@ public class MainApp {
         try {
             Guest guest = guestSessionBeanRemote.retrieveGuestByPassportNumber(passportNumber);
             if (guest != null) {
-                System.out.println("Guest verified successfully. Welcome, " + guest.getFirstName() + " " + guest.getLastName() + "!");
+                System.out.println("Guest verified successfully");
                 return guest;
             } else {
                 System.out.println("No matching customer found for the provided passport number.");
@@ -1971,6 +2141,7 @@ public class MainApp {
         }
         return null;
     }
+    
 
     private void displayRoomNames() {
         try {

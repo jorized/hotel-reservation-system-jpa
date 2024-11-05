@@ -15,10 +15,10 @@ import javax.persistence.Entity;
 @Entity
 public class Customer extends Guest implements Serializable {
 
-    @Column(length = 50, nullable = false, unique = true)
+    @Column(length = 50, unique = true)
     private String username;
     
-    @Column(nullable = false)
+    @Column(length = 50)
     private String password;
 
     public Customer() {
@@ -29,8 +29,14 @@ public class Customer extends Guest implements Serializable {
         super(firstName, lastName, email, phoneNumber, passportNumber);
         this.username = username;
         this.password = password;
-    }    
-    
+    }
+
+    //For walk-in guests
+    public Customer(String firstName, String lastName, String email, String phoneNumber, String passportNumber) {
+        super(firstName, lastName, email, phoneNumber, passportNumber);
+        this.username = null;
+        this.password = null;
+    }        
 
     public String getUsername() {
         return username;
