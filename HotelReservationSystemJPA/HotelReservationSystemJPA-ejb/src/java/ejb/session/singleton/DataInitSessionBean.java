@@ -14,7 +14,6 @@ import ejb.session.stateless.RoomTypeSessionBeanLocal;
 import entity.Customer;
 import entity.Employee;
 import entity.Partner;
-import entity.Reservation;
 import entity.Room;
 import entity.RoomRate;
 import entity.RoomType;
@@ -29,9 +28,6 @@ import javax.ejb.Startup;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import util.enumeration.EmployeeAccessRightEnum;
-import util.enumeration.PartnerAccessRightEnum;
-import util.enumeration.ReservationStatusEnum;
-import util.enumeration.ReservationTypeEnum;
 import util.enumeration.RoomRateTypeEnum;
 import util.exception.AccountAlreadyExistException;
 
@@ -228,7 +224,7 @@ public class DataInitSessionBean {
             }
         }
 
-        Partner testPartner = new Partner("jojo", "password", PartnerAccessRightEnum.EMPLOYEE);
+        Partner testPartner = new Partner("jojo", "password");
         if (em.createQuery("SELECT COUNT(p) FROM Partner p", Long.class).getSingleResult() == 0) {
             try {
                 partnerSessionBeanLocal.createNewPartner(testPartner);

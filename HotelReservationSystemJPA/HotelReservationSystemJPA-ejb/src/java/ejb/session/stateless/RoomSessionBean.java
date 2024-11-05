@@ -9,10 +9,16 @@ import entity.Reservation;
 import entity.Room;
 import entity.RoomReservation;
 import entity.RoomType;
+import java.util.Date;
 import java.util.List;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Stateless;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -30,6 +36,9 @@ import util.exception.UpdateRoomException;
  */
 @Stateless
 public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLocal {
+    
+    @Resource
+    private TimerService timerService;
 
     @EJB
     private ExceptionReportSessionBeanLocal exceptionReportSessionBeanLocal;
@@ -45,7 +54,6 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;        
     
-
     @Override
     public Room createNewRoom(Room newRoom) throws RoomAlreadyExistException {
 
@@ -229,6 +237,20 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
             }
         }
         System.out.println("*** DONE ALLOCATING ROOMS ***");
+    }
+    
+    //Programmatic scheduling of room allocation
+    @Override
+    public void scheduleRoomAllocation(Date scheduledDate) {
+        TimerConfig timerConfig = new TimerConfig("UserScheduledAllocation", false);
+        timerService.createSingleActionTimer(scheduledDate, timerConfig);
+    }
+    
+    @Timeout
+    public void handleTimeout(Timer timer) throws InvalidRoomTypeTierNumberException {
+        if (timer.getInfo().equals("UserScheduledAllocation")) {
+            allocateRooms();
+        }
     }
 
     @Override

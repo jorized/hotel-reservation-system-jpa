@@ -51,8 +51,8 @@ public class Reservation implements Serializable {
     @Column(nullable = false)
     private ReservationStatusEnum reservationStatusEnum;
     
-    @ManyToOne // can be null
-    @JoinColumn
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private Guest guest;
     
 //    @ManyToOne(optional = false)

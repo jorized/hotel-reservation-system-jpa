@@ -7,12 +7,9 @@ package entity;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import util.enumeration.PartnerAccessRightEnum;
 
 /**
  *
@@ -32,27 +29,14 @@ public class Partner implements Serializable {
     @Column(nullable = false)
     private String password;
     
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PartnerAccessRightEnum role;
 
     public Partner() {
     }
 
-    public Partner(String username, String password, PartnerAccessRightEnum role) {
+    public Partner(String username, String password) {
         this();
         this.username = username;
         this.password = password;
-        this.role = role;
-    }
-
-    
-    public PartnerAccessRightEnum getRole() {
-        return role;
-    }
-
-    public void setRole(PartnerAccessRightEnum role) {
-        this.role = role;
     }
 
     public String getUsername() {
