@@ -208,8 +208,11 @@ public class DataInitSessionBean {
         RoomRate testdeluxePeakRate = new RoomRate("Peak Rate for Deluxe Room", RoomRateTypeEnum.PEAK, new BigDecimal("100"), null, null, peakStartDate, peakEndDate, testDeluxeRoomType);
         RoomRate testdeluxePromoRate = new RoomRate("Promotion Rate for Deluxe Room", RoomRateTypeEnum.PROMOTION, new BigDecimal("50"), promotionStartDate, promotionEndDate, null, null, testDeluxeRoomType);
 
-        RoomRate testPremierPublishedRate = new RoomRate("Published Rate for Premier Room", RoomRateTypeEnum.PUBLISHED, new BigDecimal("75"), null, null, null, null, testPremierRoomType);
+        RoomRate testPremierPublishedRate = new RoomRate("Published Rate for Premier Room", RoomRateTypeEnum.PUBLISHED, new BigDecimal("100"), null, null, null, null, testPremierRoomType);
+        RoomRate testPremierNormalRate = new RoomRate("Normal Rate for Premier Room", RoomRateTypeEnum.NORMAL, new BigDecimal("75"), null, null, null, null, testPremierRoomType);
+        
         RoomRate testGrandSuitePublishedRate = new RoomRate("Published Rate for Grand Suite Room", RoomRateTypeEnum.PUBLISHED, new BigDecimal("200"), null, null, null, null, testGrandSuiteType);
+        RoomRate testGrandSuiteNormalRate = new RoomRate("Normal Rate for Grand Suite Room", RoomRateTypeEnum.NORMAL, new BigDecimal("180"), null, null, null, null, testGrandSuiteType);
         if (em.createQuery("SELECT COUNT(rr) FROM RoomRate rr", Long.class).getSingleResult() == 0) {
             try {
                 roomRateSessionBeanLocal.createNewRoomRate(testdeluxePublishedRate);
@@ -218,7 +221,10 @@ public class DataInitSessionBean {
                 roomRateSessionBeanLocal.createNewRoomRate(testdeluxePromoRate);
 
                 roomRateSessionBeanLocal.createNewRoomRate(testPremierPublishedRate);
+                roomRateSessionBeanLocal.createNewRoomRate(testPremierNormalRate);
+                
                 roomRateSessionBeanLocal.createNewRoomRate(testGrandSuitePublishedRate);
+                roomRateSessionBeanLocal.createNewRoomRate(testGrandSuiteNormalRate);
             } catch (Exception ex) {
                 System.out.println("Error creating room rate: " + ex.getMessage() + "\n");
             }
