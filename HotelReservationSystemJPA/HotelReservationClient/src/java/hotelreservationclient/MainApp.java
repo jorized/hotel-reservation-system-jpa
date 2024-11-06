@@ -339,17 +339,27 @@ public class MainApp {
                     while (calendar.getTime().before(checkOutDate)) {
                         Date currentDate = calendar.getTime();
                         BigDecimal ratePerNight = roomTypeSessionBeanRemote.getLowestTierDailyRate(currentDate, ReservationTypeEnum.ONLINE, roomsOfThisType);
-                        totalPerRoomAmount = totalPerRoomAmount.add(ratePerNight);
+
+                        if (ratePerNight != null) {
+                            totalPerRoomAmount = totalPerRoomAmount.add(ratePerNight);
+                        } else {
+                            // System.out.println("Warning: Rate for " + currentDate + " is null. Setting rate to 0.");
+                            totalPerRoomAmount = totalPerRoomAmount.add(BigDecimal.ZERO);
+                        }
                         calendar.add(Calendar.DATE, 1);
+                        // System.out.println("Debug: ratePerNight = " + ratePerNight + ", totalPerRoomAmount = " + totalPerRoomAmount);
                     }
 
                     BigDecimal totalReservationAmount = totalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms));
                     totalPerRoomAmounts.set(i, totalPerRoomAmount);
                     totalReservationAmounts.set(i, totalReservationAmount);
 
-                    availableRoomsMessage.append("Room Type: ").append(roomType.getTypeName())
-                            .append(" - $").append(totalPerRoomAmount).append(" per room, Total Reservation Amount: $")
-                            .append(totalReservationAmount).append(" for ").append(noOfRooms).append(" rooms\n");
+                    availableRoomsMessage.append("Room Type: ")
+                            .append(roomType.getTypeName())
+                            .append(" - $").append(totalPerRoomAmount)
+                            .append(" per room, Total Reservation Amount: $")
+                            .append(totalReservationAmount).append(" for ")
+                            .append(noOfRooms).append(" rooms\n");
                 }
             }
 
@@ -424,6 +434,7 @@ public class MainApp {
             }
         } catch (Exception ex) {
             System.out.println("Error reserving hotel room: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
