@@ -9,6 +9,7 @@ import entity.Partner;
 import java.util.List;
 import javax.ejb.Remote;
 import util.exception.AccountAlreadyExistException;
+import util.exception.InvalidLoginCredentialsException;
 
 /**
  *
@@ -20,4 +21,6 @@ public interface PartnerSessionBeanRemote {
     public Partner createNewPartner(Partner newPartner) throws AccountAlreadyExistException;
     
     public List<Partner> retrieveAllPartners();
+    
+    public Partner partnerLogin(String username, String password) throws InvalidLoginCredentialsException;
 }

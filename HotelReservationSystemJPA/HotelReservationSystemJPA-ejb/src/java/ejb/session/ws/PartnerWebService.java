@@ -12,6 +12,7 @@ import javax.jws.WebService;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.ejb.Stateless;
+import util.exception.InvalidLoginCredentialsException;
 
 /**
  *
@@ -27,5 +28,10 @@ public class PartnerWebService {
     @WebMethod(operationName = "retrieveAllPartners")
     public List<Partner> retrieveAllPartners() {
         return partnerSessionBeanLocal.retrieveAllPartners();
+    }
+    
+    @WebMethod(operationName = "partnerLogin")
+    public Partner partnerLogin(String username, String password) throws InvalidLoginCredentialsException {
+        return partnerSessionBeanLocal.partnerLogin(username, password);
     }
 }
