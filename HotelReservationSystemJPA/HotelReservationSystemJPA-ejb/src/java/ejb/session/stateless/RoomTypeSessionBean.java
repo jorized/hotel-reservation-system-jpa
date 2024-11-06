@@ -235,14 +235,17 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
         }
 
         RoomType lowestTierRoomType = rooms.stream()
-                                           .map(Room::getRoomType)
-                                           .min((rt1, rt2) -> Integer.compare(rt1.getTierNumber(), rt2.getTierNumber()))
-                                           .orElseThrow(() -> new IllegalArgumentException("No valid RoomType found"));
+                .map(Room::getRoomType)
+                .min((rt1, rt2) -> Integer.compare(rt1.getTierNumber(), rt2.getTierNumber()))
+                .orElseThrow(() -> new IllegalArgumentException("No valid RoomType found"));
+
+        // For walk-in reservations, get the Published rate directly
+        if (reservationType == ReservationTypeEnum.WALKIN) {
+            return roomRateSessionBeanLocal.getDailyRate(date, lowestTierRoomType, reservationType);
+        }
 
         // Get the daily rate for the lowest-tier RoomType
         return roomRateSessionBeanLocal.getDailyRate(date, lowestTierRoomType, reservationType);
     }
-
-  
 
 }

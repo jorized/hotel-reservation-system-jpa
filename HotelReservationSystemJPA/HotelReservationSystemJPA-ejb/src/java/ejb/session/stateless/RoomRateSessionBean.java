@@ -7,8 +7,7 @@ package ejb.session.stateless;
 import entity.RoomRate;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Calendar;import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -136,7 +135,6 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
 
         for (RoomRate roomRate : roomRates) {
             if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
-
                 // Online reservations: Promotion -> Peak -> Normal priority
                 if (reservationTypeEnum == ReservationTypeEnum.ONLINE) {
                     if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
