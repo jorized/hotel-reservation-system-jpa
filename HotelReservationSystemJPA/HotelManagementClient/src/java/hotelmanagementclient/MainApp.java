@@ -41,6 +41,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -400,7 +401,7 @@ public class MainApp {
                 System.out.println("Partner has successfully been created!\n");
             } else {
                 throw new InvalidAccountCredentialsException("Invalid account credentials");
-            }            
+            }
 
         } catch (Exception ex) {
             System.out.println("Error creating new employee: " + ex.getMessage() + "\n");
@@ -864,7 +865,7 @@ public class MainApp {
                 System.out.println("\nA room with room number " + roomNum + " already exists. Room creation aborted.");
                 return;
             }
-            
+
             // Create and save the room if all inputs are valid
             Room newRoom = new Room(floorNum, seqNum, existingRoomType);
             roomSessionBeanRemote.createNewRoom(newRoom);
@@ -1035,14 +1036,14 @@ public class MainApp {
             //Do not need to check if list is empty because it will never happen 
             List<ExceptionReport> exceptionReports = exceptionReportSessionBeanRemote.retrieveAllExceptionReports();
             for (ExceptionReport exceptionReport : exceptionReports) {
-                
+
                 System.out.printf("%-5d %-20s %-20s %-20s\n",
                         index++,
                         formatEnumString(exceptionReport.getExceptionTypeReport().toString()),
                         exceptionReport.getRoomReservation().getReservation().getReservationId(),
-                        exceptionReport.getExceptionTypeReport() == ExceptionTypeReportEnum.TYPE_1 ? 
-                                "Upgraded from " + exceptionReport.getRoomReservation().getReservation().getRoomType().getTypeName() + " to " + exceptionReport.getRoomReservation().getRoom().getRoomType().getTypeName() :
-                                "No upgrade to next higher tier"
+                        exceptionReport.getExceptionTypeReport() == ExceptionTypeReportEnum.TYPE_1
+                        ? "Upgraded from " + exceptionReport.getRoomReservation().getReservation().getRoomType().getTypeName() + " to " + exceptionReport.getRoomReservation().getRoom().getRoomType().getTypeName()
+                        : "No upgrade to next higher tier"
                 );
             }
             System.out.print("\n");
@@ -1051,7 +1052,7 @@ public class MainApp {
             System.out.println("Error viewing room allocation exception reports: " + ex.getMessage() + "\n");
         }
     }
-    
+
     private void doTriggerRoomAllocationForSpecificDate() {
         try {
             Scanner scanner = new Scanner(System.in);
@@ -1060,7 +1061,7 @@ public class MainApp {
 
             System.out.print("Enter date and time (yyyy-MM-dd HH:mm):");
             String enteredDateTime = scanner.nextLine().trim();
-            
+
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             Date userDate = dateFormat.parse(enteredDateTime);
             Date currentDate = new Date();
@@ -1072,8 +1073,7 @@ public class MainApp {
                 roomSessionBeanRemote.scheduleRoomAllocation(userDate);
                 System.out.println("Room allocation scheduled for: " + userDate);
             }
-            
-            
+
         } catch (Exception ex) {
             System.out.println("Error triggering room allocation for specific date: " + ex.getMessage() + "\n");
         }
@@ -1497,79 +1497,33 @@ public class MainApp {
 
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-            Date checkInDate = promptForDate(scanner, dateFormat, "Enter check in date (yyyy-MM-dd): ");
+            // Prompt for check-in and check-out dates
+            Date checkInDate = promptForDate(scanner, dateFormat, "Enter check-in date (yyyy-MM-dd): ");
             Date checkOutDate;
-
-            // Ensure check-out date is not the same as check-in date
             while (true) {
-                checkOutDate = promptForDate(scanner, dateFormat, "Enter check out date (yyyy-MM-dd): ");
+                checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
                 if (!checkOutDate.equals(checkInDate)) {
                     break;
                 }
                 System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
             }
+
+            // Prompt for the number of rooms requested
             System.out.print("Enter number of rooms you would like to book: ");
-            String noOfRoomsString = scanner.nextLine().trim();
+            int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
-            Integer noOfRooms = Integer.parseInt(noOfRoomsString);
-
+            // Retrieve available rooms
             List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;
             }
 
-            int availableRoomSize = availableRooms.size();
-
-            if (availableRoomSize >= noOfRooms) {
-                // display all the differnt room types from the available rooms with Room ID
-                System.out.println("\nAvailable rooms for the selected dates:");
-
-                Set<String> displayedRoomTypes = new HashSet<>();
-
-                for (Room room : availableRooms) {
-                    String roomTypeName = room.getRoomType().getTypeName();
-                    if (!displayedRoomTypes.contains(roomTypeName)) {
-                        System.out.println("Room Type: " + roomTypeName);
-                        displayedRoomTypes.add(roomTypeName); // Track this room type as displayed
-                    }
-                }
-
-                while (true) {
-                    System.out.println("\nWould you like to reserve?");
-                    System.out.println("1: Reserve Room(s)");
-                    System.out.println("2: Go back");
-
-                    System.out.print("\nEnter your choice > ");
-                    int response = scanner.nextInt();
-                    scanner.nextLine();;
-
-                    if (response == 1) {
-                        System.out.print("\nAre you sure you want to reserve this room? (Y/N): ");
-                        String responseString = scanner.nextLine().trim();
-                        if (responseString.toLowerCase().equals("y")) {
-                            reserveWalkInRoom(checkInDate, checkOutDate, noOfRooms, availableRooms);
-                            System.out.println("Returning to the main menu...\n");
-                            break;
-                        } else if (responseString.toLowerCase().equals("n")) {
-                            System.out.println("Reservation cancelled.\n");
-                        } else {
-                            System.out.println("Invalid option. Please try again. \n");
-                        }
-                    } else if (response == 2) {
-                        break;
-                    } else {
-                        System.out.println("Invalid option. Please try again. \n");
-                    }
-
-                }
-
-            } else {
-                System.out.println("Not enough rooms are available. Available rooms: " + availableRoomSize);
-            }
+            // Call reserveWalkInRoom to display rooms and proceed with reservation logic if applicable
+            reserveWalkInRoom(checkInDate, checkOutDate, noOfRooms, availableRooms);
 
         } catch (Exception ex) {
-            System.out.println("Error searching for hotel room: " + ex.getMessage() + "\n");
+            System.out.println("Error searching for hotel room: " + ex.getMessage());
         }
     }
 
@@ -1581,10 +1535,8 @@ public class MainApp {
 
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-            // Prompt for check-in date
+            //prompt for check-in and check-out dates
             Date checkInDate = promptForDate(scanner, dateFormat, "Enter check-in date (yyyy-MM-dd): ");
-
-            // Prompt for check-out date and ensure it's not the same as check-in date
             Date checkOutDate;
             while (true) {
                 checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
@@ -1594,26 +1546,19 @@ public class MainApp {
                 System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
             }
 
-            // Prompt for number of rooms
+            //prompt for the number of rooms requested
             System.out.print("Enter number of rooms you would like to book: ");
-            int noOfRooms = scanner.nextInt();
-            scanner.nextLine(); // Consume newline left-over
+            int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
-            // Retrieve available rooms
+            //get available rooms
             List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;
             }
 
-            // Proceed to book rooms if available rooms are enough
-            int availableRoomSize = availableRooms.size();
-            if (availableRoomSize >= noOfRooms) {
-                System.out.println("\nAvailable rooms found. Proceeding with reservation...");
-                reserveWalkInRoom(checkInDate, checkOutDate, noOfRooms, availableRooms);
-            } else {
-                System.out.println("Not enough rooms are available. Available rooms: " + availableRoomSize);
-            }
+            //call reserveWalkInRoom to display rooms and handle reservation if applicable
+            reserveWalkInRoom(checkInDate, checkOutDate, noOfRooms, availableRooms);
 
         } catch (Exception ex) {
             System.out.println("Error in reserving hotel room: " + ex.getMessage());
@@ -1622,98 +1567,159 @@ public class MainApp {
 
     private void reserveWalkInRoom(Date checkInDate, Date checkOutDate, int noOfRooms, List<Room> availableRooms) {
         try {
+            //lists to store room types and the amounts
+            List<RoomType> roomTypes = new ArrayList<>();
+            List<BigDecimal> totalPerRoomAmounts = new ArrayList<>();
+            List<BigDecimal> totalReservationAmounts = new ArrayList<>();
+            List<List<Room>> roomsByType = new ArrayList<>();
 
-            Guest verifiedGuest = doGuestVerification();
-            if (verifiedGuest == null) {
-                System.out.println("Unable to verify guest");
+            //grouping rooms by RoomType
+            for (Room room : availableRooms) {
+                RoomType roomType = room.getRoomType();
+                int index = roomTypes.indexOf(roomType);
+
+                //if room type not yet in the list, add in
+                if (index == -1) { 
+                    roomTypes.add(roomType);
+                    totalPerRoomAmounts.add(BigDecimal.ZERO);
+                    totalReservationAmounts.add(BigDecimal.ZERO);
+                     //create a new list for this room type
+                    roomsByType.add(new ArrayList<>());
+                    //update index to the newly added room type
+                    index = roomTypes.size() - 1; 
+                }
+                 //add room to the corresponding list
+                roomsByType.get(index).add(room);
+            }
+
+            boolean sufficientRoomsAvailable = false;
+            int maxAvailableRooms = 0;
+
+            //determine the max number of rooms available across ALL room types
+            for (int i = 0; i < roomsByType.size(); i++) {
+                maxAvailableRooms = Math.max(maxAvailableRooms, roomsByType.get(i).size());
+            }
+
+            //check if there are any room types with enough rooms and display them
+            StringBuilder availableRoomsMessage = new StringBuilder();
+            for (int i = 0; i < roomTypes.size(); i++) {
+                RoomType roomType = roomTypes.get(i);
+                List<Room> roomsOfThisType = roomsByType.get(i);
+
+                if (roomsOfThisType.size() >= noOfRooms) {
+                    sufficientRoomsAvailable = true;
+
+                    //calculate the per-room price for this room type
+                    BigDecimal totalPerRoomAmount = BigDecimal.ZERO;
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(checkInDate);
+
+                    while (calendar.getTime().before(checkOutDate)) {
+                        Date currentDate = calendar.getTime();
+                        BigDecimal ratePerNight = roomTypeSessionBeanRemote.getLowestTierDailyRate(currentDate, ReservationTypeEnum.WALKIN, roomsOfThisType);
+                        totalPerRoomAmount = totalPerRoomAmount.add(ratePerNight);
+                        calendar.add(Calendar.DATE, 1);
+                    }
+
+                    //calculate the total reservation amount for the requested number of rooms
+                    BigDecimal totalReservationAmount = totalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms));
+
+                    //store the calculated amounts
+                    totalPerRoomAmounts.set(i, totalPerRoomAmount);
+                    totalReservationAmounts.set(i, totalReservationAmount);
+
+                    // Append this room type's availability, per-room price, and total reservation amount to the message
+                    availableRoomsMessage.append("Room Type: ")
+                                         .append(roomType.getTypeName())
+                                         .append(" - $").append(totalPerRoomAmount)
+                                         .append(" per room, Total Reservation Amount: $")
+                                         .append(totalReservationAmount).append(" for ")
+                                         .append(noOfRooms).append(" rooms\n");
+                }
+            }
+
+            // check if rooms available
+            if (sufficientRoomsAvailable) {
+                System.out.println("\nAvailable rooms for the selected dates:");
+                System.out.println(availableRoomsMessage.toString());
+            } else {
+                System.out.println("\nNo available room types have enough rooms for the requested number: " + noOfRooms);
+                System.out.println("The maximum number of rooms available to book is: " + maxAvailableRooms + "\n");
                 return;
             }
 
-            // Group rooms by RoomType
-            Map<RoomType, List<Room>> roomsByType = availableRooms.stream()
-                    .collect(Collectors.groupingBy(Room::getRoomType));
+            //ask the user if they want to register as a guest and reserve
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("\nWould you like to proceed with registration and reserve?");
+            System.out.println("1: Register and Reserve Room(s)");
+            System.out.println("2: Go back");
 
-            int roomsToBook = noOfRooms;
+            System.out.print("\nEnter your choice > ");
+            int response = scanner.nextInt();
+            scanner.nextLine();
 
-            for (Map.Entry<RoomType, List<Room>> entry : roomsByType.entrySet()) {
-                RoomType roomType = entry.getKey();
-                List<Room> roomsOfThisType = entry.getValue();
-
-                //stop when all rooms booked
-                if (roomsToBook <= 0) {
-                    break;
+            if (response == 1) {
+                //verify the guest before proceeding with the reservation
+                Guest verifiedGuest = doGuestVerification();
+                if (verifiedGuest == null) {
+                    System.out.println("Unable to verify guest");
+                    return;
                 }
 
-                int availableOfThisType = roomsOfThisType.size();
-                int roomsToBookFromThisType = Math.min(roomsToBook, availableOfThisType);
-                roomsToBook -= roomsToBookFromThisType;
+                int roomsToBook = noOfRooms;
 
-                //calculate total amount for each roomType
-                BigDecimal totalAmountForType = BigDecimal.ZERO;
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(checkInDate);
+                // Proceed with booking rooms
+                for (int i = 0; i < roomTypes.size(); i++) {
+                    RoomType roomType = roomTypes.get(i);
+                    List<Room> roomsOfThisType = roomsByType.get(i);
 
-                while (calendar.getTime().before(checkOutDate)) {
-                    Date currentDate = calendar.getTime();
+                    if (roomsOfThisType.size() < noOfRooms) {
+                        continue;  // Skip room types that don't have enough rooms
+                    }
 
-                    //get daily rate for date and roomType
-                    BigDecimal ratePerNight = roomTypeSessionBeanRemote.getLowestTierDailyRate(currentDate, ReservationTypeEnum.WALKIN, availableRooms);
+                    if (roomsToBook <= 0) {
+                        break;
+                    }
 
-                    // Log the retrieved rate per night
-                    // System.out.println("Rate per night for " + currentDate + " is $" + ratePerNight);
-                    totalAmountForType = totalAmountForType.add(ratePerNight.multiply(BigDecimal.valueOf(roomsToBookFromThisType)));
+                    int roomsToBookFromThisType = Math.min(roomsToBook, roomsOfThisType.size());
+                    roomsToBook -= roomsToBookFromThisType;
 
-                    // Log the running total amount after each day's rate is added
-                    // System.out.println("Total amount so far: $" + totalAmountForType);
-                    // Move to the next day
-                    calendar.add(Calendar.DATE, 1);
+                    //use pre-calculated reservation amount for this room type
+                    BigDecimal reservationAmount = totalReservationAmounts.get(i);
+
+                    //create and persist the Reservation instance for this room type
+                    Reservation reservation = new Reservation(
+                            checkInDate,
+                            checkOutDate,
+                            roomsToBookFromThisType,
+                            ReservationTypeEnum.WALKIN,
+                            reservationAmount,
+                            ReservationStatusEnum.CONFIRMED,
+                            new Date(),
+                            verifiedGuest,
+                            roomType,
+                            null
+                    );
+
+                    reservationSessionBeanRemote.createNewReservation(reservation);
+
+                    // Mark rooms as reserved
+                    for (int j = 0; j < roomsToBookFromThisType; j++) {
+                        Room room = roomsOfThisType.get(j);
+                        room.setRoomStatus(RoomStatusEnum.RESERVED);
+                        roomSessionBeanRemote.updateRoom(room);
+                    }
                 }
-
-                System.out.println("Total reservation amount for Room Type: " + roomType.getTypeName()
-                        + " with " + roomsToBookFromThisType + " room(s) and total amount: $" + totalAmountForType);
-
-                // Create and persist the Reservation instance for this room type
-                Reservation reservation = new Reservation(
-                        checkInDate,
-                        checkOutDate,
-                        roomsToBookFromThisType,
-                        ReservationTypeEnum.ONLINE,
-                        totalAmountForType,
-                        ReservationStatusEnum.CONFIRMED,
-                        new Date(),
-                        verifiedGuest,
-                        roomType,
-                        null
-                );
-
-                reservationSessionBeanRemote.createNewReservation(reservation);
-                // System.out.println("Reservation created successfully for Room Type: " + roomType.getTypeName());
-
-                //mark the selected rooms as "reserved"
-                for (int i = 0; i < roomsToBookFromThisType && i < roomsOfThisType.size(); i++) {
-                    Room room = roomsOfThisType.get(i);
-                    room.setRoomStatus(RoomStatusEnum.RESERVED);
-                    roomSessionBeanRemote.updateRoom(room);
-
-                    // System.out.println("Room ID: " + room.getRoomId() + " updated to status: " + room.getRoomStatus());
-                }
-
-                //check if allocation is same-day check-in after 2 am
-                Calendar currentCal = Calendar.getInstance();
-                if (reservationSessionBeanRemote.isSameDayCheckIn(checkInDate, currentCal.getTime()) && currentCal.get(Calendar.HOUR_OF_DAY) >= 2) {
-                    roomSessionBeanRemote.allocateRooms();
-                }
+                System.out.println("Your reservation has successfully been made!\n");
+            } else if (response == 2) {
+                System.out.println("Returning to the main menu...");
+            } else {
+                System.out.println("Invalid option. Please try again.");
             }
-            System.out.println("Your reservation has successfully been made!");
-
-            if (roomsToBook > 0) {
-                System.out.println("Warning: Could not fulfill the complete room request. Remaining rooms needed: " + roomsToBook);
-            }
-
         } catch (Exception ex) {
-            System.out.println("Error reserving hotel room: " + ex.getMessage());
+            System.out.println("Error searching for hotel room: " + ex.getMessage());
+            ex.printStackTrace();
         }
-
     }
 
     private void doCheckInGuest() {
@@ -1727,7 +1733,7 @@ public class MainApp {
                 System.out.println("Unable to verify guest");
                 return;
             }
-            
+
             // Retrieve all reservations for the guest and filter those with today's check-in date
             List<Reservation> reservations = reservationSessionBeanRemote.retrieveAllReservationsByGuest(guest);
             List<Reservation> todayReservations = new ArrayList<>();
@@ -1787,13 +1793,10 @@ public class MainApp {
                 System.out.println("No reservations scheduled for today.");
             }
 
-
-
         } catch (Exception ex) {
             System.out.println("Error checking in: " + ex.getMessage());
         }
     }
-
 
     private void doCheckOutGuest() {
         try {
@@ -1867,12 +1870,10 @@ public class MainApp {
                 System.out.println("No reservations scheduled for check-out today.");
             }
 
-
         } catch (Exception ex) {
             System.out.println("Error checking out: " + ex.getMessage());
         }
     }
-
 
     /**
      * HELPER METHOD *
@@ -1910,7 +1911,7 @@ public class MainApp {
         }
         return date;
     }
-    
+
     private Date stripTime(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -1933,7 +1934,7 @@ public class MainApp {
 
             if (response.toLowerCase().equals("y")) {
                 return doRegisteredGuestReservation();
-                
+
             } else if (response.toLowerCase().equals("n")) {
                 return doNonRegisteredGuestReservation();
             } else {
@@ -1943,10 +1944,10 @@ public class MainApp {
         } catch (Exception ex) {
             System.out.println("Error verifying guest: " + ex.getMessage() + "\n");
         }
-        
+
         return null;
     }
-    
+
     private Guest doRegisteredGuestReservation() {
         try {
             Scanner scanner = new Scanner(System.in);
@@ -1964,18 +1965,18 @@ public class MainApp {
                 while (response < 1 || response > 4) {
                     System.out.print("Enter your choice > ");
                     response = scanner.nextInt();
-                    
+
                     if (response == 1) {
                         System.out.print("Enter email address: ");
                         scanner.nextLine();  // Consume the leftover newline
                         String email = scanner.nextLine().trim();
-                        return verifyGuestByEmail(email);                        
+                        return verifyGuestByEmail(email);
                     } else if (response == 2) {
                         System.out.print("Enter phone number: ");
                         scanner.nextLine();  // Consume the leftover newline
                         String phoneNumber = scanner.nextLine().trim();
-                        return verifyGuestByPhoneNumber(phoneNumber);                       
-                        
+                        return verifyGuestByPhoneNumber(phoneNumber);
+
                     } else if (response == 3) {
                         System.out.print("Enter passport number: ");
                         scanner.nextLine();  // Consume the leftover newline
@@ -1989,21 +1990,20 @@ public class MainApp {
                     }
 
                 }
-                
+
                 if (response == 4) {
                     break;
                 }
-                
-                
+
             }
-            
+
         } catch (Exception ex) {
             System.out.println("Error verifying registered guest: " + ex.getMessage() + "\n");
         }
-        
+
         return null;
     }
-    
+
     private Guest doNonRegisteredGuestReservation() {
         try {
             Scanner scanner = new Scanner(System.in);
@@ -2015,31 +2015,31 @@ public class MainApp {
 
             System.out.print("Enter guest last name: ");
             String lastName = scanner.nextLine().trim();
-            
+
             System.out.print("Enter guest email address: ");
             String emailAddress = scanner.nextLine().trim();
-            
+
             System.out.print("Enter guest phone number: ");
             String phoneNumber = scanner.nextLine().trim();
-            
+
             System.out.print("Enter guest passport number: ");
             String passportNumber = scanner.nextLine().trim();
-            
+
             if (firstName.length() > 0 && lastName.length() > 0 && emailAddress.length() > 0 && phoneNumber.length() > 0 && passportNumber.length() > 0) {
                 Guest guest = customerSessionBeanRemote.createNewCustomer(new Customer(firstName, lastName, emailAddress, passportNumber, passportNumber));
-                System.out.println("Guest verified successfully.");
+                System.out.println("\nGuest verified successfully.\n");
                 return guest;
             } else {
                 throw new InvalidAccountCredentialsException("Invalid guest credentials");
-            }            
-            
+            }
+
         } catch (Exception ex) {
             System.out.println("Error verifying non-registered guest: " + ex.getMessage() + "\n");
         }
-        
+
         return null;
     }
-    
+
     private Guest doCheckInAndOutVerification() {
         try {
             Scanner scanner = new Scanner(System.in);
@@ -2057,7 +2057,7 @@ public class MainApp {
                 while (response < 1 || response > 4) {
                     System.out.print("Enter your choice > ");
                     response = scanner.nextInt();
-                    
+
                     if (response == 1) {
                         System.out.print("Enter email address: ");
                         scanner.nextLine();  // Consume the leftover newline
@@ -2069,7 +2069,7 @@ public class MainApp {
                         scanner.nextLine();  // Consume the leftover newline
                         String phoneNumber = scanner.nextLine().trim();
                         return verifyGuestByPhoneNumber(phoneNumber);
-                        
+
                     } else if (response == 3) {
                         System.out.print("Enter passport number: ");
                         scanner.nextLine();  // Consume the leftover newline
@@ -2082,18 +2082,17 @@ public class MainApp {
                         System.out.println("Invalid option. Please try again.\n");
                     }
                 }
-                
+
                 if (response == 4) {
                     break;
                 }
-                
-                
+
             }
-            
+
         } catch (Exception ex) {
             System.out.println("Error verifying guest: " + ex.getMessage() + "\n");
         }
-        
+
         return null;
     }
 
@@ -2101,7 +2100,7 @@ public class MainApp {
         try {
             Guest guest = guestSessionBeanRemote.retrieveGuestByEmail(email);
             if (guest != null) {
-                System.out.println("Guest verified successfully");                           
+                System.out.println("Guest verified successfully");
                 return guest;
             } else {
                 System.out.println("No matching customer found for the provided email.");
@@ -2141,7 +2140,6 @@ public class MainApp {
         }
         return null;
     }
-    
 
     private void displayRoomNames() {
         try {
