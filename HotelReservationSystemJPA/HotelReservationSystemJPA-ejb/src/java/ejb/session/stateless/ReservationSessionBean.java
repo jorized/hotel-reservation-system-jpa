@@ -5,6 +5,7 @@
 package ejb.session.stateless;
 
 import entity.Guest;
+import entity.Partner;
 import entity.Reservation;
 import entity.Room;
 import entity.RoomRate;
@@ -104,6 +105,13 @@ public class ReservationSessionBean implements ReservationSessionBeanRemote, Res
     public List<Reservation> retrieveAllReservationsByGuest(Guest guest) {
         return em.createQuery("SELECT r FROM Reservation r WHERE r.guest = :guest", Reservation.class)
                  .setParameter("guest", guest)
+                 .getResultList();
+    }
+    
+    @Override
+    public List<Reservation> retrieveAllReservationsByPartner(Partner partner) {
+        return em.createQuery("SELECT r FROM Reservation r WHERE r.partner = :partner", Reservation.class)
+                 .setParameter("partner", partner)
                  .getResultList();
     }
     

@@ -4,21 +4,85 @@
 <xsd:import namespace="http://ws.session.ejb/" schemaLocation="http://localhost:8080/ReservationWebService/ReservationWebService?xsd=1"/>
 </xsd:schema>
 </types>
+<message name="createNewReservation">
+<part name="parameters" element="tns:createNewReservation"/>
+</message>
+<message name="createNewReservationResponse">
+<part name="parameters" element="tns:createNewReservationResponse"/>
+</message>
+<message name="getReservationByReservationId">
+<part name="parameters" element="tns:getReservationByReservationId"/>
+</message>
+<message name="getReservationByReservationIdResponse">
+<part name="parameters" element="tns:getReservationByReservationIdResponse"/>
+</message>
+<message name="InvalidReservationIdException">
+<part name="fault" element="tns:InvalidReservationIdException"/>
+</message>
 <message name="retrieveAllReservations">
 <part name="parameters" element="tns:retrieveAllReservations"/>
 </message>
 <message name="retrieveAllReservationsResponse">
 <part name="parameters" element="tns:retrieveAllReservationsResponse"/>
 </message>
+<message name="retrieveAllReservationsByPartner">
+<part name="parameters" element="tns:retrieveAllReservationsByPartner"/>
+</message>
+<message name="retrieveAllReservationsByPartnerResponse">
+<part name="parameters" element="tns:retrieveAllReservationsByPartnerResponse"/>
+</message>
 <portType name="ReservationWebService">
+<operation name="createNewReservation">
+<input wsam:Action="http://ws.session.ejb/ReservationWebService/createNewReservationRequest" message="tns:createNewReservation"/>
+<output wsam:Action="http://ws.session.ejb/ReservationWebService/createNewReservationResponse" message="tns:createNewReservationResponse"/>
+</operation>
+<operation name="getReservationByReservationId">
+<input wsam:Action="http://ws.session.ejb/ReservationWebService/getReservationByReservationIdRequest" message="tns:getReservationByReservationId"/>
+<output wsam:Action="http://ws.session.ejb/ReservationWebService/getReservationByReservationIdResponse" message="tns:getReservationByReservationIdResponse"/>
+<fault message="tns:InvalidReservationIdException" name="InvalidReservationIdException" wsam:Action="http://ws.session.ejb/ReservationWebService/getReservationByReservationId/Fault/InvalidReservationIdException"/>
+</operation>
 <operation name="retrieveAllReservations">
 <input wsam:Action="http://ws.session.ejb/ReservationWebService/retrieveAllReservationsRequest" message="tns:retrieveAllReservations"/>
 <output wsam:Action="http://ws.session.ejb/ReservationWebService/retrieveAllReservationsResponse" message="tns:retrieveAllReservationsResponse"/>
 </operation>
+<operation name="retrieveAllReservationsByPartner">
+<input wsam:Action="http://ws.session.ejb/ReservationWebService/retrieveAllReservationsByPartnerRequest" message="tns:retrieveAllReservationsByPartner"/>
+<output wsam:Action="http://ws.session.ejb/ReservationWebService/retrieveAllReservationsByPartnerResponse" message="tns:retrieveAllReservationsByPartnerResponse"/>
+</operation>
 </portType>
 <binding name="ReservationWebServicePortBinding" type="tns:ReservationWebService">
 <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+<operation name="createNewReservation">
+<soap:operation soapAction=""/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="getReservationByReservationId">
+<soap:operation soapAction=""/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+<fault name="InvalidReservationIdException">
+<soap:fault name="InvalidReservationIdException" use="literal"/>
+</fault>
+</operation>
 <operation name="retrieveAllReservations">
+<soap:operation soapAction=""/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="retrieveAllReservationsByPartner">
 <soap:operation soapAction=""/>
 <input>
 <soap:body use="literal"/>

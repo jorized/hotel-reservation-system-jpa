@@ -44,5 +44,7 @@ public interface RoomSessionBeanLocal {
     public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
 
     public void scheduleRoomAllocation(Date scheduledDate);
+
+    public Room retrieveRoomByRoomId(Long roomId);
     
 }

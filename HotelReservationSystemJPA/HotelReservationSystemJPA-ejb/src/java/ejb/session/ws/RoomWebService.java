@@ -11,6 +11,8 @@ import javax.ejb.EJB;
 import javax.jws.WebService;
 import javax.jws.WebMethod;
 import javax.ejb.Stateless;
+import util.exception.InvalidRoomTypeTierNumberException;
+import util.exception.UpdateRoomException;
 
 /**
  *
@@ -26,6 +28,21 @@ public class RoomWebService {
     @WebMethod(operationName = "retrieveAllRooms")
     public List<Room> retrieveAllRooms() {
         return roomSessionBeanLocal.retrieveAllRooms();
+    }
+    
+    @WebMethod(operationName = "retrieveAllAvailableRooms")
+    public List<Room> retrieveAllAvailableRooms() {
+        return roomSessionBeanLocal.retrieveAllAvailableRooms();
+    }
+    
+    @WebMethod(operationName = "updateRoom")
+    public Room updateRoom(Room updatedRoom) throws UpdateRoomException {
+        return roomSessionBeanLocal.updateRoom(updatedRoom);
+    }
+    
+    @WebMethod(operationName = "allocateRooms")
+    public void allocateRooms() throws InvalidRoomTypeTierNumberException {
+        roomSessionBeanLocal.allocateRooms();
     }
     
     
