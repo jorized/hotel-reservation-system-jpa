@@ -1,5 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is Metro/2.4.3 (RELEASE-2.4.3-ad3323c; 2019-01-21T17:46:06+0000) JAXWS-RI/2.3.2 JAXWS-API/2.3.2 JAXB-RI/2.3.2 JAXB-API/2.3.2 git-revision#unknown. --><xs:schema xmlns:tns="http://ws.session.ejb/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://ws.session.ejb/">
 
+<xs:element name="InvalidRoomException" type="tns:InvalidRoomException"/>
+
+<xs:element name="InvalidRoomTypeException" type="tns:InvalidRoomTypeException"/>
+
+<xs:element name="getLowestTierDailyRate" type="tns:getLowestTierDailyRate"/>
+
+<xs:element name="getLowestTierDailyRateResponse" type="tns:getLowestTierDailyRateResponse"/>
+
 <xs:element name="retrieveAllRoomTypes" type="tns:retrieveAllRoomTypes"/>
 
 <xs:element name="retrieveAllRoomTypesResponse" type="tns:retrieveAllRoomTypesResponse"/>
@@ -28,10 +36,65 @@
 </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="getLowestTierDailyRate">
+<xs:sequence>
+<xs:element name="arg0" type="xs:dateTime" minOccurs="0"/>
+<xs:element name="arg1" type="tns:reservationTypeEnum" minOccurs="0"/>
+<xs:element name="arg2" type="tns:room" minOccurs="0" maxOccurs="unbounded"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="room">
+<xs:sequence>
+<xs:element name="floorNum" type="xs:string" minOccurs="0"/>
+<xs:element name="roomId" type="xs:long" minOccurs="0"/>
+<xs:element name="roomNum" type="xs:string" minOccurs="0"/>
+<xs:element name="roomStatus" type="tns:roomStatusEnum" minOccurs="0"/>
+<xs:element name="roomType" type="tns:roomType" minOccurs="0"/>
+<xs:element name="sequenceNum" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getLowestTierDailyRateResponse">
+<xs:sequence>
+<xs:element name="return" type="xs:decimal" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="InvalidRoomTypeException">
+<xs:sequence>
+<xs:element name="message" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="InvalidRoomException">
+<xs:sequence>
+<xs:element name="message" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
 <xs:simpleType name="roomTypeStatusEnum">
 <xs:restriction base="xs:string">
 <xs:enumeration value="ACTIVE"/>
 <xs:enumeration value="DISABLED"/>
+</xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="reservationTypeEnum">
+<xs:restriction base="xs:string">
+<xs:enumeration value="WALKIN"/>
+<xs:enumeration value="ONLINE"/>
+</xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="roomStatusEnum">
+<xs:restriction base="xs:string">
+<xs:enumeration value="OCCUPIED"/>
+<xs:enumeration value="DISABLED"/>
+<xs:enumeration value="AVAILABLE"/>
+<xs:enumeration value="NOT_AVAILABLE"/>
+<xs:enumeration value="RESERVED"/>
+<xs:enumeration value="ALLOCATED"/>
 </xs:restriction>
 </xs:simpleType>
 </xs:schema>

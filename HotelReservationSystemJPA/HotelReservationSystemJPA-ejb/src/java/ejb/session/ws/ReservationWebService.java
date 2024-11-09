@@ -5,12 +5,14 @@
 package ejb.session.ws;
 
 import ejb.session.stateless.ReservationSessionBeanLocal;
+import entity.Partner;
 import entity.Reservation;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.jws.WebService;
 import javax.jws.WebMethod;
 import javax.ejb.Stateless;
+import util.exception.InvalidReservationIdException;
 
 /**
  *
@@ -26,6 +28,21 @@ public class ReservationWebService {
     @WebMethod(operationName = "retrieveAllReservations")
     public List<Reservation> retrieveAllReservations() {
         return reservationSessionBeanLocal.retrieveAllReservations();
+    }
+    
+    @WebMethod(operationName = "createNewReservation")
+    public Reservation createNewReservation(Reservation newReservation) {
+        return reservationSessionBeanLocal.createNewReservation(newReservation);
+    }
+    
+    @WebMethod(operationName = "retrieveAllReservationsByPartner")
+    public List<Reservation> retrieveAllReservationsByPartner(Partner partner) {
+        return reservationSessionBeanLocal.retrieveAllReservationsByPartner(partner);
+    }
+    
+    @WebMethod(operationName = "getReservationByReservationId")
+    public Reservation getReservationByReservationId(Long reservationId) throws InvalidReservationIdException {
+        return reservationSessionBeanLocal.getReservationByReservationId(reservationId);
     }
     
     

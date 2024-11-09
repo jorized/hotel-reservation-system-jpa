@@ -1,16 +1,32 @@
 <?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is Metro/2.4.3 (RELEASE-2.4.3-ad3323c; 2019-01-21T17:46:06+0000) JAXWS-RI/2.3.2 JAXWS-API/2.3.2 JAXB-RI/2.3.2 JAXB-API/2.3.2 git-revision#unknown. --><xs:schema xmlns:tns="http://ws.session.ejb/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://ws.session.ejb/">
 
+<xs:element name="InvalidReservationIdException" type="tns:InvalidReservationIdException"/>
+
+<xs:element name="createNewReservation" type="tns:createNewReservation"/>
+
+<xs:element name="createNewReservationResponse" type="tns:createNewReservationResponse"/>
+
+<xs:element name="getReservationByReservationId" type="tns:getReservationByReservationId"/>
+
+<xs:element name="getReservationByReservationIdResponse" type="tns:getReservationByReservationIdResponse"/>
+
 <xs:element name="retrieveAllReservations" type="tns:retrieveAllReservations"/>
+
+<xs:element name="retrieveAllReservationsByPartner" type="tns:retrieveAllReservationsByPartner"/>
+
+<xs:element name="retrieveAllReservationsByPartnerResponse" type="tns:retrieveAllReservationsByPartnerResponse"/>
 
 <xs:element name="retrieveAllReservationsResponse" type="tns:retrieveAllReservationsResponse"/>
 
-<xs:complexType name="retrieveAllReservations">
-<xs:sequence/>
+<xs:complexType name="getReservationByReservationId">
+<xs:sequence>
+<xs:element name="arg0" type="xs:long" minOccurs="0"/>
+</xs:sequence>
 </xs:complexType>
 
-<xs:complexType name="retrieveAllReservationsResponse">
+<xs:complexType name="getReservationByReservationIdResponse">
 <xs:sequence>
-<xs:element name="return" type="tns:reservation" minOccurs="0" maxOccurs="unbounded"/>
+<xs:element name="return" type="tns:reservation" minOccurs="0"/>
 </xs:sequence>
 </xs:complexType>
 
@@ -59,6 +75,46 @@
 <xs:element name="size" type="xs:string" minOccurs="0"/>
 <xs:element name="tierNumber" type="xs:int" minOccurs="0"/>
 <xs:element name="typeName" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="InvalidReservationIdException">
+<xs:sequence>
+<xs:element name="message" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllReservationsByPartner">
+<xs:sequence>
+<xs:element name="arg0" type="tns:partner" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllReservationsByPartnerResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:reservation" minOccurs="0" maxOccurs="unbounded"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllReservations">
+<xs:sequence/>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllReservationsResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:reservation" minOccurs="0" maxOccurs="unbounded"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="createNewReservation">
+<xs:sequence>
+<xs:element name="arg0" type="tns:reservation" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="createNewReservationResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:reservation" minOccurs="0"/>
 </xs:sequence>
 </xs:complexType>
 

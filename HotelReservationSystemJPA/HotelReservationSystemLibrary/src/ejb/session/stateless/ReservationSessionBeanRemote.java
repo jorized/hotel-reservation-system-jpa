@@ -5,6 +5,7 @@
 package ejb.session.stateless;
 
 import entity.Guest;
+import entity.Partner;
 import entity.Reservation;
 import entity.Room;
 import entity.RoomRate;
@@ -36,6 +37,6 @@ public interface ReservationSessionBeanRemote {
     
     public Reservation updateReservation(Reservation updatedReservation) throws InvalidReservationIdException;
     
-    
+    public List<Reservation> retrieveAllReservationsByPartner(Partner partner);
     
 }

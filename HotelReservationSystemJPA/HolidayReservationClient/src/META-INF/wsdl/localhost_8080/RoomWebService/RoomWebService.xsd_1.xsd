@@ -1,14 +1,30 @@
 <?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is Metro/2.4.3 (RELEASE-2.4.3-ad3323c; 2019-01-21T17:46:06+0000) JAXWS-RI/2.3.2 JAXWS-API/2.3.2 JAXB-RI/2.3.2 JAXB-API/2.3.2 git-revision#unknown. --><xs:schema xmlns:tns="http://ws.session.ejb/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://ws.session.ejb/">
 
+<xs:element name="InvalidRoomTypeTierNumberException" type="tns:InvalidRoomTypeTierNumberException"/>
+
+<xs:element name="UpdateRoomException" type="tns:UpdateRoomException"/>
+
+<xs:element name="allocateRooms" type="tns:allocateRooms"/>
+
+<xs:element name="allocateRoomsResponse" type="tns:allocateRoomsResponse"/>
+
+<xs:element name="retrieveAllAvailableRooms" type="tns:retrieveAllAvailableRooms"/>
+
+<xs:element name="retrieveAllAvailableRoomsResponse" type="tns:retrieveAllAvailableRoomsResponse"/>
+
 <xs:element name="retrieveAllRooms" type="tns:retrieveAllRooms"/>
 
 <xs:element name="retrieveAllRoomsResponse" type="tns:retrieveAllRoomsResponse"/>
 
-<xs:complexType name="retrieveAllRooms">
+<xs:element name="updateRoom" type="tns:updateRoom"/>
+
+<xs:element name="updateRoomResponse" type="tns:updateRoomResponse"/>
+
+<xs:complexType name="retrieveAllAvailableRooms">
 <xs:sequence/>
 </xs:complexType>
 
-<xs:complexType name="retrieveAllRoomsResponse">
+<xs:complexType name="retrieveAllAvailableRoomsResponse">
 <xs:sequence>
 <xs:element name="return" type="tns:room" minOccurs="0" maxOccurs="unbounded"/>
 </xs:sequence>
@@ -36,6 +52,48 @@
 <xs:element name="size" type="xs:string" minOccurs="0"/>
 <xs:element name="tierNumber" type="xs:int" minOccurs="0"/>
 <xs:element name="typeName" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="updateRoom">
+<xs:sequence>
+<xs:element name="arg0" type="tns:room" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="updateRoomResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:room" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="UpdateRoomException">
+<xs:sequence>
+<xs:element name="message" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="allocateRooms">
+<xs:sequence/>
+</xs:complexType>
+
+<xs:complexType name="allocateRoomsResponse">
+<xs:sequence/>
+</xs:complexType>
+
+<xs:complexType name="InvalidRoomTypeTierNumberException">
+<xs:sequence>
+<xs:element name="message" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllRooms">
+<xs:sequence/>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllRoomsResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:room" minOccurs="0" maxOccurs="unbounded"/>
 </xs:sequence>
 </xs:complexType>
 

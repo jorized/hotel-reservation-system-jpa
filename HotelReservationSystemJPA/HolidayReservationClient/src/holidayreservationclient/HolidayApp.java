@@ -4,16 +4,33 @@
  */
 package holidayreservationclient;
 
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import ws.partner.InvalidLoginCredentialsException;
 import ws.partner.InvalidLoginCredentialsException_Exception;
 import ws.partner.Partner;
 import ws.partner.PartnerWebService_Service;
+import ws.reservation.Reservation;
+import ws.reservation.ReservationStatusEnum;
 import ws.reservation.ReservationWebService_Service;
+import ws.room.Room;
+import ws.room.RoomStatusEnum;
 import ws.room.RoomWebService_Service;
 import ws.roomrate.RoomRateWebService_Service;
+import ws.roomtype.ReservationTypeEnum;
 import ws.roomtype.RoomType;
+
 import ws.roomtype.RoomTypeWebService_Service;
 
 /**
@@ -125,11 +142,11 @@ public class HolidayApp {
                     if (response == 1) {
                         doSearchHotelRoom();
                     } else if (response == 2) {
-                        //doReserveHotelRoom();
+                        doReserveHotelRoom();
                     } else if (response == 3) {
-                        //doViewMyReservationDetails();
+                        doViewMyReservationDetails();
                     } else if (response == 4) {
-                        //doViewAllMyReservations();
+                        doViewAllMyReservations();
                     } else if (response == 5) {
                         System.out.println("Logging out...\n");
                         currentPartner = null;
@@ -146,8 +163,467 @@ public class HolidayApp {
     }
     
     private void doSearchHotelRoom() {
-        
+        try {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("*** Holiday Reservation System :: Search Hotel Room ***\n");
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+            Date checkInDate = promptForDate(scanner, dateFormat, "Enter check-in date (yyyy-MM-dd): ");
+            Date checkOutDate;
+
+            // Ensure check-out date is not the same as check-in date
+            while (true) {
+                checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
+                if (!checkOutDate.equals(checkInDate)) {
+                    break;
+                }
+                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+            }
+            System.out.print("Enter number of rooms you would like to book: ");
+            int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
+
+            List<Room> availableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableRooms();
+            if (availableRooms == null || availableRooms.isEmpty()) {
+                System.out.println("\nNo available rooms found for the selected dates.");
+                return;
+            }
+
+            // Call reserveRooms to display rooms and handle reservation if applicable
+            reserveRooms(checkInDate, checkOutDate, noOfRooms, availableRooms);
+
+        } catch (Exception ex) {
+            System.out.println("Error in searching for hotel room: " + ex.getMessage());
+        }
     }
     
+    private void doReserveHotelRoom() {
+        try {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("*** Holiday Reservation System :: Reserve Hotel Room ***\n");
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+            // Prompt for check-in date
+            Date checkInDate = promptForDate(scanner, dateFormat, "Enter check-in date (yyyy-MM-dd): ");
+
+            // Prompt for check-out date and ensure it's not the same as check-in date
+            Date checkOutDate;
+            while (true) {
+                checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
+                if (!checkOutDate.equals(checkInDate)) {
+                    break;
+                }
+                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+            }
+
+            System.out.print("Enter number of rooms you would like to book: ");
+            int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
+
+            List<Room> availableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableRooms();
+            if (availableRooms == null || availableRooms.isEmpty()) {
+                System.out.println("\nNo available rooms found for the selected dates.");
+                return;
+            }
+
+            int availableRoomSize = availableRooms.size();
+
+            if (availableRoomSize >= noOfRooms) {
+                System.out.println("\nAvailable rooms found. Proceeding with reservation...");
+                reserveRooms(checkInDate, checkOutDate, noOfRooms, availableRooms);
+            } else {
+                System.out.println("Not enough rooms are available. Available rooms: " + availableRoomSize);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("Error in reserving hotel room: " + ex.getMessage());
+        }
+    }
+    
+    private void reserveRooms(Date checkInDate, Date checkOutDate, int noOfRooms, List<Room> availableRooms) {
+        try {
+            // Lists to store room types and their corresponding amounts
+            List<RoomType> roomTypes = new ArrayList<>();
+            List<BigDecimal> totalPerRoomAmounts = new ArrayList<>();
+            List<List<ws.roomtype.Room>> roomsByType = new ArrayList<>();
+
+            // Group rooms by RoomTypeId using a Map to avoid duplicates
+            Map<Long, List<ws.roomtype.Room>> roomsByTypeIdMap = new HashMap<>();
+            Map<Long, RoomType> roomTypeMap = new HashMap<>();
+
+            for (Room room : availableRooms) {
+                RoomType roomType = convertToRoomtypeRoomType(room.getRoomType());
+                Long roomTypeId = roomType.getRoomTypeId();
+
+                // Map RoomType by ID for later access
+                roomTypeMap.putIfAbsent(roomTypeId, roomType);
+
+                // Group rooms by their RoomTypeId
+                roomsByTypeIdMap.computeIfAbsent(roomTypeId, k -> new ArrayList<>()).add(convertToRoomtypeRoom(room));
+            }
+
+            // Populate roomTypes and roomsByType lists based on the grouped map
+            for (Long roomTypeId : roomsByTypeIdMap.keySet()) {
+                roomTypes.add(roomTypeMap.get(roomTypeId));
+                roomsByType.add(roomsByTypeIdMap.get(roomTypeId));
+            }
+
+            boolean sufficientRoomsAvailable = false;
+            int maxAvailableRooms = 0;
+            RoomType requestedRoomType = null;
+
+            // Determine the maximum number of rooms available across all room types
+            for (int i = 0; i < roomTypes.size(); i++) {
+                RoomType roomType = roomTypes.get(i);
+                List<ws.roomtype.Room> roomsOfThisType = roomsByType.get(i);
+
+                if (roomsOfThisType.size() >= noOfRooms) {
+                    sufficientRoomsAvailable = true;
+
+                    // Set the requestedRoomType to the lowest-tier room type that has sufficient rooms
+                    if (requestedRoomType == null || roomType.getTierNumber() < requestedRoomType.getTierNumber()) {
+                        requestedRoomType = roomType;
+                    }
+                }
+
+                maxAvailableRooms = Math.max(maxAvailableRooms, roomsOfThisType.size());
+
+                // Calculate the per-room price for this room type
+                BigDecimal totalPerRoomAmount = BigDecimal.ZERO;
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(checkInDate);
+
+                while (calendar.getTime().before(checkOutDate)) {
+                    Date currentDate = calendar.getTime();
+                    BigDecimal ratePerNight = roomTypeService.getRoomTypeWebServicePort()
+                            .getLowestTierDailyRate(toXMLGregorianCalendar(currentDate), ReservationTypeEnum.ONLINE, roomsOfThisType);
+
+                    if (ratePerNight != null) {
+                        totalPerRoomAmount = totalPerRoomAmount.add(ratePerNight);
+                    }
+                    calendar.add(Calendar.DATE, 1);
+                }
+
+                totalPerRoomAmounts.add(totalPerRoomAmount);
+            }
+
+            // Check if sufficient rooms are available and output the results
+            if (sufficientRoomsAvailable) {
+                System.out.println("\nAvailable rooms for the selected dates:");
+                int index = roomTypes.indexOf(requestedRoomType);
+                System.out.println("Room Type: " + requestedRoomType.getTypeName() +
+                        " - $" + totalPerRoomAmounts.get(index) +
+                        " per room, Total Reservation Amount: $" +
+                        totalPerRoomAmounts.get(index).multiply(BigDecimal.valueOf(noOfRooms)) + " for " +
+                        noOfRooms + " rooms\n");
+            } else {
+                System.out.println("\nNo available room types have enough rooms for the requested number: " + noOfRooms);
+                System.out.println("The maximum number of rooms available to book is: " + maxAvailableRooms + "\n");
+                return;
+            }
+
+            // Ask the user if they want to proceed with the reservation
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("\nWould you like to proceed with reservation?");
+            System.out.println("1: Reserve Room(s)");
+            System.out.println("2: Go back");
+
+            System.out.print("\nEnter your choice > ");
+            int response = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            if (response == 1) {
+                if (currentPartner == null) {
+                    System.out.println("Error: you must login to reserve.");
+                    return;
+                }
+
+                // Re-fetch the latest available rooms after confirmation
+                List<Room> latestAvailableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableRooms();
+
+                // Group the latest available rooms by RoomTypeId
+                Map<Long, List<Room>> latestRoomsByTypeIdMap = new HashMap<>();
+                for (Room room : latestAvailableRooms) {
+                    ws.roomtype.RoomType convertedRoomType = convertToRoomtypeRoomType(room.getRoomType());
+                    Long roomTypeId = convertedRoomType.getRoomTypeId();
+                    latestRoomsByTypeIdMap.computeIfAbsent(roomTypeId, k -> new ArrayList<>()).add(room);
+                }
+
+                // Use the requestedRoomType to create a reservation with the specified number of rooms
+                int index = roomTypes.indexOf(requestedRoomType);
+
+                // Calculate the total reservation amount based on the requested room type and total number of rooms
+                BigDecimal totalReservationAmount = totalPerRoomAmounts.get(index)
+                        .multiply(BigDecimal.valueOf(noOfRooms));
+
+                int roomsToBook = noOfRooms;
+                List<Room> roomsToReserve = new ArrayList<>();
+
+                // Attempt to reserve rooms in the requested room type only
+                List<Room> latestRoomsOfRequestedType = latestRoomsByTypeIdMap.getOrDefault(requestedRoomType.getRoomTypeId(), new ArrayList<>());
+                int availableRoomsOfRequestedType = latestRoomsOfRequestedType.size();
+
+                int roomsToBookFromRequestedType = Math.min(roomsToBook, availableRoomsOfRequestedType);
+                roomsToBook -= roomsToBookFromRequestedType;
+
+                // Mark rooms as RESERVED
+                for (int j = 0; j < roomsToBookFromRequestedType; j++) {
+                    Room room = latestRoomsOfRequestedType.get(j);
+                    room.setRoomStatus(RoomStatusEnum.RESERVED);
+                    roomService.getRoomWebServicePort().updateRoom(room);
+                    roomsToReserve.add(room);
+                }
+
+                Reservation reservation = new Reservation(); 
+                reservation.setCheckInDate(toXMLGregorianCalendar(checkInDate));
+                reservation.setCheckOutDate(toXMLGregorianCalendar(checkOutDate));
+                reservation.setNumOfRooms(noOfRooms);
+                reservation.setReservationType(convertToReservationTypeEnum(ReservationTypeEnum.ONLINE));
+                reservation.setReservationAmount(totalReservationAmount);
+                reservation.setReservationStatusEnum(ReservationStatusEnum.CONFIRMED);
+                reservation.setRoomType(convertToReservationRoomType(requestedRoomType));
+                reservation.setPartner(convertToReservationPartner(currentPartner));
+
+                reservationService.getReservationWebServicePort().createNewReservation(reservation);
+
+                // Immediate allocation if conditions are met
+                if (stripTime(convertToDate(reservation.getCheckInDate())).equals(stripTime(new Date()))) {
+                    Calendar currentTime = Calendar.getInstance();
+                    int currentHour = currentTime.get(Calendar.HOUR_OF_DAY);
+                    if (currentHour >= 2) {
+                        roomService.getRoomWebServicePort().allocateRooms();
+                    }
+                }
+
+                System.out.println("Your reservation has successfully been made!\n");
+            } else if (response == 2) {
+                System.out.println("Returning to the main menu...");
+            } else {
+                System.out.println("Invalid option. Please try again.");
+            }
+        } catch (Exception ex) {
+            System.out.println("Error reserving hotel room: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    
+    private void doViewMyReservationDetails() {
+        try {
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.println("*** Holiday Reservation System :: View reservation details ***\n");
+
+            // Retrieve reservations for the current partner
+            List<Reservation> reservations = reservationService.getReservationWebServicePort().retrieveAllReservationsByPartner(convertToReservationPartner(currentPartner));
+
+            // Check if there are any reservations
+            if (reservations == null || reservations.isEmpty()) {
+                System.out.println("No reservations found.");
+                return;
+            }
+
+            // Display a summary of reservations in a table format
+            System.out.println("*** Reservation Summary ***\n");
+            System.out.printf("%-5s %-20s %-20s\n", "No.", "Room Type", "Total Amount");
+
+            int index = 1;
+            for (Reservation reservation : reservations) {
+                System.out.printf("%-5d %-20s %-20s\n",
+                        index++,
+                        reservation.getRoomType().getTypeName(),
+                        "$" + reservation.getReservationAmount());
+            }
+
+            System.out.print("\nEnter the reservation index number to view details: ");
+            int selectedIndex = scanner.nextInt();
+            scanner.nextLine();
+
+            // Validate index input
+            if (selectedIndex < 1 || selectedIndex > reservations.size()) {
+                System.out.println("Invalid index. Please try again.");
+                return;
+            }
+
+            // Retrieve the selected reservation
+            Reservation selectedReservation = reservations.get(selectedIndex - 1);
+
+            // Display detailed reservation information
+            System.out.println("\nReservation Details:");
+            System.out.println("Check-in Date: " + stripTime(convertToDate(selectedReservation.getCheckInDate())));
+            System.out.println("Check-out Date: " + stripTime(convertToDate(selectedReservation.getCheckOutDate())));
+            System.out.println("Room Type: " + selectedReservation.getRoomType().getTypeName());
+            System.out.println("Number of Rooms: " + selectedReservation.getNumOfRooms());
+            System.out.println("Total Amount: $" + selectedReservation.getReservationAmount());
+
+        } catch (Exception ex) {
+            System.out.println("Error viewing reservation details: " + ex.getMessage() + "\n");
+        }
+    }
+
+    
+    private void doViewAllMyReservations() {
+        try {
+            System.out.println("*** Holiday Reservation System :: View all reservations***\n");
+            System.out.printf("%-5s %-40s %-40s %-20s %-20s %-20s\n",
+                    "No.", "Check-in Date", "Check-out Date", "Room Type", "Number of Rooms", "Total Amount");
+            int index = 1;
+
+            List<Reservation> reservations = reservationService.getReservationWebServicePort().retrieveAllReservationsByPartner(convertToReservationPartner(currentPartner));
+
+            if (reservations.isEmpty()) {
+                System.out.println("No reservations found.");
+            } else {
+                for (Reservation reservation : reservations) {
+                    System.out.printf("%-5s %-40s %-40s %-20s %-20s %-20s\n",
+                            index++,
+                            stripTime(convertToDate(reservation.getCheckInDate())),
+                            stripTime(convertToDate(reservation.getCheckOutDate())),
+                            reservation.getRoomType().getTypeName(),
+                            reservation.getNumOfRooms(),
+                            "$" + reservation.getReservationAmount());
+                }
+            }
+
+            System.out.print("\n");
+
+        } catch (Exception ex) {
+            System.out.println("Error viewing all reservations: " + ex.getMessage() + "\n");
+        }
+    }
+            
+    /** HELPER METHODS **/
+    private Date promptForDate(Scanner scanner, SimpleDateFormat dateFormat, String prompt) {
+        Date date = null;
+        while (date == null) {
+            System.out.print(prompt);
+            String dateInput = scanner.nextLine().trim();
+            try {
+                date = dateFormat.parse(dateInput);
+
+                // Check if the date is today or later
+                Date today = new Date();
+                if (date.before(dateFormat.parse(dateFormat.format(today)))) {
+                    System.out.println("Date must be today or a future date. Please enter a valid date.");
+                    date = null; // Reset date to null to repeat the loop
+                }
+            } catch (ParseException e) {
+                System.out.println("Invalid date format. Please enter the date in yyyy-MM-dd format.");
+            }
+        }
+        return date;
+    }
+    
+    private Date stripTime(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
+    }
+    
+    //In jakarta EE, container manages conversion between Date and XMLGregorianCalendar, but for Non jakarta EE client,
+    //This conversion does not happen automatically because standard SOAP-based web services expect XMLGregorianCalendar
+    public XMLGregorianCalendar toXMLGregorianCalendar(Date date) {
+        try {
+            GregorianCalendar gregorianCalendar = new GregorianCalendar();
+            gregorianCalendar.setTime(date);
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }        
+    }
+    
+    private Date convertToDate(XMLGregorianCalendar xmlGregorianCalendar) {
+        if (xmlGregorianCalendar == null) {
+            return null;
+        }
+        return xmlGregorianCalendar.toGregorianCalendar().getTime();
+    }
+
+    
+
+
+
+   private ws.roomtype.RoomType convertToRoomtypeRoomType(ws.room.RoomType roomType) {
+        ws.roomtype.RoomType newRoomType = new ws.roomtype.RoomType();
+        
+        newRoomType.setRoomTypeId(roomType.getRoomTypeId());
+        newRoomType.setTypeName(roomType.getTypeName());
+        newRoomType.setTierNumber(roomType.getTierNumber());
+        newRoomType.setDescription(roomType.getDescription());
+        newRoomType.setBed(roomType.getBed());
+        newRoomType.setAmenities(roomType.getAmenities());
+        newRoomType.setCapacity(roomType.getCapacity());
+        newRoomType.setSize(roomType.getSize());
+        newRoomType.setRoomTypeStatus(convertToRoomtypeRoomTypeStatusEnum(roomType.getRoomTypeStatus()));
+
+        
+        return newRoomType;
+    }
+   
+   
+   
+   private ws.roomtype.Room convertToRoomtypeRoom(ws.room.Room room) {
+        ws.roomtype.Room convertedRoom = new ws.roomtype.Room();
+        convertedRoom.setRoomType(convertToRoomtypeRoomType(room.getRoomType()));
+        convertedRoom.setRoomNum(room.getRoomNum());
+        convertedRoom.setRoomStatus(convertToRoomtypeRoomStatusEnum(room.getRoomStatus()));
+        // Add other necessary fields
+        return convertedRoom;
+    }
+   
+   private ws.reservation.RoomType convertToReservationRoomType(ws.roomtype.RoomType roomType) {
+        ws.reservation.RoomType convertedRoomType = new ws.reservation.RoomType();
+        convertedRoomType.setRoomTypeId(roomType.getRoomTypeId());
+        convertedRoomType.setTypeName(roomType.getTypeName());
+        convertedRoomType.setTierNumber(roomType.getTierNumber());
+        convertedRoomType.setDescription(roomType.getDescription());
+        convertedRoomType.setBed(roomType.getBed());
+        convertedRoomType.setAmenities(roomType.getAmenities());
+        convertedRoomType.setCapacity(roomType.getCapacity());
+        convertedRoomType.setSize(roomType.getSize());
+        convertedRoomType.setRoomTypeStatus(convertToReservationRoomTypeStatusEnum(roomType.getRoomTypeStatus()));
+        // Map other fields as necessary
+        return convertedRoomType;
+    }
+
+    private ws.roomtype.RoomTypeStatusEnum convertToRoomtypeRoomTypeStatusEnum(ws.room.RoomTypeStatusEnum status) {
+        return ws.roomtype.RoomTypeStatusEnum.valueOf(status.name());
+    }
+
+   
+    private ws.roomtype.RoomStatusEnum convertToRoomtypeRoomStatusEnum(ws.room.RoomStatusEnum roomStatus) {
+        return ws.roomtype.RoomStatusEnum.valueOf(roomStatus.name());
+    }
+    
+    private ws.reservation.ReservationTypeEnum convertToReservationTypeEnum(ws.roomtype.ReservationTypeEnum type) {
+        return ws.reservation.ReservationTypeEnum.valueOf(type.name());
+    }
+    
+    private ws.reservation.RoomTypeStatusEnum convertToReservationRoomTypeStatusEnum(ws.roomtype.RoomTypeStatusEnum status) {
+        return ws.reservation.RoomTypeStatusEnum.valueOf(status.name());
+    }    
+    
+    private ws.reservation.Partner convertToReservationPartner(ws.partner.Partner partner) {
+        ws.reservation.Partner convertedPartner = new ws.reservation.Partner();
+        convertedPartner.setPartnerId(partner.getPartnerId());
+        convertedPartner.setUsername(partner.getUsername());
+        convertedPartner.setPassword(partner.getPassword());
+        return convertedPartner;
+    }
+
+
+
+
+
+
+
+    
+
+
     
 }
