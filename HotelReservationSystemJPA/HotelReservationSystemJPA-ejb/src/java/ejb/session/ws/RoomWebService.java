@@ -6,6 +6,7 @@ package ejb.session.ws;
 
 import ejb.session.stateless.RoomSessionBeanLocal;
 import entity.Room;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.jws.WebService;

@@ -42,10 +42,10 @@ public interface RoomSessionBeanRemote {
     
     public void allocateRooms() throws InvalidRoomTypeTierNumberException;
     
+    public void allocateRoomsManually(Date checkInDate) throws InvalidRoomTypeTierNumberException;
+    
     public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
-    
-    public void scheduleRoomAllocation(Date scheduledDate);
-    
+
     public Room retrieveRoomByRoomId(Long roomId);
 
 }

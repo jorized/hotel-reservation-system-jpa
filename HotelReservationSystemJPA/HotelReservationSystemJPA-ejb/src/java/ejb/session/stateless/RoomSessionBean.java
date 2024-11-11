@@ -255,22 +255,94 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
             }
         }
         System.out.println("*** DONE ALLOCATING ROOMS ***");
-    }        
+    }     
     
-    //Programmatic scheduling of room allocation
     @Override
-    public void scheduleRoomAllocation(Date scheduledDate) {
-        TimerConfig timerConfig = new TimerConfig("UserScheduledAllocation", false);
-        timerService.createSingleActionTimer(scheduledDate, timerConfig);
-    }
-    
-    @Timeout
-    public void handleTimeout(Timer timer) throws InvalidRoomTypeTierNumberException {
-        if (timer.getInfo().equals("UserScheduledAllocation")) {
-            allocateRooms();
-        }
-    }
+    public void allocateRoomsManually(Date checkInDate) throws InvalidRoomTypeTierNumberException {
+        System.out.println("*** START MANUALLY ALLOCATING ROOMS ***");
 
+        List<Reservation> reservations = em.createQuery(
+            "SELECT r FROM Reservation r WHERE r.reservationId NOT IN (SELECT rr.reservation.reservationId FROM RoomReservation rr) AND r.checkInDate = :checkInDate",
+            Reservation.class
+        )
+        .setParameter("checkInDate", checkInDate)
+        .getResultList();
+
+        for (Reservation reservation : reservations) {
+            RoomType currentRoomType = reservation.getRoomType();
+            int roomsNeeded = reservation.getNumOfRooms();
+            int roomsAllocated = 0;
+
+            System.out.println("Processing Reservation ID: " + reservation.getReservationId());
+            System.out.println("Current Room Type: " + currentRoomType.getTypeName());
+            System.out.println("Rooms Needed: " + roomsNeeded);
+
+            while (roomsAllocated < roomsNeeded) {
+                List<Room> reservedRooms = retrieveAllReservedRoomsByRoomType(currentRoomType);
+
+                if (!reservedRooms.isEmpty()) {
+                    Room room = reservedRooms.get(0);
+                    System.out.println("Allocating Reserved Room: " + room.getRoomNum());
+                    RoomReservation newRoomReservation = new RoomReservation(room, reservation);
+                    room.setRoomStatus(RoomStatusEnum.ALLOCATED);
+                    roomReservationSessionBeanLocal.createNewRoomReservation(newRoomReservation);
+                    roomsAllocated++;
+                } else {
+                    System.out.println("No Reserved Rooms Available in Current Room Type.");
+                    // Upgrade to next tier if available
+                    try {
+                        RoomType upgradedRoomType = roomTypeSessionBeanLocal.retrieveRoomTypeByTierNumber(currentRoomType.getTierNumber() + 1);
+                        if (upgradedRoomType != null) {
+                            List<Room> upgradedAvailableRooms = retrieveAllAvailableRoomsByRoomType(upgradedRoomType);
+                            if (!upgradedAvailableRooms.isEmpty()) {
+                                Room upgradedRoom = upgradedAvailableRooms.get(0);
+                                System.out.println("Allocating Available Upgraded Room: " + upgradedRoom.getRoomNum());
+                                RoomReservation newRoomReservation = new RoomReservation(upgradedRoom, reservation);
+                                upgradedRoom.setRoomStatus(RoomStatusEnum.ALLOCATED);
+                                roomReservationSessionBeanLocal.createNewRoomReservation(newRoomReservation);
+                                roomsAllocated++;
+                                // Create Exception Report
+                                ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE_1, newRoomReservation);
+                                exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
+                            } else {
+                                System.out.println("No Available Rooms in Upgraded Room Type.");
+                                // Create Exception Report Type 2
+                                RoomReservation emptyRoomReservation = new RoomReservation(null, reservation);
+                                roomReservationSessionBeanLocal.createNewRoomReservation(emptyRoomReservation);
+
+                                ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE_2, emptyRoomReservation);
+                                exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
+
+                                roomsAllocated++;
+                            }
+                        } else {
+                            System.out.println("No Higher Tier Room Type Available for Upgrade.");
+                            // Create Exception Report Type 2
+                            RoomReservation emptyRoomReservation = new RoomReservation(null, reservation);
+                            roomReservationSessionBeanLocal.createNewRoomReservation(emptyRoomReservation);
+
+                            ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE_2, emptyRoomReservation);
+                            exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
+
+                            roomsAllocated++;
+                        }
+                    } catch (InvalidRoomTypeTierNumberException ex) {
+                        System.out.println("No Higher Tier Room Type Available for Upgrade.");
+                        // Create Exception Report Type 2
+                        RoomReservation emptyRoomReservation = new RoomReservation(null, reservation);
+                        roomReservationSessionBeanLocal.createNewRoomReservation(emptyRoomReservation);
+
+                        ExceptionReport exceptionReport = new ExceptionReport(ExceptionTypeReportEnum.TYPE_2, emptyRoomReservation);
+                        exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
+
+                        roomsAllocated++;
+                    }                    
+                }
+            }
+        }
+        System.out.println("*** DONE MANUALY ALLOCATING ROOMS ***");
+    }
+        
     @Override
     public List<Room> retrieveAllAvailableRooms() {
         Query query = em.createQuery("SELECT r FROM Room r WHERE r.roomStatus = :availableStatus", Room.class)
