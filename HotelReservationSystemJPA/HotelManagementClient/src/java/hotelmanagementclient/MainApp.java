@@ -42,11 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.ejb.TimerConfig;
 import util.enumeration.ExceptionTypeReportEnum;
 import util.enumeration.ReservationStatusEnum;
 import util.enumeration.ReservationTypeEnum;
@@ -1700,7 +1696,6 @@ public class MainApp {
                         ReservationTypeEnum.WALKIN,
                         totalReservationAmount,
                         ReservationStatusEnum.CONFIRMED,
-                        new Date(),
                         verifiedGuest,
                         requestedRoomType,
                         null

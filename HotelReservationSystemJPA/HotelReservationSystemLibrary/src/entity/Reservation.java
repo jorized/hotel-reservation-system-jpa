@@ -55,10 +55,6 @@ public class Reservation implements Serializable {
     @JoinColumn
     private Guest guest;
     
-//    @ManyToOne(optional = false)
-//    @JoinColumn(nullable = false)
-//    private RoomRate roomRate;
-    
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private RoomType roomType;
@@ -70,7 +66,7 @@ public class Reservation implements Serializable {
     public Reservation() {
     }
 
-    public Reservation(Date checkInDate, Date checkOutDate, Integer numOfRooms, ReservationTypeEnum reservationType, BigDecimal reservationAmount, ReservationStatusEnum reservationStatusEnum, Date createdAt, Guest guest, RoomType roomType, Partner partner) {
+    public Reservation(Date checkInDate, Date checkOutDate, Integer numOfRooms, ReservationTypeEnum reservationType, BigDecimal reservationAmount, ReservationStatusEnum reservationStatusEnum, Guest guest, RoomType roomType, Partner partner) {
         this();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
@@ -83,11 +79,6 @@ public class Reservation implements Serializable {
         this.partner = partner;
     }
     
-    
-    //Will set the current datetime right before persisting. 
-    //Not wise to store it in constructor because createdAt would be initialized every time a Reservation object is instantiated, 
-    //Regardless of whether it will be saved or not.
-
     public ReservationStatusEnum getReservationStatusEnum() {
         return reservationStatusEnum;
     }
