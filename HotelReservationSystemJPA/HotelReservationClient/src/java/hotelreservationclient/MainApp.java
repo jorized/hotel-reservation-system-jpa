@@ -427,7 +427,6 @@ public class MainApp {
                         ReservationTypeEnum.ONLINE,
                         totalReservationAmount,
                         ReservationStatusEnum.CONFIRMED,
-                        new Date(),
                         currentCustomer,
                         requestedRoomType,
                         null
