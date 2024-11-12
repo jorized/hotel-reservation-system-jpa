@@ -28,6 +28,8 @@ public interface RoomRateSessionBeanRemote {
 
     public RoomRate retrieveRoomRateByRoomName(String rateName) throws InvalidRoomRateNameException;
 
+    public List<RoomRate> retrieveAllRoomRatesByRoomType(RoomType roomType);
+
     public RoomRate updateRoomRate(RoomRate updatedRoomRate) throws UpdateRoomRateException;
 
     public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException;
@@ -36,6 +38,8 @@ public interface RoomRateSessionBeanRemote {
 
     public BigDecimal getDailyRate(Date date, RoomType roomType, ReservationTypeEnum reservationTypeEnum);
 
+    public RoomRate getDailyRateRoomRate(Date date, RoomType roomType, ReservationTypeEnum reservationTypeEnum);
+
     public RoomRate getRoomRateForType(RoomType roomType, Date currentDate) throws InvalidRoomRateException;
-    
+
 }

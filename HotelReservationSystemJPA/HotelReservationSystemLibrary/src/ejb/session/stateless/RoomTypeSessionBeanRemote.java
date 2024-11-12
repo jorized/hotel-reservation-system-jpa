@@ -30,7 +30,11 @@ public interface RoomTypeSessionBeanRemote {
     
     public List<RoomType> retrieveAllRoomTypes();
     
+    public List<RoomType> retrieveAllActiveRoomTypes();
+    
     public RoomType retrieveRoomTypeByName(String typeName) throws InvalidRoomTypeNameException;
+    
+    public RoomType retrieveActiveRoomTypeByName(String typeName) throws InvalidRoomTypeNameException;
     
     public RoomType updateRoomType(RoomType updatedRoomType) throws InvalidRoomTypeTierNumberException, InvalidRoomTypeCapacityException;
     
