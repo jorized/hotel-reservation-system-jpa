@@ -16,6 +16,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import util.enumeration.ReservationTypeEnum;
+import util.enumeration.RoomTypeStatusEnum;
 import util.exception.InvalidRoomException;
 import util.exception.InvalidRoomTypeCapacityException;
 import util.exception.InvalidRoomTypeException;
@@ -132,6 +133,13 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
 
         return query.getResultList();
     }
+    
+    @Override
+    public List<RoomType> retrieveAllActiveRoomTypes() {
+        Query query = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.roomTypeStatus = :roomTypeStatus ORDER BY rt.tierNumber", RoomType.class)
+                        .setParameter("roomTypeStatus", RoomTypeStatusEnum.ACTIVE);
+        return query.getResultList();
+    }
 
     @Override
     public RoomType retrieveRoomTypeByName(String typeName) throws InvalidRoomTypeNameException {
@@ -145,32 +153,48 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     }
 
     @Override
+    public RoomType retrieveActiveRoomTypeByName(String typeName) throws InvalidRoomTypeNameException {
+        try {
+            return em.createQuery("SELECT rt FROM RoomType rt WHERE rt.typeName = :typeName AND rt.roomTypeStatus = :roomTypeStatus", RoomType.class)
+                    .setParameter("typeName", typeName)
+                    .setParameter("roomTypeStatus", RoomTypeStatusEnum.ACTIVE)
+                    .getSingleResult();
+        } catch (NoResultException ex) {
+            throw new InvalidRoomTypeNameException("Invalid or inactive room type name.");
+        }
+    }
+
+    @Override
     public RoomType retrieveRoomTypeByTierNumber(Integer tierNumber) throws InvalidRoomTypeTierNumberException {
         try {
             return em.createQuery("SELECT rt FROM RoomType rt WHERE rt.tierNumber = :tierNumber", RoomType.class)
-                     .setParameter("tierNumber", tierNumber)
-                     .getSingleResult();
+                    .setParameter("tierNumber", tierNumber)
+                    .getSingleResult();
         } catch (NoResultException ex) {
             throw new InvalidRoomTypeTierNumberException("Invalid room type tier number.");
         }
     }
-    
+
     @Override
     public void deleteRoomType(RoomType existingRoomType) throws RoomTypeInUseException {
         //Check if existing room type is linked to any rooms. (Get all rooms linked to that room type)
-        //Not sure what they mean by "if room type is not used", but for now assume that it means no rooms are linked
-        //But could potentially need to change to check check-in/check-out date?
         RoomType managedRoomType = em.find(RoomType.class, existingRoomType.getRoomTypeId());
 
-        if (roomSessionBeanLocal.retrieveAllRoomsByRoomType(managedRoomType).isEmpty()) {
+        boolean roomTypeLinkedToRooms = !roomSessionBeanLocal.retrieveAllRoomsByRoomType(managedRoomType).isEmpty();
+        boolean roomTypeLinkedToRoomRates = !roomRateSessionBeanLocal.retrieveAllRoomRatesByRoomType(managedRoomType).isEmpty();
+        
+        if (!roomTypeLinkedToRooms && !roomTypeLinkedToRoomRates) {
             em.remove(managedRoomType);
             em.flush();
             //Shift existing tier numbers down too
             shiftTierNumbersDownForDelete(managedRoomType.getTierNumber());
         } else {
-            throw new RoomTypeInUseException("Room type is currently in use. Unable to delete.");
-        }        
-    }    
+            // if in use, marked as disabled
+            managedRoomType.setRoomTypeStatus(RoomTypeStatusEnum.DISABLED);
+            em.merge(managedRoomType);
+            throw new RoomTypeInUseException("Room type is currently in use. Marked as disabled instead of deletion.");
+        }
+    }
 
     private void shiftTierNumberUpForCreate(Integer fromTier) {
         List<RoomType> affectedRoomTypes = em.createQuery(

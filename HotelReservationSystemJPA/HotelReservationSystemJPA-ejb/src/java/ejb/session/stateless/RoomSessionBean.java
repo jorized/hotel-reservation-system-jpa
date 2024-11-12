@@ -36,7 +36,7 @@ import util.exception.UpdateRoomException;
  */
 @Stateless
 public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLocal {
-    
+
     @Resource
     private TimerService timerService;
 
@@ -47,13 +47,13 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     private RoomTypeSessionBeanLocal roomTypeSessionBeanLocal;
 
     @EJB
-    private RoomReservationSessionBeanLocal roomReservationSessionBeanLocal;                
+    private RoomReservationSessionBeanLocal roomReservationSessionBeanLocal;
 
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
-    private EntityManager em;        
-    
+    private EntityManager em;
+
     @Override
     public Room createNewRoom(Room newRoom) throws RoomAlreadyExistException {
 
@@ -118,27 +118,18 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
         Room managedRoom = em.find(Room.class, existingRoom.getRoomId());
 
         // Check if the room has any active reservations or is in use
-        if (isRoomInUse(managedRoom.getRoomId())) {
-            // If in use, disable the room instead of deleting
-            managedRoom.setRoomStatus(RoomStatusEnum.DISABLED);
-            em.merge(managedRoom); // Update the status to DISABLED in the database
-            em.flush();
-            return "Room is in use, status has been changed to 'DISABLED'.\n";
-        } else {
-            // If not in use, proceed to delete the room
+        if (managedRoom.getRoomStatus() == RoomStatusEnum.AVAILABLE) {
+            // If AVAILABLE, proceed to delete the room
             em.remove(managedRoom);
             em.flush();
             return "Room has successfully been removed.\n";
+        } else {
+            // If not AVAILABLE, mark the room as DISABLED instead
+            managedRoom.setRoomStatus(RoomStatusEnum.DISABLED);
+            em.merge(managedRoom); // Update the status to DISABLED in the database
+            em.flush();
+            return "Room is not available, room status has been changed to 'DISABLED'.\n";
         }
-    }
-
-    public boolean isRoomInUse(Long roomId) {
-        // Query to check if there are any active reservations for the room
-        return !em.createQuery("SELECT r FROM Room r WHERE r.roomId = :roomId AND r.roomStatus = :notInUseStatus")
-                .setParameter("roomId", roomId)
-                .setParameter("notInUseStatus", RoomStatusEnum.NOT_AVAILABLE)
-                .getResultList()
-                .isEmpty();
     }
 
     @Override
@@ -147,30 +138,30 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
                 .setParameter("roomType", roomType)
                 .getResultList();
     }
-    
+
     @Override
     public List<Room> retrieveAllRooms() {
         Query query = em.createQuery("SELECT r FROM Room r ORDER BY r.roomNum");
-	
-	return query.getResultList();
+
+        return query.getResultList();
     }
-    
+
     @Override
     public List<Room> retrieveAllReservedRoomsByRoomType(RoomType roomType) {
         return em.createQuery("SELECT r FROM Room r WHERE r.roomType = :roomType AND r.roomStatus = :roomStatus", Room.class)
-        .setParameter("roomType", roomType)
-        .setParameter("roomStatus", RoomStatusEnum.RESERVED)
-        .getResultList();
+                .setParameter("roomType", roomType)
+                .setParameter("roomStatus", RoomStatusEnum.RESERVED)
+                .getResultList();
     }
-    
+
     @Override
     public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType) {
         return em.createQuery("SELECT r FROM Room r WHERE r.roomType = :roomType AND r.roomStatus = :roomStatus", Room.class)
-        .setParameter("roomType", roomType)
-        .setParameter("roomStatus", RoomStatusEnum.AVAILABLE)
-        .getResultList();
+                .setParameter("roomType", roomType)
+                .setParameter("roomStatus", RoomStatusEnum.AVAILABLE)
+                .getResultList();
     }
-    
+
     //Room allocation method (EJB timer method that runs at 2am)
     //@Schedule(hour = "*", minute = "*", second = "*/5", info = "allocateRooms")
     @Schedule(hour = "2", minute = "0", second = "0", info = "allocateRooms")
@@ -178,8 +169,8 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
         System.out.println("*** START ALLOCATING ROOMS ***");
 
         List<Reservation> reservations = em.createQuery(
-            "SELECT r FROM Reservation r WHERE r.reservationId NOT IN (SELECT rr.reservation.reservationId FROM RoomReservation rr) AND r.checkInDate = CURRENT_DATE",
-            Reservation.class
+                "SELECT r FROM Reservation r WHERE r.reservationId NOT IN (SELECT rr.reservation.reservationId FROM RoomReservation rr) AND r.checkInDate = CURRENT_DATE",
+                Reservation.class
         ).getResultList();
 
         for (Reservation reservation : reservations) {
@@ -250,23 +241,23 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
                         exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
 
                         roomsAllocated++;
-                    }                    
+                    }
                 }
             }
         }
         System.out.println("*** DONE ALLOCATING ROOMS ***");
-    }     
-    
+    }
+
     @Override
     public void allocateRoomsManually(Date checkInDate) throws InvalidRoomTypeTierNumberException {
         System.out.println("*** START MANUALLY ALLOCATING ROOMS ***");
 
         List<Reservation> reservations = em.createQuery(
-            "SELECT r FROM Reservation r WHERE r.reservationId NOT IN (SELECT rr.reservation.reservationId FROM RoomReservation rr) AND r.checkInDate = :checkInDate",
-            Reservation.class
+                "SELECT r FROM Reservation r WHERE r.reservationId NOT IN (SELECT rr.reservation.reservationId FROM RoomReservation rr) AND r.checkInDate = :checkInDate",
+                Reservation.class
         )
-        .setParameter("checkInDate", checkInDate)
-        .getResultList();
+                .setParameter("checkInDate", checkInDate)
+                .getResultList();
 
         for (Reservation reservation : reservations) {
             RoomType currentRoomType = reservation.getRoomType();
@@ -336,38 +327,37 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
                         exceptionReportSessionBeanLocal.createNewExceptionReport(exceptionReport);
 
                         roomsAllocated++;
-                    }                    
+                    }
                 }
             }
         }
         System.out.println("*** DONE MANUALY ALLOCATING ROOMS ***");
     }
-        
+
     @Override
     public List<Room> retrieveAllAvailableRooms() {
         Query query = em.createQuery("SELECT r FROM Room r WHERE r.roomStatus = :availableStatus", Room.class)
-                        .setParameter("availableStatus", RoomStatusEnum.AVAILABLE);
+                .setParameter("availableStatus", RoomStatusEnum.AVAILABLE);
 
         List<Room> rooms = query.getResultList();
         System.out.println("Rooms retrieved: " + rooms);
         return rooms;
     }
-    
+
     @Override
     public boolean checkRoomNum(String roomNum) {
         return em.createQuery("SELECT COUNT(r) FROM Room r WHERE r.roomNum = :roomNum", Long.class)
-                 .setParameter("roomNum", roomNum)
-                 .getSingleResult() > 0;
+                .setParameter("roomNum", roomNum)
+                .getSingleResult() > 0;
     }
-    
+
     @Override
     public Room retrieveRoomByRoomId(Long roomId) {
         Room room = em.createQuery("SELECT r FROM Room r WHERE r.roomId = :roomId", Room.class)
-                 .setParameter("roomId", roomId)
-                 .getSingleResult();
+                .setParameter("roomId", roomId)
+                .getSingleResult();
         em.refresh(room);
         return room;
-    }   
-    
-    
+    }
+
 }

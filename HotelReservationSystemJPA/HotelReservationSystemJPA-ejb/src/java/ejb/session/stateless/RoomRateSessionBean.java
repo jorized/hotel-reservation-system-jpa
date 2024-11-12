@@ -4,10 +4,12 @@
  */
 package ejb.session.stateless;
 
+import entity.Room;
 import entity.RoomRate;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.util.Calendar;import java.util.Date;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -70,6 +72,14 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         }
     }
 
+    @Override
+    public List<RoomRate> retrieveAllRoomRatesByRoomType(RoomType roomType) {
+        return em.createQuery("SELECT rR FROM RoomRate rR WHERE rR.roomType = :roomType", RoomRate.class)
+                .setParameter("roomType", roomType)
+                .getResultList();
+    }
+
+    @Override
     public RoomRate updateRoomRate(RoomRate updatedRoomRate) throws UpdateRoomRateException {
         try {
             RoomRate existingRoomRate = em.find(RoomRate.class, updatedRoomRate.getRoomRateId());
@@ -106,9 +116,8 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
 
     @Override
     public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException {
-        //Check if existing room type is linked to any rooms. (Get all rooms linked to that room type)
-        //Not sure what they mean by "if room type is not used", but for now assume that it means no rooms are linked
-        //But could potentially need to change to check check-in/check-out date?
+        //Check if existing room rate is linked to any reservations. (Get all rooms linked to that room type)
+
         RoomRate managedRoomRate = em.find(RoomRate.class, existingRoomRate.getRoomRateId());
 
         if (reservationSessionBeanLocal.retrieveAllReservationsByRoomRate(managedRoomRate).isEmpty()) {
@@ -159,6 +168,38 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         }
 
         return rate;
+    }
+
+    @Override
+    public RoomRate getDailyRateRoomRate(Date date, RoomType roomType, ReservationTypeEnum reservationTypeEnum) {
+        RoomRate selectedRoomRate = null;
+        List<RoomRate> roomRates = retrieveAllRoomRates();
+
+        for (RoomRate roomRate : roomRates) {
+            if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
+                
+                if (reservationTypeEnum == ReservationTypeEnum.ONLINE) {
+                    if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
+                            && isWithinPeriod(date, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
+                        return roomRate; 
+                    }
+                    if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
+                            && isWithinPeriod(date, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
+                        selectedRoomRate = roomRate; 
+                    }
+                    if (roomRate.getRateType() == RoomRateTypeEnum.NORMAL && selectedRoomRate == null) {
+                        selectedRoomRate = roomRate; 
+                    }
+                }
+
+                if (reservationTypeEnum == ReservationTypeEnum.WALKIN
+                        && roomRate.getRateType() == RoomRateTypeEnum.PUBLISHED) {
+                    return roomRate;
+                }
+            }
+        }
+
+        return selectedRoomRate;
     }
 
     private boolean isWithinPeriod(Date date, Date startDate, Date endDate) {

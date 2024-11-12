@@ -4,11 +4,14 @@
 <xsd:import namespace="http://ws.session.ejb/" schemaLocation="http://localhost:8080/RoomWebService/RoomWebService?xsd=1"/>
 </xsd:schema>
 </types>
-<message name="retrieveAllAvailableRooms">
-<part name="parameters" element="tns:retrieveAllAvailableRooms"/>
+<message name="updateRoom">
+<part name="parameters" element="tns:updateRoom"/>
 </message>
-<message name="retrieveAllAvailableRoomsResponse">
-<part name="parameters" element="tns:retrieveAllAvailableRoomsResponse"/>
+<message name="updateRoomResponse">
+<part name="parameters" element="tns:updateRoomResponse"/>
+</message>
+<message name="UpdateRoomException">
+<part name="fault" element="tns:UpdateRoomException"/>
 </message>
 <message name="allocateRooms">
 <part name="parameters" element="tns:allocateRooms"/>
@@ -19,44 +22,41 @@
 <message name="InvalidRoomTypeTierNumberException">
 <part name="fault" element="tns:InvalidRoomTypeTierNumberException"/>
 </message>
-<message name="updateRoom">
-<part name="parameters" element="tns:updateRoom"/>
-</message>
-<message name="updateRoomResponse">
-<part name="parameters" element="tns:updateRoomResponse"/>
-</message>
-<message name="UpdateRoomException">
-<part name="fault" element="tns:UpdateRoomException"/>
-</message>
 <message name="retrieveAllRooms">
 <part name="parameters" element="tns:retrieveAllRooms"/>
 </message>
 <message name="retrieveAllRoomsResponse">
 <part name="parameters" element="tns:retrieveAllRoomsResponse"/>
 </message>
+<message name="retrieveAllAvailableRooms">
+<part name="parameters" element="tns:retrieveAllAvailableRooms"/>
+</message>
+<message name="retrieveAllAvailableRoomsResponse">
+<part name="parameters" element="tns:retrieveAllAvailableRoomsResponse"/>
+</message>
 <portType name="RoomWebService">
-<operation name="retrieveAllAvailableRooms">
-<input wsam:Action="http://ws.session.ejb/RoomWebService/retrieveAllAvailableRoomsRequest" message="tns:retrieveAllAvailableRooms"/>
-<output wsam:Action="http://ws.session.ejb/RoomWebService/retrieveAllAvailableRoomsResponse" message="tns:retrieveAllAvailableRoomsResponse"/>
+<operation name="updateRoom">
+<input wsam:Action="http://ws.session.ejb/RoomWebService/updateRoomRequest" message="tns:updateRoom"/>
+<output wsam:Action="http://ws.session.ejb/RoomWebService/updateRoomResponse" message="tns:updateRoomResponse"/>
+<fault message="tns:UpdateRoomException" name="UpdateRoomException" wsam:Action="http://ws.session.ejb/RoomWebService/updateRoom/Fault/UpdateRoomException"/>
 </operation>
 <operation name="allocateRooms">
 <input wsam:Action="http://ws.session.ejb/RoomWebService/allocateRoomsRequest" message="tns:allocateRooms"/>
 <output wsam:Action="http://ws.session.ejb/RoomWebService/allocateRoomsResponse" message="tns:allocateRoomsResponse"/>
 <fault message="tns:InvalidRoomTypeTierNumberException" name="InvalidRoomTypeTierNumberException" wsam:Action="http://ws.session.ejb/RoomWebService/allocateRooms/Fault/InvalidRoomTypeTierNumberException"/>
 </operation>
-<operation name="updateRoom">
-<input wsam:Action="http://ws.session.ejb/RoomWebService/updateRoomRequest" message="tns:updateRoom"/>
-<output wsam:Action="http://ws.session.ejb/RoomWebService/updateRoomResponse" message="tns:updateRoomResponse"/>
-<fault message="tns:UpdateRoomException" name="UpdateRoomException" wsam:Action="http://ws.session.ejb/RoomWebService/updateRoom/Fault/UpdateRoomException"/>
-</operation>
 <operation name="retrieveAllRooms">
 <input wsam:Action="http://ws.session.ejb/RoomWebService/retrieveAllRoomsRequest" message="tns:retrieveAllRooms"/>
 <output wsam:Action="http://ws.session.ejb/RoomWebService/retrieveAllRoomsResponse" message="tns:retrieveAllRoomsResponse"/>
 </operation>
+<operation name="retrieveAllAvailableRooms">
+<input wsam:Action="http://ws.session.ejb/RoomWebService/retrieveAllAvailableRoomsRequest" message="tns:retrieveAllAvailableRooms"/>
+<output wsam:Action="http://ws.session.ejb/RoomWebService/retrieveAllAvailableRoomsResponse" message="tns:retrieveAllAvailableRoomsResponse"/>
+</operation>
 </portType>
 <binding name="RoomWebServicePortBinding" type="tns:RoomWebService">
 <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
-<operation name="retrieveAllAvailableRooms">
+<operation name="updateRoom">
 <soap:operation soapAction=""/>
 <input>
 <soap:body use="literal"/>
@@ -64,6 +64,9 @@
 <output>
 <soap:body use="literal"/>
 </output>
+<fault name="UpdateRoomException">
+<soap:fault name="UpdateRoomException" use="literal"/>
+</fault>
 </operation>
 <operation name="allocateRooms">
 <soap:operation soapAction=""/>
@@ -77,7 +80,7 @@
 <soap:fault name="InvalidRoomTypeTierNumberException" use="literal"/>
 </fault>
 </operation>
-<operation name="updateRoom">
+<operation name="retrieveAllRooms">
 <soap:operation soapAction=""/>
 <input>
 <soap:body use="literal"/>
@@ -85,11 +88,8 @@
 <output>
 <soap:body use="literal"/>
 </output>
-<fault name="UpdateRoomException">
-<soap:fault name="UpdateRoomException" use="literal"/>
-</fault>
 </operation>
-<operation name="retrieveAllRooms">
+<operation name="retrieveAllAvailableRooms">
 <soap:operation soapAction=""/>
 <input>
 <soap:body use="literal"/>
