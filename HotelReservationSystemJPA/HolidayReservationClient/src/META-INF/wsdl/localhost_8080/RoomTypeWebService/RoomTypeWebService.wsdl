@@ -4,6 +4,12 @@
 <xsd:import namespace="http://ws.session.ejb/" schemaLocation="http://localhost:8080/RoomTypeWebService/RoomTypeWebService?xsd=1"/>
 </xsd:schema>
 </types>
+<message name="retrieveAllRoomTypes">
+<part name="parameters" element="tns:retrieveAllRoomTypes"/>
+</message>
+<message name="retrieveAllRoomTypesResponse">
+<part name="parameters" element="tns:retrieveAllRoomTypesResponse"/>
+</message>
 <message name="getLowestTierDailyRate">
 <part name="parameters" element="tns:getLowestTierDailyRate"/>
 </message>
@@ -16,26 +22,29 @@
 <message name="InvalidRoomException">
 <part name="fault" element="tns:InvalidRoomException"/>
 </message>
-<message name="retrieveAllRoomTypes">
-<part name="parameters" element="tns:retrieveAllRoomTypes"/>
-</message>
-<message name="retrieveAllRoomTypesResponse">
-<part name="parameters" element="tns:retrieveAllRoomTypesResponse"/>
-</message>
 <portType name="RoomTypeWebService">
+<operation name="retrieveAllRoomTypes">
+<input wsam:Action="http://ws.session.ejb/RoomTypeWebService/retrieveAllRoomTypesRequest" message="tns:retrieveAllRoomTypes"/>
+<output wsam:Action="http://ws.session.ejb/RoomTypeWebService/retrieveAllRoomTypesResponse" message="tns:retrieveAllRoomTypesResponse"/>
+</operation>
 <operation name="getLowestTierDailyRate">
 <input wsam:Action="http://ws.session.ejb/RoomTypeWebService/getLowestTierDailyRateRequest" message="tns:getLowestTierDailyRate"/>
 <output wsam:Action="http://ws.session.ejb/RoomTypeWebService/getLowestTierDailyRateResponse" message="tns:getLowestTierDailyRateResponse"/>
 <fault message="tns:InvalidRoomTypeException" name="InvalidRoomTypeException" wsam:Action="http://ws.session.ejb/RoomTypeWebService/getLowestTierDailyRate/Fault/InvalidRoomTypeException"/>
 <fault message="tns:InvalidRoomException" name="InvalidRoomException" wsam:Action="http://ws.session.ejb/RoomTypeWebService/getLowestTierDailyRate/Fault/InvalidRoomException"/>
 </operation>
-<operation name="retrieveAllRoomTypes">
-<input wsam:Action="http://ws.session.ejb/RoomTypeWebService/retrieveAllRoomTypesRequest" message="tns:retrieveAllRoomTypes"/>
-<output wsam:Action="http://ws.session.ejb/RoomTypeWebService/retrieveAllRoomTypesResponse" message="tns:retrieveAllRoomTypesResponse"/>
-</operation>
 </portType>
 <binding name="RoomTypeWebServicePortBinding" type="tns:RoomTypeWebService">
 <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+<operation name="retrieveAllRoomTypes">
+<soap:operation soapAction=""/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
 <operation name="getLowestTierDailyRate">
 <soap:operation soapAction=""/>
 <input>
@@ -50,15 +59,6 @@
 <fault name="InvalidRoomException">
 <soap:fault name="InvalidRoomException" use="literal"/>
 </fault>
-</operation>
-<operation name="retrieveAllRoomTypes">
-<soap:operation soapAction=""/>
-<input>
-<soap:body use="literal"/>
-</input>
-<output>
-<soap:body use="literal"/>
-</output>
 </operation>
 </binding>
 <service name="RoomTypeWebService">
