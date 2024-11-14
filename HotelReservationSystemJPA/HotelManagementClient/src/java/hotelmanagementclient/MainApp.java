@@ -10,6 +10,7 @@ import ejb.session.stateless.ExceptionReportSessionBeanRemote;
 import ejb.session.stateless.GuestSessionBeanRemote;
 import ejb.session.stateless.PartnerSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
+import ejb.session.stateless.RoomRateReservationSessionBeanRemote;
 import ejb.session.stateless.RoomRateSessionBeanRemote;
 import ejb.session.stateless.RoomReservationSessionBeanRemote;
 import ejb.session.stateless.RoomSessionBeanRemote;
@@ -22,6 +23,7 @@ import entity.Partner;
 import entity.Reservation;
 import entity.Room;
 import entity.RoomRate;
+import entity.RoomRateReservation;
 import entity.RoomReservation;
 import entity.RoomType;
 import java.math.BigDecimal;
@@ -63,6 +65,7 @@ public class MainApp {
     private GuestSessionBeanRemote guestSessionBeanRemote;
     private CustomerSessionBeanRemote customerSessionBeanRemote;
     private RoomReservationSessionBeanRemote roomReservationSessionBeanRemote;
+    private RoomRateReservationSessionBeanRemote roomRateReservationSessionBeanRemote;
 
     private Employee currentEmployee;
 
@@ -80,7 +83,8 @@ public class MainApp {
             ReservationSessionBeanRemote reservationSessionBeanRemote,
             GuestSessionBeanRemote guestSessionBeanRemote,
             CustomerSessionBeanRemote customerSessionBeanRemote,
-            RoomReservationSessionBeanRemote roomReservationSessionBeanRemote
+            RoomReservationSessionBeanRemote roomReservationSessionBeanRemote,
+            RoomRateReservationSessionBeanRemote roomRateReservationSessionBeanRemote
     ) {
         this();
         this.employeeSessionBeanRemote = employeeSessionBeanRemote;
@@ -93,6 +97,7 @@ public class MainApp {
         this.guestSessionBeanRemote = guestSessionBeanRemote;
         this.customerSessionBeanRemote = customerSessionBeanRemote;
         this.roomReservationSessionBeanRemote = roomReservationSessionBeanRemote;
+        this.roomRateReservationSessionBeanRemote = roomRateReservationSessionBeanRemote;
     }
 
     public void runApp() {
@@ -481,7 +486,7 @@ public class MainApp {
                     }
                 }
 
-                if (response == 3) {
+                if (response == 5) {
                     break;
                 }
 
@@ -827,9 +832,7 @@ public class MainApp {
 
     private void doCreateNewRoom() throws InvalidRoomDetailsException {
         try {
-
             Scanner scanner = new Scanner(System.in);
-
             System.out.println("*** HoRS Management Client :: Create new room ***\n");
 
             displayActiveRoomTypes();
@@ -842,29 +845,37 @@ public class MainApp {
             String floorNum;
             String seqNum;
 
-            // Loop until valid 2-digit floor number is entered
+            // Loop until valid 2-digit floor number is entered and not "00"
             while (true) {
                 System.out.print("Enter floor number (2 digits): ");
                 floorNum = scanner.nextLine().trim();
-                if (floorNum.matches("\\d{2}")) { // Check if it's exactly 2 digits
+                if (floorNum.matches("\\d{2}") && !floorNum.equals("00")) { // Check if it's exactly 2 digits and not "00"
                     break;
                 } else {
-                    System.out.println("Invalid input. Floor number must be exactly 2 digits.");
+                    System.out.println("Invalid input. Floor number must be exactly 2 digits and cannot be '00'.");
                 }
             }
 
-            // Loop until valid 2-digit sequence number is entered
+            // Loop until valid 2-digit sequence number is entered and not "00"
             while (true) {
                 System.out.print("Enter sequence number (2 digits): ");
                 seqNum = scanner.nextLine().trim();
-                if (seqNum.matches("\\d{2}")) { // Check if it's exactly 2 digits
+                if (seqNum.matches("\\d{2}") && !seqNum.equals("00")) { // Check if it's exactly 2 digits and not "00"
                     break;
                 } else {
-                    System.out.println("Invalid input. Sequence number must be exactly 2 digits.");
+                    System.out.println("Invalid input. Sequence number must be exactly 2 digits and cannot be '00'.");
                 }
             }
 
-            // catch invalid details
+            // Prompt for room status
+            RoomStatusEnum roomTypeStatus = null;
+            while (roomTypeStatus == null) {
+                System.out.print("Enter room status (AVAILABLE/NOT AVAILABLE): ");
+                String roomTypeStatusString = scanner.nextLine().trim().toUpperCase().replace(" ", "_");
+                roomTypeStatus = RoomStatusEnum.valueOf(roomTypeStatusString);
+            }
+
+            // Check for invalid details
             if (floorNum.isEmpty() || seqNum.isEmpty() || existingRoomType == null) {
                 throw new InvalidRoomDetailsException("Invalid room details");
             }
@@ -876,7 +887,7 @@ public class MainApp {
             }
 
             // Create and save the room if all inputs are valid
-            Room newRoom = new Room(floorNum, seqNum, existingRoomType);
+            Room newRoom = new Room(floorNum, seqNum, existingRoomType, roomTypeStatus);
             roomSessionBeanRemote.createNewRoom(newRoom);
 
             System.out.println("\nNew room for '" + roomTypeString + "' has successfully been created.\n");
@@ -904,23 +915,21 @@ public class MainApp {
             System.out.println("Floor Number: " + existingRoom.getFloorNum());
             System.out.println("Sequence Number: " + existingRoom.getSequenceNum());
             System.out.println("Room Number: " + existingRoom.getRoomNum());
-            System.out.println("Room Status: " + existingRoom.getRoomStatus());
+            System.out.println("Room Status: " + formatEnumString(existingRoom.getRoomStatus().toString()));
 
             Room updatedRoom = new Room();
             updatedRoom.setRoomId(existingRoom.getRoomId());
 
-            // not sure if changing the floor num and seq num makes sense anot...
-            // Loop to get valid 2-digit floor number
+            // Update floor number if provided
             String finalFloorNum;
             while (true) {
-
                 System.out.print("\nEnter new floor number (2 digits, or press Enter to keep current): ");
                 String updatedFloorNum = scanner.nextLine().trim();
 
                 if (updatedFloorNum.isEmpty()) {
-                    finalFloorNum = existingRoom.getFloorNum(); // Use the existing floor number if no input
+                    finalFloorNum = existingRoom.getFloorNum();
                     break;
-                } else if (updatedFloorNum.matches("\\d{2}")) { // Check if it's exactly 2 digits
+                } else if (updatedFloorNum.matches("\\d{2}")) {
                     finalFloorNum = updatedFloorNum;
                     break;
                 } else {
@@ -928,14 +937,16 @@ public class MainApp {
                 }
             }
 
+            // Update sequence number if provided
             String finalSeqNum;
             while (true) {
                 System.out.print("Enter new sequence number (2 digits, or press Enter to keep current): ");
                 String updatedSeqNum = scanner.nextLine().trim();
+
                 if (updatedSeqNum.isEmpty()) {
-                    finalSeqNum = existingRoom.getSequenceNum(); // Use the existing sequence number if no input
+                    finalSeqNum = existingRoom.getSequenceNum();
                     break;
-                } else if (updatedSeqNum.matches("\\d{2}")) { // Check if it's exactly 2 digits
+                } else if (updatedSeqNum.matches("\\d{2}")) {
                     finalSeqNum = updatedSeqNum;
                     break;
                 } else {
@@ -943,20 +954,31 @@ public class MainApp {
                 }
             }
 
-            // join to get roomNum
-            String roomNum = finalFloorNum + finalSeqNum;
-            if (roomSessionBeanRemote.checkRoomNum(roomNum)) {
-                System.out.println("\nA room with room number " + roomNum + " already exists. Room Update aborted.\n");
-                return;
+            // Check if roomNum needs to be updated
+            boolean roomNumChanged = !finalFloorNum.equals(existingRoom.getFloorNum()) || !finalSeqNum.equals(existingRoom.getSequenceNum());
+            if (roomNumChanged) {
+                String roomNum = finalFloorNum + finalSeqNum;
+                if (roomSessionBeanRemote.checkRoomNum(roomNum) && !roomNum.equals(existingRoom.getRoomNum())) {
+                    System.out.println("\nA room with room number " + roomNum + " already exists. Room Update aborted.\n");
+                    return;
+                }
+                updatedRoom.setFloorNum(finalFloorNum);
+                updatedRoom.setSequenceNum(finalSeqNum);
+                updatedRoom.setRoomNum(roomNum);
+            } else {
+                // Retain the current roomNum, floorNum, and seqNum
+                updatedRoom.setFloorNum(existingRoom.getFloorNum());
+                updatedRoom.setSequenceNum(existingRoom.getSequenceNum());
+                updatedRoom.setRoomNum(existingRoom.getRoomNum());
             }
-            updatedRoom.setFloorNum(finalFloorNum);
-            updatedRoom.setSequenceNum(finalSeqNum);
-            updatedRoom.setRoomNum(roomNum);
 
-            System.out.print("Enter new status (or press Enter to keep current): ");
+            // Update room status if provided
+            System.out.print("Enter new room status (AVAILABLE/ALLOCATED/DISABLED/NOT AVAILABLE/OCCUPIED/RESERVED), or press Enter to keep current: ");
             String updatedStatus = scanner.nextLine().trim();
             if (!updatedStatus.isEmpty()) {
-                updatedRoom.setRoomStatus(RoomStatusEnum.valueOf(updatedStatus.toUpperCase()));
+                updatedRoom.setRoomStatus(RoomStatusEnum.valueOf(updatedStatus.toUpperCase().replace(" ", "_")));
+            } else {
+                updatedRoom.setRoomStatus(existingRoom.getRoomStatus());
             }
 
             roomSessionBeanRemote.updateRoom(updatedRoom);
@@ -1008,9 +1030,9 @@ public class MainApp {
         try {
             System.out.println("\n*** HoRS Management Client :: View All Rooms ***\n");
 
-            System.out.printf("%-5s %-15s %-15s %-20s %-20s %-15s\n",
-                    "No.", "Room Number", "Floor Number", "Sequence Number", "Room Type", "Status");
-            System.out.println("--------------------------------------------------------------------------------------------");
+            System.out.printf("%-5s %-15s %-20s %-15s\n",
+                    "No.", "Room Number", "Room Type", "Status");
+            System.out.println("-------------------------------------------------------");
 
             List<Room> rooms = roomSessionBeanRemote.retrieveAllRooms();
 
@@ -1019,15 +1041,13 @@ public class MainApp {
             } else {
                 int index = 1;
                 for (Room room : rooms) {
-                    System.out.printf("%-5d %-15s %-15s %-20s %-20s %-15s\n",
+                    System.out.printf("%-5d %-15s %-20s %-15s\n",
                             index++,
                             room.getRoomNum(),
-                            room.getFloorNum(),
-                            room.getSequenceNum(),
                             room.getRoomType().getTypeName(),
                             formatEnumString(room.getRoomStatus().toString()));
                 }
-                System.out.println("--------------------------------------------------------------------------------------------\n");
+                System.out.println("-------------------------------------------------------\n");
             }
 
         } catch (Exception ex) {
@@ -1037,7 +1057,6 @@ public class MainApp {
 
     private void doViewRoomAllocationExceptionReport() {
         try {
-
             System.out.println("\n*** HoRS Management Client :: View Room Allocation Exception Report ***\n");
 
             List<ExceptionReport> exceptionReports = exceptionReportSessionBeanRemote.retrieveAllExceptionReports();
@@ -1046,12 +1065,12 @@ public class MainApp {
             if (exceptionReports.isEmpty()) {
                 System.out.println("No room allocation exceptions found. All reservations are allocated successfully.\n");
             } else {
-                System.out.printf("%-5s %-20s %-20s %-20s\n", "No.", "Type", "Reservation No.", "Remarks");
-                System.out.println("---------------------------------------------------------------");
+                System.out.printf("%-5s %-20s %-20s %-40s\n", "No.", "Type", "Reservation No.", "Remarks");
+                System.out.println("---------------------------------------------------------------------------------");
 
                 int index = 1;
                 for (ExceptionReport exceptionReport : exceptionReports) {
-                    System.out.printf("%-5d %-20s %-20s %-20s\n",
+                    System.out.printf("%-5d %-20s %-20s %-40s\n",
                             index++,
                             formatEnumString(exceptionReport.getExceptionTypeReport().toString()),
                             exceptionReport.getRoomReservation().getReservation().getReservationId(),
@@ -1061,7 +1080,7 @@ public class MainApp {
                             : "No upgrade to next higher tier"
                     );
                 }
-                System.out.println("---------------------------------------------------------------\n");
+                System.out.println("---------------------------------------------------------------------------------\n");
             }
         } catch (Exception ex) {
             System.out.println("Error viewing room allocation exception reports: " + ex.getMessage() + "\n");
@@ -1089,7 +1108,7 @@ public class MainApp {
                 System.out.println("The entered date is in the past. Please enter a future date.");
             } else {
                 roomSessionBeanRemote.allocateRoomsManually(userDate);
-                System.out.println("Room allocation triggered for check-in date: " + userDate);
+                System.out.println("Room allocation triggered for check-in date: " + userDate +"\n");
             }
 
         } catch (Exception ex) {
@@ -1187,9 +1206,6 @@ public class MainApp {
                 }
             }
 
-            System.out.print("Enter rate per night: ");
-            BigDecimal ratePerNight = new BigDecimal(scanner.nextLine().trim());
-
             Date promotionStartDate = null;
             Date promotionEndDate = null;
             Date peakStartDate = null;
@@ -1198,12 +1214,17 @@ public class MainApp {
             if (rateType == RoomRateTypeEnum.PROMOTION) {
                 promotionStartDate = promptForDate(scanner, dateFormat, "Enter promotion start date (yyyy-MM-dd): ");
                 promotionEndDate = promptForDate(scanner, dateFormat, "Enter promotion end date (yyyy-MM-dd): ");
+                promotionEndDate = setEndTimeToLastSecond(promotionEndDate);
             } else if (rateType == RoomRateTypeEnum.PEAK) {
                 peakStartDate = promptForDate(scanner, dateFormat, "Enter peak start date (yyyy-MM-dd): ");
                 peakEndDate = promptForDate(scanner, dateFormat, "Enter peak end date (yyyy-MM-dd): ");
+                peakEndDate = setEndTimeToLastSecond(peakEndDate);
             }
 
-            //If all inputs are filled in
+            System.out.print("Enter rate per night: ");
+            BigDecimal ratePerNight = new BigDecimal(scanner.nextLine().trim());
+
+            // If all inputs are filled in
             if (name.length() > 0 && ratePerNight.compareTo(BigDecimal.ZERO) > 0) {
                 RoomRate newRoomRate = new RoomRate(name, rateType, ratePerNight, promotionStartDate, promotionEndDate, peakStartDate, peakEndDate, existingRoomType);
                 roomRateSessionBeanRemote.createNewRoomRate(newRoomRate);
@@ -1216,7 +1237,6 @@ public class MainApp {
         } catch (Exception ex) {
             System.out.println("Error creating new room rate: " + ex.getMessage() + "\n");
         }
-
     }
 
     private void doViewRoomRateDetails() {
@@ -1257,8 +1277,9 @@ public class MainApp {
         try {
             Scanner scanner = new Scanner(System.in);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date today = new Date();
 
-            System.out.println("*** HoRS Management Client :: Update room rate ***\n");
+            System.out.println("*** HoRS Management Client :: Update Room Rate ***\n");
 
             displayRoomNames();
 
@@ -1267,26 +1288,48 @@ public class MainApp {
 
             RoomRate existingRoomRate = roomRateSessionBeanRemote.retrieveRoomRateByRoomName(rateNameString);
 
-            System.out.println("\nRoom rate found. Details for room rate name: " + existingRoomRate.getRateName() + "");
+            System.out.println("\nRoom rate found. Details for room rate name: " + existingRoomRate.getRateName());
             System.out.println("Room Type: " + existingRoomRate.getRoomType().getTypeName());
             System.out.println("Room Rate Type: " + formatEnumString(existingRoomRate.getRateType().toString()));
 
-            // Check if rate is PROMOTION or PEAK
             if (existingRoomRate.getRateType() == RoomRateTypeEnum.PROMOTION) {
-                System.out.println("Promotion Start Date: " + existingRoomRate.getPromotionStartDate());
-                System.out.println("Promotion End Date: " + existingRoomRate.getPromotionEndDate());
+                System.out.println("Promotion Start Date: " + formatDate(existingRoomRate.getPromotionStartDate()));
+                System.out.println("Promotion End Date: " + formatDate(existingRoomRate.getPromotionEndDate()));
             } else if (existingRoomRate.getRateType() == RoomRateTypeEnum.PEAK) {
-                System.out.println("Peak Start Date: " + existingRoomRate.getPeakStartDate());
-                System.out.println("Peak End Date: " + existingRoomRate.getPeakEndDate());
+                System.out.println("Peak Start Date: " + formatDate(existingRoomRate.getPeakStartDate()));
+                System.out.println("Peak End Date: " + formatDate(existingRoomRate.getPeakEndDate()));
             }
 
             System.out.println("Rate Per Night: $" + existingRoomRate.getRatePerNight() + "\n");
 
             RoomRate updatedRoomRate = new RoomRate();
             updatedRoomRate.setRoomRateId(existingRoomRate.getRoomRateId());
+            updatedRoomRate.setRateType(existingRoomRate.getRateType());
+            updatedRoomRate.setRoomType(existingRoomRate.getRoomType());
+            updatedRoomRate.setRatePerNight(existingRoomRate.getRatePerNight());
+
+            // Prompt for updating room rate name
+            String newRoomName;
+            while (true) {
+                System.out.print("Enter new room rate name (or press Enter to keep current): ");
+                newRoomName = scanner.nextLine().trim();
+                if (newRoomName.isEmpty()) {
+                    newRoomName = existingRoomRate.getRateName(); // Keep current name if Enter is pressed
+                    break;
+                } else {
+                    try {
+                        roomRateSessionBeanRemote.retrieveRoomRateByRoomName(newRoomName);
+                        System.out.println("Room rate name already exists. Please enter a different name.");
+                    } catch (Exception e) {
+                        // Room name does not exist, so it's safe to use
+                        break;
+                    }
+                }
+            }
+            updatedRoomRate.setRateName(newRoomName);
 
             displayRoomTypes();
-            
+
             System.out.print("\nEnter new room type (or press Enter to keep current): ");
             String updatedRoomType = scanner.nextLine().trim();
             if (!updatedRoomType.isEmpty()) {
@@ -1296,37 +1339,74 @@ public class MainApp {
 
             System.out.print("Enter new rate type (PROMOTION/PEAK/PUBLISHED/NORMAL) (or press Enter to keep current): ");
             String rateTypeInput = scanner.nextLine().trim();
+            RoomRateTypeEnum newRateType = existingRoomRate.getRateType();
             if (!rateTypeInput.isEmpty()) {
                 try {
-                    RoomRateTypeEnum newRateType = RoomRateTypeEnum.valueOf(rateTypeInput.toUpperCase());
+                    newRateType = RoomRateTypeEnum.valueOf(rateTypeInput.toUpperCase());
                     updatedRoomRate.setRateType(newRateType);
-
-                    if (newRateType == RoomRateTypeEnum.PROMOTION) {
-                        Date promotionStartDate = promptForDate(scanner, dateFormat, "Enter promotion start date (yyyy-MM-dd): ");
-                        Date promotionEndDate = promptForDate(scanner, dateFormat, "Enter promotion end date (yyyy-MM-dd): ");
-                        updatedRoomRate.setPromotionStartDate(promotionStartDate);
-                        updatedRoomRate.setPromotionEndDate(promotionEndDate);
-                    } else if (newRateType == RoomRateTypeEnum.PEAK) {
-                        Date peakStartDate = promptForDate(scanner, dateFormat, "Enter peak start date (yyyy-MM-dd): ");
-                        Date peakEndDate = promptForDate(scanner, dateFormat, "Enter peak end date (yyyy-MM-dd): ");
-                        updatedRoomRate.setPeakStartDate(peakStartDate);
-                        updatedRoomRate.setPeakEndDate(peakEndDate);
-                    } else {
-                        updatedRoomRate.setPromotionStartDate(null);
-                        updatedRoomRate.setPromotionEndDate(null);
-                        updatedRoomRate.setPeakStartDate(null);
-                        updatedRoomRate.setPeakEndDate(null);
-                    }
                 } catch (IllegalArgumentException ex) {
                     System.out.println("Invalid rate type. Keeping current value.");
                 }
+            }
+
+            // Use promptForDateUpdate to optionally update dates for PROMOTION or PEAK rate types
+            if (newRateType == RoomRateTypeEnum.PROMOTION) {
+                Date promotionStartDate = promptForDateUpdate(scanner, dateFormat, "Enter promotion start date (yyyy-MM-dd) (or press Enter to keep current): ", existingRoomRate.getPromotionStartDate());
+                Date promotionEndDate;
+
+                while (true) {
+                    promotionEndDate = promptForDateUpdate(scanner, dateFormat, "Enter promotion end date (yyyy-MM-dd) (or press Enter to keep current): ", existingRoomRate.getPromotionEndDate());
+                    promotionEndDate = setEndTimeToLastSecond(promotionEndDate);
+
+                    // Validate that promotionEndDate is after promotionStartDate
+                    if (!promotionEndDate.before(promotionStartDate)) {
+                        break;
+                    } else {
+                        System.out.println("Promotion end date must be after the promotion start date. Please enter a valid end date.");
+                    }
+                }
+
+                updatedRoomRate.setPromotionStartDate(promotionStartDate);
+                updatedRoomRate.setPromotionEndDate(promotionEndDate);
+                updatedRoomRate.setPeakStartDate(null);
+                updatedRoomRate.setPeakEndDate(null);
+            } else if (newRateType == RoomRateTypeEnum.PEAK) {
+                Date peakStartDate = promptForDateUpdate(scanner, dateFormat, "Enter peak start date (yyyy-MM-dd) (or press Enter to keep current): ", existingRoomRate.getPeakStartDate());
+                Date peakEndDate;
+
+                while (true) {
+                    peakEndDate = promptForDateUpdate(scanner, dateFormat, "Enter peak end date (yyyy-MM-dd) (or press Enter to keep current): ", existingRoomRate.getPeakEndDate());
+                    peakEndDate = setEndTimeToLastSecond(peakEndDate);
+
+                    // Validate that peakEndDate is after peakStartDate
+                    if (!peakEndDate.before(peakStartDate)) {
+                        break;
+                    } else {
+                        System.out.println("Peak end date must be after the peak start date. Please enter a valid end date.");
+                    }
+                }
+
+                updatedRoomRate.setPeakStartDate(peakStartDate);
+                updatedRoomRate.setPeakEndDate(peakEndDate);
+                updatedRoomRate.setPromotionStartDate(null);
+                updatedRoomRate.setPromotionEndDate(null);
+            } else {
+                updatedRoomRate.setPromotionStartDate(null);
+                updatedRoomRate.setPromotionEndDate(null);
+                updatedRoomRate.setPeakStartDate(null);
+                updatedRoomRate.setPeakEndDate(null);
             }
 
             System.out.print("Enter new rate per night (or press Enter to keep current): ");
             String ratePerNightInput = scanner.nextLine().trim();
             if (!ratePerNightInput.isEmpty()) {
                 try {
-                    updatedRoomRate.setRatePerNight(new BigDecimal(ratePerNightInput));
+                    BigDecimal newRatePerNight = new BigDecimal(ratePerNightInput);
+                    if (newRatePerNight.compareTo(BigDecimal.ZERO) < 0) {
+                        System.out.println("Rate per night cannot be negative. Keeping current value.");
+                    } else {
+                        updatedRoomRate.setRatePerNight(newRatePerNight);
+                    }
                 } catch (NumberFormatException ex) {
                     System.out.print("Invalid input for rate per night. Keeping current value.");
                 }
@@ -1373,8 +1453,8 @@ public class MainApp {
             String response = scanner.nextLine().trim();
 
             if (response.toLowerCase().equals("y")) {
-                roomRateSessionBeanRemote.deleteRoomRate(existingRoomRate);
-                System.out.println("Room type has successfully been removed.\n");
+                String resultMessage = roomRateSessionBeanRemote.deleteRoomRate(existingRoomRate);
+                System.out.println(resultMessage);
             } else if (response.toLowerCase().equals("n")) {
                 System.out.println("\n");
             } else {
@@ -1564,6 +1644,7 @@ public class MainApp {
             List<RoomType> roomTypes = new ArrayList<>();
             List<BigDecimal> totalPerRoomAmounts = new ArrayList<>();
             List<List<Room>> roomsByType = new ArrayList<>();
+            Map<RoomType, List<RoomRate>> uniqueRoomRatesMap = new HashMap<>(); // Map for unique RoomRates by RoomType
 
             // Group rooms by RoomType
             for (Room room : availableRooms) {
@@ -1573,14 +1654,15 @@ public class MainApp {
                 if (index == -1) { // Room type not yet in the list
                     roomTypes.add(roomType);
                     totalPerRoomAmounts.add(BigDecimal.ZERO);
-                    roomsByType.add(new ArrayList<>()); // Create a new list for this room type
+                    roomsByType.add(new ArrayList<>());
+                    uniqueRoomRatesMap.put(roomType, new ArrayList<>()); // Initialize unique RoomRates list for each RoomType
                     index = roomTypes.size() - 1; // Update index to the newly added room type
                 }
                 roomsByType.get(index).add(room); // Add room to the corresponding list
             }
 
-            // Display available room types and calculate total prices
-            System.out.println("Available rooms for the selected dates:\n");
+            long numberOfNights = (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
+            System.out.println("\nAvailable rooms for the selected dates (" + numberOfNights + " nights):\n");
             List<Integer> selectableIndices = new ArrayList<>();
 
             for (int i = 0; i < roomTypes.size(); i++) {
@@ -1588,10 +1670,7 @@ public class MainApp {
                 List<Room> roomsOfThisType = roomsByType.get(i);
 
                 if (roomsOfThisType.size() >= noOfRooms) {
-                    // Add this index to selectable indices as it meets the room requirement
                     selectableIndices.add(i);
-
-                    // Calculate the per-room price for this room type
                     BigDecimal totalPerRoomAmount = BigDecimal.ZERO;
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(checkInDate);
@@ -1600,6 +1679,14 @@ public class MainApp {
                         Date currentDate = calendar.getTime();
                         BigDecimal ratePerNight = roomTypeSessionBeanRemote.getLowestTierDailyRate(currentDate, ReservationTypeEnum.WALKIN, roomsOfThisType);
 
+                        RoomRate dailyRoomRate = roomRateSessionBeanRemote.getDailyRateRoomRate(currentDate, roomType, ReservationTypeEnum.WALKIN);
+                        if (dailyRoomRate != null) {
+                            List<RoomRate> roomRatesForType = uniqueRoomRatesMap.get(roomType);
+                            if (!roomRatesForType.contains(dailyRoomRate)) {
+                                roomRatesForType.add(dailyRoomRate); // Add unique RoomRate for the RoomType
+                            }
+                        }
+
                         if (ratePerNight != null) {
                             totalPerRoomAmount = totalPerRoomAmount.add(ratePerNight);
                         }
@@ -1607,14 +1694,11 @@ public class MainApp {
                     }
 
                     totalPerRoomAmounts.set(i, totalPerRoomAmount);
-
-                    // Display each room type with a selection number
                     System.out.println((selectableIndices.size()) + ": " + roomType.getTypeName()
                             + " - $" + totalPerRoomAmount
                             + " per room, Total Reservation Amount: $"
                             + totalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms))
                             + " for " + noOfRooms + ((noOfRooms > 1) ? " rooms" : " room"));
-
                 }
             }
 
@@ -1623,18 +1707,16 @@ public class MainApp {
                 return;
             }
 
-            // Ask the user to select a room type from the displayed options
             Scanner scanner = new Scanner(System.in);
             System.out.print("\nPlease select a room type by entering the number: ");
             int roomTypeSelection = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            scanner.nextLine();
 
             if (roomTypeSelection < 1 || roomTypeSelection > selectableIndices.size()) {
                 System.out.println("Invalid selection. Returning to the main menu.");
                 return;
             }
 
-            // Get the selected room type index and corresponding data
             int selectedIndex = selectableIndices.get(roomTypeSelection - 1);
             RoomType selectedRoomType = roomTypes.get(selectedIndex);
             BigDecimal selectedTotalPerRoomAmount = totalPerRoomAmounts.get(selectedIndex);
@@ -1645,14 +1727,13 @@ public class MainApp {
                     + selectedTotalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms))
                     + " for " + noOfRooms + " rooms");
 
-            // Proceed with reservation confirmation
             System.out.println("\nWould you like to proceed with registration and reservation?");
             System.out.println("1: Reserve Room(s)");
             System.out.println("2: Go back");
 
             System.out.print("\nEnter your choice > ");
             int response = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            scanner.nextLine();
 
             if (response == 1) {
                 Guest verifiedGuest = doGuestVerification();
@@ -1663,39 +1744,22 @@ public class MainApp {
 
                 // Re-fetch the latest available rooms after confirmation
                 List<Room> latestAvailableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
-
-                // Group the latest available rooms by RoomType
                 Map<RoomType, List<Room>> latestRoomsByType = new HashMap<>();
                 for (Room room : latestAvailableRooms) {
                     latestRoomsByType.computeIfAbsent(room.getRoomType(), k -> new ArrayList<>()).add(room);
                 }
 
-                // Create a single reservation for the total number of rooms
-                int index = roomTypes.indexOf(selectedRoomType);
-
-                // Calculate the total reservation amount based on the requested room type and total number of rooms
-                BigDecimal totalReservationAmount = totalPerRoomAmounts.get(index)
-                        .multiply(BigDecimal.valueOf(noOfRooms));
-
-                int roomsToBook = noOfRooms;
+                BigDecimal totalReservationAmount = selectedTotalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms));
                 List<Room> roomsToReserve = new ArrayList<>();
-
-                // Attempt to reserve rooms in the requested room type only
                 List<Room> latestRoomsOfRequestedType = latestRoomsByType.getOrDefault(selectedRoomType, new ArrayList<>());
-                int availableRoomsOfRequestedType = latestRoomsOfRequestedType.size();
 
-                int roomsToBookFromRequestedType = Math.min(roomsToBook, availableRoomsOfRequestedType);
-                roomsToBook -= roomsToBookFromRequestedType;
-
-                // Mark rooms as RESERVED
-                for (int j = 0; j < roomsToBookFromRequestedType; j++) {
+                for (int j = 0; j < Math.min(noOfRooms, latestRoomsOfRequestedType.size()); j++) {
                     Room room = latestRoomsOfRequestedType.get(j);
                     room.setRoomStatus(RoomStatusEnum.RESERVED);
                     roomSessionBeanRemote.updateRoom(room);
                     roomsToReserve.add(room);
                 }
 
-                // Create the reservation
                 Reservation reservation = new Reservation(
                         checkInDate,
                         checkOutDate,
@@ -1708,7 +1772,14 @@ public class MainApp {
                         null
                 );
 
-                reservationSessionBeanRemote.createNewReservation(reservation);
+                Reservation newlycreatedReservation = reservationSessionBeanRemote.createNewReservation(reservation);
+
+                // Create and persist RoomRateReservation records for each unique RoomRate for the selected RoomType
+                for (RoomRate roomRate : uniqueRoomRatesMap.get(selectedRoomType)) {
+                    Reservation existingReservation = reservationSessionBeanRemote.getReservationByReservationId(newlycreatedReservation.getReservationId());
+                    RoomRateReservation roomRateReservation = new RoomRateReservation(roomRate, existingReservation);
+                    roomRateReservationSessionBeanRemote.createNewRoomRateReservation(roomRateReservation);
+                }
 
                 // Immediate allocation if applicable
                 if (stripTime(reservation.getCheckInDate()).equals(stripTime(new Date()))) {
@@ -1742,18 +1813,17 @@ public class MainApp {
                 return;
             }
 
-            // Retrieve all reservations for the guest and filter those with today's check-in date
             List<Reservation> reservations = reservationSessionBeanRemote.retrieveAllReservationsByGuest(guest);
             List<Reservation> todayReservations = new ArrayList<>();
             Date today = stripTime(new Date());
 
             for (Reservation reservation : reservations) {
-                if (stripTime(reservation.getCheckInDate()).equals(today)) {
+                if (reservation.getReservationStatusEnum() == ReservationStatusEnum.CONFIRMED
+                        && stripTime(reservation.getCheckInDate()).equals(today)) {
                     todayReservations.add(reservation);
                 }
             }
 
-            // If there are any reservations for today, ask if they want to check in to all
             if (!todayReservations.isEmpty()) {
                 System.out.println("\nYou have reservations scheduled for today:");
                 for (Reservation reservation : todayReservations) {
@@ -1764,41 +1834,27 @@ public class MainApp {
                 String response = scanner.nextLine().trim().toLowerCase();
 
                 if (response.equals("y")) {
-                    // Process each reservation for check-in
                     for (Reservation reservation : todayReservations) {
-                        List<RoomReservation> roomReservations = roomReservationSessionBeanRemote.retrieveRoomReservationsByReservation(reservation);
-                        List<RoomReservation> allocatedRooms = new ArrayList<>();
+                        List<String> allocatedRooms = roomSessionBeanRemote.allocateAvailableRoomsOrUpgrade(reservation);
 
-                        for (RoomReservation roomReservation : roomReservations) {
-                            if (roomReservation.getRoom() != null && roomReservation.getRoom().getRoomStatus() == RoomStatusEnum.ALLOCATED) {
-                                allocatedRooms.add(roomReservation);
-                            }
-                        }
-
-                        if (!allocatedRooms.isEmpty()) {
-                            System.out.println("Checking in to reservation ID: " + reservation.getReservationId());
-                            System.out.println("The following rooms are ready for check-in:");
-
-                            for (RoomReservation allocatedRoom : allocatedRooms) {
-                                System.out.println("Room Number: " + allocatedRoom.getRoom().getRoomNum());
-                                // Update the room's status to OCCUPIED
-                                allocatedRoom.getRoom().setRoomStatus(RoomStatusEnum.OCCUPIED);
-                                roomSessionBeanRemote.updateRoom(allocatedRoom.getRoom());
-                            }
-
-                            // Update reservation status to CHECKED_IN
+                        if (allocatedRooms != null) {
                             reservation.setReservationStatusEnum(ReservationStatusEnum.CHECKED_IN);
                             reservationSessionBeanRemote.updateReservation(reservation);
-                            System.out.println("Successfully checked in to reservation ID: " + reservation.getReservationId() + "\n");
+                            System.out.println("Successfully checked in to reservation ID: " + reservation.getReservationId());
+                            System.out.println("Checked into the following rooms:");
+                            for (String roomNum : allocatedRooms) {
+                                System.out.println(" - Room: " + roomNum);
+                            }
                         } else {
-                            System.out.println("Reservation ID: " + reservation.getReservationId() + " - Your rooms are not ready yet. Unable to check you in.");
+                            System.out.println("Unable to check in to reservation ID: " + reservation.getReservationId()
+                                    + " as not all rooms could be allocated.\n");
                         }
                     }
                 } else {
                     System.out.println("Check-in canceled.\n");
                 }
             } else {
-                System.out.println("No reservations scheduled for today.");
+                System.out.println("No reservations scheduled for today.\n");
             }
 
         } catch (Exception ex) {
@@ -1834,7 +1890,7 @@ public class MainApp {
             if (!todayCheckOutReservations.isEmpty()) {
                 System.out.println("\nYou have reservations scheduled for check-out today:");
                 for (Reservation reservation : todayCheckOutReservations) {
-                    System.out.println("- Reservation ID: " + reservation.getReservationId() + ", Room Type: " + reservation.getRoomType());
+                    System.out.println("- Reservation ID: " + reservation.getReservationId() + ", Room Type: " + reservation.getRoomType().getTypeName());
                 }
 
                 System.out.print("\nDo you want to check out of all these reservations? (Y/N): ");
@@ -1900,6 +1956,7 @@ public class MainApp {
     }
 
     private Date promptForDate(Scanner scanner, SimpleDateFormat dateFormat, String prompt) {
+        dateFormat.setLenient(false);
         Date date = null;
         while (date == null) {
             System.out.print(prompt);
@@ -1918,6 +1975,33 @@ public class MainApp {
             }
         }
         return date;
+    }
+
+    private Date promptForDateUpdate(Scanner scanner, SimpleDateFormat dateFormat, String prompt, Date currentDate) {
+        dateFormat.setLenient(false);
+        while (true) {
+            System.out.print(prompt);
+            String dateInput = scanner.nextLine().trim();
+
+            // Keep the current date if Enter is pressed
+            if (dateInput.isEmpty()) {
+                return currentDate;
+            }
+
+            try {
+                Date date = dateFormat.parse(dateInput);
+
+                // Ensure the date is today or later
+                Date today = new Date();
+                if (date.before(dateFormat.parse(dateFormat.format(today)))) {
+                    System.out.println("Date must be today or a future date. Please enter a valid date.");
+                } else {
+                    return date; // Return the valid date
+                }
+            } catch (ParseException e) {
+                System.out.println("Invalid date format. Please enter the date in yyyy-MM-dd format.");
+            }
+        }
     }
 
     private Date stripTime(Date date) {
@@ -2034,7 +2118,7 @@ public class MainApp {
             String passportNumber = scanner.nextLine().trim();
 
             if (firstName.length() > 0 && lastName.length() > 0 && emailAddress.length() > 0 && phoneNumber.length() > 0 && passportNumber.length() > 0) {
-                Guest guest = customerSessionBeanRemote.createNewCustomer(new Customer(firstName, lastName, emailAddress, passportNumber, passportNumber));
+                Guest guest = customerSessionBeanRemote.createNewCustomer(new Customer(firstName, lastName, emailAddress, phoneNumber, passportNumber));
                 System.out.println("\nGuest verified successfully.\n");
                 return guest;
             } else {
@@ -2108,7 +2192,7 @@ public class MainApp {
         try {
             Guest guest = guestSessionBeanRemote.retrieveGuestByEmail(email);
             if (guest != null) {
-                System.out.println("Guest verified successfully");
+                System.out.println("\nGuest verified successfully");
                 return guest;
             } else {
                 System.out.println("No matching customer found for the provided email.");
@@ -2123,7 +2207,7 @@ public class MainApp {
         try {
             Guest guest = guestSessionBeanRemote.retrieveGuestByPhoneNumber(phoneNumber);
             if (guest != null) {
-                System.out.println("Guest verified successfully");
+                System.out.println("\nGuest verified successfully");
                 return guest;
             } else {
                 System.out.println("No matching customer found for the provided phone number.");
@@ -2138,7 +2222,7 @@ public class MainApp {
         try {
             Guest guest = guestSessionBeanRemote.retrieveGuestByPassportNumber(passportNumber);
             if (guest != null) {
-                System.out.println("Guest verified successfully");
+                System.out.println("\nGuest verified successfully");
                 return guest;
             } else {
                 System.out.println("No matching customer found for the provided passport number.");
@@ -2218,11 +2302,23 @@ public class MainApp {
 
     // Helper method to format currency values
     private String formatCurrency(BigDecimal amount) {
-        return amount != null ? "$" + amount.toString() : "N/A";
+        return amount != null ? "$" + String.format("%.2f", amount) : "N/A";
     }
 
     // Helper method to format dates to avoid null display
     private String formatDate(Date date) {
         return date != null ? new SimpleDateFormat("dd-MM-yyyy").format(date) : "N/A";
+    }
+
+    private Date setEndTimeToLastSecond(Date endDate) {
+        if (endDate != null) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(endDate);
+            calendar.set(Calendar.HOUR_OF_DAY, 23);
+            calendar.set(Calendar.MINUTE, 59);
+            calendar.set(Calendar.SECOND, 58);
+            return calendar.getTime();
+        }
+        return null;
     }
 }

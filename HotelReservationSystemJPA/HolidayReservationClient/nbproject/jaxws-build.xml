@@ -101,5 +101,22 @@
         <delete dir="${build.generated.dir}/jax-wsCache/RoomRateWebService"/>
         <delete dir="${build.generated.sources.dir}/jax-ws/ws/roomrate"/>
     </target>
-    <target name="wsimport-client-generate" depends="wsimport-client-PartnerWebService, wsimport-client-ReservationWebService, wsimport-client-RoomWebService, wsimport-client-RoomTypeWebService, wsimport-client-RoomRateWebService"/>
+    <target name="wsimport-client-RoomRateReservationWebService" depends="wsimport-init">
+        <mkdir dir="${build.generated.dir}/jax-wsCache/RoomRateReservationWebService"/>
+        <property name="wsdl-RoomRateReservationWebService" location="xml-resources/web-service-references/RoomRateReservationWebService/wsdl/localhost_8080/RoomRateReservationWebService/RoomRateReservationWebService.wsdl"/>
+        <wsimport sourcedestdir="${build.generated.dir}/jax-wsCache/RoomRateReservationWebService" destdir="${build.generated.dir}/jax-wsCache/RoomRateReservationWebService" wsdl="${wsdl-RoomRateReservationWebService}" catalog="catalog.xml" encoding="${source.encoding}" extension="true" verbose="true" fork="false" wsdlLocation="http://localhost:8080/RoomRateReservationWebService/RoomRateReservationWebService?wsdl" xnocompile="true" xendorsed="true" package="ws.roomratereservation">
+            <depends file="${wsdl-RoomRateReservationWebService}"/>
+            <produces dir="${build.generated.dir}/jax-wsCache/RoomRateReservationWebService"/>
+        </wsimport>
+        <copy todir="${build.generated.sources.dir}/jax-ws">
+            <fileset dir="${build.generated.dir}/jax-wsCache/RoomRateReservationWebService">
+                <include name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="wsimport-client-clean-RoomRateReservationWebService" depends="-init-project">
+        <delete dir="${build.generated.dir}/jax-wsCache/RoomRateReservationWebService"/>
+        <delete dir="${build.generated.sources.dir}/jax-ws/ws/roomratereservation"/>
+    </target>
+    <target name="wsimport-client-generate" depends="wsimport-client-PartnerWebService, wsimport-client-ReservationWebService, wsimport-client-RoomWebService, wsimport-client-RoomTypeWebService, wsimport-client-RoomRateWebService, wsimport-client-RoomRateReservationWebService"/>
 </project>

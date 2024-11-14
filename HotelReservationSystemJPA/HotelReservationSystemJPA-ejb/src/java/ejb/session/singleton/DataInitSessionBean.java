@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import util.enumeration.EmployeeAccessRightEnum;
 import util.enumeration.RoomRateTypeEnum;
+import util.enumeration.RoomStatusEnum;
 
 /**
  *
@@ -137,39 +138,39 @@ public class DataInitSessionBean {
     
     private void initialiseRooms() {
         // Deluxe Rooms
-        Room deluxeRoom0101 = new Room("01", "01", testDeluxeRoomType);
-        Room deluxeRoom0201 = new Room("02", "01", testDeluxeRoomType);
-        Room deluxeRoom0301 = new Room("03", "01", testDeluxeRoomType);
-        Room deluxeRoom0401 = new Room("04", "01", testDeluxeRoomType);
-        Room deluxeRoom0501 = new Room("05", "01", testDeluxeRoomType);
+        Room deluxeRoom0101 = new Room("01", "01", testDeluxeRoomType, RoomStatusEnum.AVAILABLE);
+        Room deluxeRoom0201 = new Room("02", "01", testDeluxeRoomType, RoomStatusEnum.AVAILABLE);
+        Room deluxeRoom0301 = new Room("03", "01", testDeluxeRoomType, RoomStatusEnum.AVAILABLE);
+        Room deluxeRoom0401 = new Room("04", "01", testDeluxeRoomType, RoomStatusEnum.AVAILABLE);
+        Room deluxeRoom0501 = new Room("05", "01", testDeluxeRoomType, RoomStatusEnum.AVAILABLE);
 
         // Premier Rooms
-        Room premierRoom0102 = new Room("01", "02", testPremierRoomType);
-        Room premierRoom0202 = new Room("02", "02", testPremierRoomType);
-        Room premierRoom0302 = new Room("03", "02", testPremierRoomType);
-        Room premierRoom0402 = new Room("04", "02", testPremierRoomType);
-        Room premierRoom0502 = new Room("05", "02", testPremierRoomType);
+        Room premierRoom0102 = new Room("01", "02", testPremierRoomType, RoomStatusEnum.AVAILABLE);
+        Room premierRoom0202 = new Room("02", "02", testPremierRoomType, RoomStatusEnum.AVAILABLE);
+        Room premierRoom0302 = new Room("03", "02", testPremierRoomType, RoomStatusEnum.AVAILABLE);
+        Room premierRoom0402 = new Room("04", "02", testPremierRoomType, RoomStatusEnum.AVAILABLE);
+        Room premierRoom0502 = new Room("05", "02", testPremierRoomType, RoomStatusEnum.AVAILABLE);
 
         // Family Rooms
-        Room familyRoom0103 = new Room("01", "03", testFamilyRoomType);
-        Room familyRoom0203 = new Room("02", "03", testFamilyRoomType);
-        Room familyRoom0303 = new Room("03", "03", testFamilyRoomType);
-        Room familyRoom0403 = new Room("04", "03", testFamilyRoomType);
-        Room familyRoom0503 = new Room("05", "03", testFamilyRoomType);
+        Room familyRoom0103 = new Room("01", "03", testFamilyRoomType, RoomStatusEnum.AVAILABLE);
+        Room familyRoom0203 = new Room("02", "03", testFamilyRoomType, RoomStatusEnum.AVAILABLE);
+        Room familyRoom0303 = new Room("03", "03", testFamilyRoomType, RoomStatusEnum.AVAILABLE);
+        Room familyRoom0403 = new Room("04", "03", testFamilyRoomType, RoomStatusEnum.AVAILABLE);
+        Room familyRoom0503 = new Room("05", "03", testFamilyRoomType, RoomStatusEnum.AVAILABLE);
 
         // Junior Suites
-        Room juniorSuite0104 = new Room("01", "04", testJuniorSuiteType);
-        Room juniorSuite0204 = new Room("02", "04", testJuniorSuiteType);
-        Room juniorSuite0304 = new Room("03", "04", testJuniorSuiteType);
-        Room juniorSuite0404 = new Room("04", "04", testJuniorSuiteType);
-        Room juniorSuite0504 = new Room("05", "04", testJuniorSuiteType);
+        Room juniorSuite0104 = new Room("01", "04", testJuniorSuiteType, RoomStatusEnum.AVAILABLE);
+        Room juniorSuite0204 = new Room("02", "04", testJuniorSuiteType, RoomStatusEnum.AVAILABLE);
+        Room juniorSuite0304 = new Room("03", "04", testJuniorSuiteType, RoomStatusEnum.AVAILABLE);
+        Room juniorSuite0404 = new Room("04", "04", testJuniorSuiteType, RoomStatusEnum.AVAILABLE);
+        Room juniorSuite0504 = new Room("05", "04", testJuniorSuiteType, RoomStatusEnum.AVAILABLE);
 
         // Grand Suites
-        Room grandSuite0105 = new Room("01", "05", testGrandSuiteType);
-        Room grandSuite0205 = new Room("02", "05", testGrandSuiteType);
-        Room grandSuite0305 = new Room("03", "05", testGrandSuiteType);
-        Room grandSuite0405 = new Room("04", "05", testGrandSuiteType);
-        Room grandSuite0505 = new Room("05", "05", testGrandSuiteType);
+        Room grandSuite0105 = new Room("01", "05", testGrandSuiteType, RoomStatusEnum.AVAILABLE);
+        Room grandSuite0205 = new Room("02", "05", testGrandSuiteType, RoomStatusEnum.AVAILABLE);
+        Room grandSuite0305 = new Room("03", "05", testGrandSuiteType, RoomStatusEnum.AVAILABLE);
+        Room grandSuite0405 = new Room("04", "05", testGrandSuiteType, RoomStatusEnum.AVAILABLE);
+        Room grandSuite0505 = new Room("05", "05", testGrandSuiteType, RoomStatusEnum.AVAILABLE);
         
         
         if (em.createQuery("SELECT COUNT(r) FROM Room r", Long.class).getSingleResult() == 0) {

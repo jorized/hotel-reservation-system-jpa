@@ -32,7 +32,7 @@ public interface RoomRateSessionBeanLocal {
     
     public RoomRate updateRoomRate(RoomRate updatedRoomRate) throws UpdateRoomRateException;
 
-    public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException;
+    public String deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException;
 
     public List<RoomRate> retrieveAllRoomRates();
     

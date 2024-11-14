@@ -50,9 +50,9 @@ public class Room implements Serializable {
     public Room() {
     }
 
-    public Room(String floorNum, String sequenceNum, RoomType roomType) {
+    public Room(String floorNum, String sequenceNum, RoomType roomType, RoomStatusEnum roomStatus) {
         this();
-        this.roomStatus = RoomStatusEnum.AVAILABLE;
+        this.roomStatus = roomStatus;
         this.floorNum = floorNum;
         this.sequenceNum = sequenceNum;
         this.roomNum = floorNum + sequenceNum;

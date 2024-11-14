@@ -10,15 +10,34 @@
 <message name="retrieveAllRoomRatesResponse">
 <part name="parameters" element="tns:retrieveAllRoomRatesResponse"/>
 </message>
+<message name="getDailyRateRoomRate">
+<part name="parameters" element="tns:getDailyRateRoomRate"/>
+</message>
+<message name="getDailyRateRoomRateResponse">
+<part name="parameters" element="tns:getDailyRateRoomRateResponse"/>
+</message>
 <portType name="RoomRateWebService">
 <operation name="retrieveAllRoomRates">
 <input wsam:Action="http://ws.session.ejb/RoomRateWebService/retrieveAllRoomRatesRequest" message="tns:retrieveAllRoomRates"/>
 <output wsam:Action="http://ws.session.ejb/RoomRateWebService/retrieveAllRoomRatesResponse" message="tns:retrieveAllRoomRatesResponse"/>
 </operation>
+<operation name="getDailyRateRoomRate">
+<input wsam:Action="http://ws.session.ejb/RoomRateWebService/getDailyRateRoomRateRequest" message="tns:getDailyRateRoomRate"/>
+<output wsam:Action="http://ws.session.ejb/RoomRateWebService/getDailyRateRoomRateResponse" message="tns:getDailyRateRoomRateResponse"/>
+</operation>
 </portType>
 <binding name="RoomRateWebServicePortBinding" type="tns:RoomRateWebService">
 <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
 <operation name="retrieveAllRoomRates">
+<soap:operation soapAction=""/>
+<input>
+<soap:body use="literal"/>
+</input>
+<output>
+<soap:body use="literal"/>
+</output>
+</operation>
+<operation name="getDailyRateRoomRate">
 <soap:operation soapAction=""/>
 <input>
 <soap:body use="literal"/>

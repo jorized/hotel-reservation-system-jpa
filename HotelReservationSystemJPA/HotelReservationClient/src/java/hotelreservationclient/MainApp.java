@@ -7,12 +7,15 @@ package hotelreservationclient;
 import ejb.session.stateless.CustomerSessionBeanRemote;
 import ejb.session.stateless.GuestSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
+import ejb.session.stateless.RoomRateReservationSessionBeanRemote;
 import ejb.session.stateless.RoomRateSessionBeanRemote;
 import ejb.session.stateless.RoomSessionBeanRemote;
 import ejb.session.stateless.RoomTypeSessionBeanRemote;
 import entity.Customer;
 import entity.Reservation;
 import entity.Room;
+import entity.RoomRate;
+import entity.RoomRateReservation;
 import entity.RoomType;
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -41,6 +44,7 @@ public class MainApp {
     private ReservationSessionBeanRemote reservationSessionBeanRemote;
     private RoomTypeSessionBeanRemote roomTypeSessionBeanRemote;
     private RoomRateSessionBeanRemote roomRateSessionBeanRemote;
+    private RoomRateReservationSessionBeanRemote roomRateReservationSessionBeanRemote;
 
     private Customer currentCustomer;
 
@@ -54,7 +58,8 @@ public class MainApp {
             RoomSessionBeanRemote roomSessionBeanRemote,
             RoomRateSessionBeanRemote roomRateSessionBeanRemote,
             RoomTypeSessionBeanRemote roomTypeSessionBeanRemote,
-            ReservationSessionBeanRemote reservationSessionBeanRemote
+            ReservationSessionBeanRemote reservationSessionBeanRemote,
+            RoomRateReservationSessionBeanRemote roomRateReservationSessionBeanRemote
     ) {
         this();
         this.guestSessionBeanRemote = guestSessionBeanRemote;
@@ -63,6 +68,7 @@ public class MainApp {
         this.roomRateSessionBeanRemote = roomRateSessionBeanRemote;
         this.roomTypeSessionBeanRemote = roomTypeSessionBeanRemote;
         this.reservationSessionBeanRemote = reservationSessionBeanRemote;
+        this.roomRateReservationSessionBeanRemote = roomRateReservationSessionBeanRemote;
     }
 
     public void runApp() {
@@ -293,6 +299,7 @@ public class MainApp {
             List<RoomType> roomTypes = new ArrayList<>();
             List<BigDecimal> totalPerRoomAmounts = new ArrayList<>();
             List<List<Room>> roomsByType = new ArrayList<>();
+            Map<RoomType, List<RoomRate>> uniqueRoomRatesMap = new HashMap<>(); // Map for unique RoomRates by RoomType
 
             // Group rooms by RoomType
             for (Room room : availableRooms) {
@@ -302,14 +309,15 @@ public class MainApp {
                 if (index == -1) { // Room type not yet in the list
                     roomTypes.add(roomType);
                     totalPerRoomAmounts.add(BigDecimal.ZERO);
-                    roomsByType.add(new ArrayList<>()); // Create a new list for this room type
+                    roomsByType.add(new ArrayList<>());
+                    uniqueRoomRatesMap.put(roomType, new ArrayList<>()); // Initialize unique RoomRates list for each RoomType
                     index = roomTypes.size() - 1; // Update index to the newly added room type
                 }
                 roomsByType.get(index).add(room); // Add room to the corresponding list
             }
 
-            // Display available room types and calculate total prices
-            System.out.println("Available rooms for the selected dates:\n");
+            long numberOfNights = (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
+            System.out.println("\nAvailable rooms for the selected dates (" + numberOfNights + " nights):\n");
             List<Integer> selectableIndices = new ArrayList<>();
 
             for (int i = 0; i < roomTypes.size(); i++) {
@@ -317,10 +325,7 @@ public class MainApp {
                 List<Room> roomsOfThisType = roomsByType.get(i);
 
                 if (roomsOfThisType.size() >= noOfRooms) {
-                    // Add this index to selectable indices as it meets the room requirement
                     selectableIndices.add(i);
-
-                    // Calculate the per-room price for this room type
                     BigDecimal totalPerRoomAmount = BigDecimal.ZERO;
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTime(checkInDate);
@@ -329,6 +334,14 @@ public class MainApp {
                         Date currentDate = calendar.getTime();
                         BigDecimal ratePerNight = roomTypeSessionBeanRemote.getLowestTierDailyRate(currentDate, ReservationTypeEnum.ONLINE, roomsOfThisType);
 
+                        RoomRate dailyRoomRate = roomRateSessionBeanRemote.getDailyRateRoomRate(currentDate, roomType, ReservationTypeEnum.ONLINE);
+                        if (dailyRoomRate != null) {
+                            List<RoomRate> roomRatesForType = uniqueRoomRatesMap.get(roomType);
+                            if (!roomRatesForType.contains(dailyRoomRate)) {
+                                roomRatesForType.add(dailyRoomRate); // Add unique RoomRate for the RoomType
+                            }
+                        }
+
                         if (ratePerNight != null) {
                             totalPerRoomAmount = totalPerRoomAmount.add(ratePerNight);
                         }
@@ -336,14 +349,11 @@ public class MainApp {
                     }
 
                     totalPerRoomAmounts.set(i, totalPerRoomAmount);
-
-                    // Display each room type with a selection number
-                    System.out.println((selectableIndices.size()) + ": " + roomType.getTypeName() +
-                            " - $" + totalPerRoomAmount +
-                            " per room, Total Reservation Amount: $" +
-                            totalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms)) +
-                            " for " + noOfRooms + ((noOfRooms > 1) ? " rooms" : " room"));
-
+                    System.out.println((selectableIndices.size()) + ": " + roomType.getTypeName()
+                            + " - $" + totalPerRoomAmount
+                            + " per room, Total Reservation Amount: $"
+                            + totalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms))
+                            + " for " + noOfRooms + ((noOfRooms > 1) ? " rooms" : " room"));
                 }
             }
 
@@ -352,78 +362,58 @@ public class MainApp {
                 return;
             }
 
-            // Ask the user to select a room type from the displayed options
             Scanner scanner = new Scanner(System.in);
             System.out.print("\nPlease select a room type by entering the number: ");
             int roomTypeSelection = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            scanner.nextLine();
 
             if (roomTypeSelection < 1 || roomTypeSelection > selectableIndices.size()) {
                 System.out.println("Invalid selection. Returning to the main menu.");
                 return;
             }
 
-            // Get the selected room type index and corresponding data
             int selectedIndex = selectableIndices.get(roomTypeSelection - 1);
             RoomType selectedRoomType = roomTypes.get(selectedIndex);
             BigDecimal selectedTotalPerRoomAmount = totalPerRoomAmounts.get(selectedIndex);
 
-            System.out.println("\nYou selected: " + selectedRoomType.getTypeName() +
-                    " - $" + selectedTotalPerRoomAmount +
-                    " per room, Total Reservation Amount: $" +
-                    selectedTotalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms)) +
-                    " for " + noOfRooms + " rooms");
+            System.out.println("\nYou selected: " + selectedRoomType.getTypeName()
+                    + " - $" + selectedTotalPerRoomAmount
+                    + " per room, Total Reservation Amount: $"
+                    + selectedTotalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms))
+                    + " for " + noOfRooms + " rooms");
 
-            // Proceed with reservation confirmation
             System.out.println("\nWould you like to proceed with reservation?");
             System.out.println("1: Reserve Room(s)");
             System.out.println("2: Go back");
 
             System.out.print("\nEnter your choice > ");
             int response = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            scanner.nextLine();
 
             if (response == 1) {
-                if (currentCustomer == null) {
-                    System.out.println("Error: you must login to reserve.");
+                if(currentCustomer == null) {
+                    System.out.println("Error : You must login to reserve.");
                     return;
                 }
 
                 // Re-fetch the latest available rooms after confirmation
                 List<Room> latestAvailableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
-
-                // Group the latest available rooms by RoomType
                 Map<RoomType, List<Room>> latestRoomsByType = new HashMap<>();
                 for (Room room : latestAvailableRooms) {
                     latestRoomsByType.computeIfAbsent(room.getRoomType(), k -> new ArrayList<>()).add(room);
                 }
 
-                // Create a single reservation for the total number of rooms
-                int index = roomTypes.indexOf(selectedRoomType);
-
-                // Calculate the total reservation amount based on the requested room type and total number of rooms
-                BigDecimal totalReservationAmount = totalPerRoomAmounts.get(index)
-                        .multiply(BigDecimal.valueOf(noOfRooms));
-
-                int roomsToBook = noOfRooms;
+                BigDecimal totalReservationAmount = selectedTotalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms));
                 List<Room> roomsToReserve = new ArrayList<>();
-
-                // Attempt to reserve rooms in the requested room type only
                 List<Room> latestRoomsOfRequestedType = latestRoomsByType.getOrDefault(selectedRoomType, new ArrayList<>());
-                int availableRoomsOfRequestedType = latestRoomsOfRequestedType.size();
 
-                int roomsToBookFromRequestedType = Math.min(roomsToBook, availableRoomsOfRequestedType);
-                roomsToBook -= roomsToBookFromRequestedType;
-
-                // Mark rooms as RESERVED
-                for (int j = 0; j < roomsToBookFromRequestedType; j++) {
+                for (int j = 0; j < Math.min(noOfRooms, latestRoomsOfRequestedType.size()); j++) {
                     Room room = latestRoomsOfRequestedType.get(j);
                     room.setRoomStatus(RoomStatusEnum.RESERVED);
                     roomSessionBeanRemote.updateRoom(room);
                     roomsToReserve.add(room);
                 }
 
-                // Create the reservation
                 Reservation reservation = new Reservation(
                         checkInDate,
                         checkOutDate,
@@ -436,7 +426,14 @@ public class MainApp {
                         null
                 );
 
-                reservationSessionBeanRemote.createNewReservation(reservation);
+                Reservation newlycreatedReservation = reservationSessionBeanRemote.createNewReservation(reservation);
+                
+                // Create and persist RoomRateReservation records for each unique RoomRate for the selected RoomType
+                for (RoomRate roomRate : uniqueRoomRatesMap.get(selectedRoomType)) {
+                    Reservation existingReservation = reservationSessionBeanRemote.getReservationByReservationId(newlycreatedReservation.getReservationId());
+                    RoomRateReservation roomRateReservation = new RoomRateReservation(roomRate, existingReservation);
+                    roomRateReservationSessionBeanRemote.createNewRoomRateReservation(roomRateReservation);
+                }
 
                 // Immediate allocation if applicable
                 if (stripTime(reservation.getCheckInDate()).equals(stripTime(new Date()))) {
@@ -492,7 +489,7 @@ public class MainApp {
 
             // Validate index input
             if (selectedIndex < 1 || selectedIndex > reservations.size()) {
-                System.out.println("Invalid index. Please try again.");
+                System.out.println("Invalid index. Please try again.\n");
                 return;
             }
 
@@ -501,11 +498,11 @@ public class MainApp {
 
             // Display detailed reservation information
             System.out.println("\nReservation Details:");
-            System.out.println("Check-in Date: " + selectedReservation.getCheckInDate());
-            System.out.println("Check-out Date: " + selectedReservation.getCheckOutDate());
+            System.out.println("Check-in Date: " + formatDate(selectedReservation.getCheckInDate()));
+            System.out.println("Check-out Date: " + formatDate(selectedReservation.getCheckOutDate()));
             System.out.println("Room Type: " + selectedReservation.getRoomType().getTypeName());
             System.out.println("Number of Rooms: " + selectedReservation.getNumOfRooms());
-            System.out.println("Total Amount: $" + selectedReservation.getReservationAmount());
+            System.out.println("Total Amount: $" + selectedReservation.getReservationAmount() + "\n");
 
         } catch (Exception ex) {
             System.out.println("Error viewing reservation details: " + ex.getMessage() + "\n");
@@ -518,8 +515,9 @@ public class MainApp {
     private void doViewAllMyReservations() {
         try {
             System.out.println("*** HoRS Reservation Client :: View all reservations***\n");
-            System.out.printf("%-5s %-40s %-40s %-20s %-20s %-20s\n",
+            System.out.printf("%-5s %-20s %-20s %-20s %-20s %-20s\n",
                     "No.", "Check-in Date", "Check-out Date", "Room Type", "Number of Rooms", "Total Amount");
+            System.out.println("---------------------------------------------------------------------------------------------------------");
             int index = 1;
 
             List<Reservation> reservations = reservationSessionBeanRemote.retrieveAllReservationsByGuest(currentCustomer);
@@ -528,14 +526,15 @@ public class MainApp {
                 System.out.println("No reservations found.");
             } else {
                 for (Reservation reservation : reservations) {
-                    System.out.printf("%-5s %-40s %-40s %-20s %-20s %-20s\n",
+                    System.out.printf("%-5s %-20s %-20s %-20s %-20s %-20s\n",
                             index++,
-                            reservation.getCheckInDate(),
-                            reservation.getCheckOutDate(),
+                            formatDate(reservation.getCheckInDate()),
+                            formatDate(reservation.getCheckOutDate()),
                             reservation.getRoomType().getTypeName(),
                             reservation.getNumOfRooms(),
                             "$" + reservation.getReservationAmount());
                 }
+                System.out.println("---------------------------------------------------------------------------------------------------------");
             }
 
             System.out.print("\n");
@@ -549,6 +548,7 @@ public class MainApp {
      * HELPER METHOD *
      */
     private Date promptForDate(Scanner scanner, SimpleDateFormat dateFormat, String prompt) {
+        dateFormat.setLenient(false);
         Date date = null;
         while (date == null) {
             System.out.print(prompt);
@@ -578,7 +578,10 @@ public class MainApp {
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime();
     }
-
+    
+    private String formatDate(Date date) {
+        return date != null ? new SimpleDateFormat("dd-MM-yyyy").format(date) : "N/A";
+    }
 
 
 }

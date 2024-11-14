@@ -8,6 +8,8 @@
     <system systemId="http://localhost:8080/RoomWebService/RoomWebService?xsd=1" uri="xml-resources/web-service-references/RoomWebService/wsdl/localhost_8080/RoomWebService/RoomWebService.xsd_1.xsd"/>
     <system systemId="http://localhost:8080/RoomTypeWebService/RoomTypeWebService?wsdl" uri="xml-resources/web-service-references/RoomTypeWebService/wsdl/localhost_8080/RoomTypeWebService/RoomTypeWebService.wsdl"/>
     <system systemId="http://localhost:8080/RoomTypeWebService/RoomTypeWebService?xsd=1" uri="xml-resources/web-service-references/RoomTypeWebService/wsdl/localhost_8080/RoomTypeWebService/RoomTypeWebService.xsd_1.xsd"/>
+    <system systemId="http://localhost:8080/RoomRateReservationWebService/RoomRateReservationWebService?wsdl" uri="xml-resources/web-service-references/RoomRateReservationWebService/wsdl/localhost_8080/RoomRateReservationWebService/RoomRateReservationWebService.wsdl"/>
+    <system systemId="http://localhost:8080/RoomRateReservationWebService/RoomRateReservationWebService?xsd=1" uri="xml-resources/web-service-references/RoomRateReservationWebService/wsdl/localhost_8080/RoomRateReservationWebService/RoomRateReservationWebService.xsd_1.xsd"/>
     <system systemId="http://localhost:8080/RoomRateWebService/RoomRateWebService?wsdl" uri="xml-resources/web-service-references/RoomRateWebService/wsdl/localhost_8080/RoomRateWebService/RoomRateWebService.wsdl"/>
     <system systemId="http://localhost:8080/RoomRateWebService/RoomRateWebService?xsd=1" uri="xml-resources/web-service-references/RoomRateWebService/wsdl/localhost_8080/RoomRateWebService/RoomRateWebService.xsd_1.xsd"/>
 </catalog>

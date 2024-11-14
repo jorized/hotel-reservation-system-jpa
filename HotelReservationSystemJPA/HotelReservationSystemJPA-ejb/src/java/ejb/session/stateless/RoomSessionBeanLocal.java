@@ -4,15 +4,19 @@
  */
 package ejb.session.stateless;
 
+import entity.Reservation;
 import entity.Room;
 import entity.RoomType;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.InvalidExceptionReportException;
 import util.exception.InvalidRoomNumException;
+import util.exception.InvalidRoomReservationException;
 import util.exception.InvalidRoomTypeTierNumberException;
 import util.exception.RoomAlreadyExistException;
 import util.exception.UpdateRoomException;
+import util.exception.UpdateRoomReservationException;
 
 /**
  *
@@ -46,6 +50,8 @@ public interface RoomSessionBeanLocal {
     public List<Room> retrieveAllAvailableRoomsByRoomType(RoomType roomType);
 
     public Room retrieveRoomByRoomId(Long roomId);
+
+    public List<String> allocateAvailableRoomsOrUpgrade(Reservation reservation) throws InvalidExceptionReportException, InvalidRoomTypeTierNumberException, UpdateRoomException, UpdateRoomReservationException, InvalidRoomReservationException;
 
     
 }

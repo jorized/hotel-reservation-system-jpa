@@ -5,8 +5,10 @@
 package ejb.session.stateless;
 
 import entity.ExceptionReport;
+import entity.RoomReservation;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.InvalidExceptionReportException;
 
 /**
  *
@@ -18,5 +20,7 @@ public interface ExceptionReportSessionBeanRemote {
     public ExceptionReport createNewExceptionReport(ExceptionReport exceptionReport);
     
     public List<ExceptionReport> retrieveAllExceptionReports();
+    
+    public ExceptionReport retrieveExceptionReportByRoomReservation(RoomReservation roomReservation) throws InvalidExceptionReportException;
     
 }

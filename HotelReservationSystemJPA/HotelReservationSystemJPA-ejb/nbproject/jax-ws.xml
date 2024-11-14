@@ -16,6 +16,9 @@
     <service name="PartnerWebService">
       <implementation-class>ejb.session.ws.PartnerWebService</implementation-class>
     </service>
+    <service name="RoomRateReservationWebService">
+      <implementation-class>ejb.session.ws.RoomRateReservationWebService</implementation-class>
+    </service>
   </services>
   <clients/>
 </jax-ws>

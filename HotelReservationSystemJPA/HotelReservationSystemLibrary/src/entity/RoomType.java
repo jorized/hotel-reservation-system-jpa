@@ -37,13 +37,13 @@ public class RoomType implements Serializable {
     @Column(length = 12, nullable = false) 
     private String bed;
     
-    @Column(nullable = false)
+    @Column(length = 255, nullable = false)
     private String description;
     
     @Column(nullable = false)
     private Integer capacity;    
     
-    @Column(nullable = false)
+    @Column(length = 255, nullable = false)
     private String amenities;
     
     @Column(nullable = false)
