@@ -7,6 +7,7 @@ package hotelreservationclient;
 import ejb.session.stateless.CustomerSessionBeanRemote;
 import ejb.session.stateless.GuestSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
+import ejb.session.stateless.RoomRateReservationSessionBeanRemote;
 import ejb.session.stateless.RoomRateSessionBeanRemote;
 import ejb.session.stateless.RoomSessionBeanRemote;
 import ejb.session.stateless.RoomTypeSessionBeanRemote;
@@ -36,9 +37,12 @@ public class Main {
     @EJB
     private static ReservationSessionBeanRemote reservationSessionBeanRemote;
     
+    @EJB
+    private static RoomRateReservationSessionBeanRemote roomRateReservationSessionBeanRemote;
+    
     
     public static void main(String[] args) {
-        MainApp mainApp = new MainApp(guestSessionBeanRemote, customerSessionBeanRemote, roomSessionBeanRemote, roomRateSessionBeanRemote, roomTypeSessionBeanRemote, reservationSessionBeanRemote);
+        MainApp mainApp = new MainApp(guestSessionBeanRemote, customerSessionBeanRemote, roomSessionBeanRemote, roomRateSessionBeanRemote, roomTypeSessionBeanRemote, reservationSessionBeanRemote, roomRateReservationSessionBeanRemote);
         mainApp.runApp();
     }
     

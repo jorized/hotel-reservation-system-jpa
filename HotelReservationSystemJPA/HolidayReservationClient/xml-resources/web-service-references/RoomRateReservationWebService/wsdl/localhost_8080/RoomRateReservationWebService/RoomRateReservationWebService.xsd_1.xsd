@@ -1,18 +1,54 @@
 <?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is Metro/2.4.3 (RELEASE-2.4.3-ad3323c; 2019-01-21T17:46:06+0000) JAXWS-RI/2.3.2 JAXWS-API/2.3.2 JAXB-RI/2.3.2 JAXB-API/2.3.2 git-revision#unknown. --><xs:schema xmlns:tns="http://ws.session.ejb/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://ws.session.ejb/">
 
-<xs:element name="getDailyRateRoomRate" type="tns:getDailyRateRoomRate"/>
+<xs:element name="createNewRoomRateReservation" type="tns:createNewRoomRateReservation"/>
 
-<xs:element name="getDailyRateRoomRateResponse" type="tns:getDailyRateRoomRateResponse"/>
+<xs:element name="createNewRoomRateReservationResponse" type="tns:createNewRoomRateReservationResponse"/>
 
-<xs:element name="retrieveAllRoomRates" type="tns:retrieveAllRoomRates"/>
-
-<xs:element name="retrieveAllRoomRatesResponse" type="tns:retrieveAllRoomRatesResponse"/>
-
-<xs:complexType name="getDailyRateRoomRate">
+<xs:complexType name="createNewRoomRateReservation">
 <xs:sequence>
-<xs:element name="arg0" type="xs:dateTime" minOccurs="0"/>
-<xs:element name="arg1" type="tns:roomType" minOccurs="0"/>
-<xs:element name="arg2" type="tns:reservationTypeEnum" minOccurs="0"/>
+<xs:element name="arg0" type="tns:roomRateReservation" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="roomRateReservation">
+<xs:sequence>
+<xs:element name="reservation" type="tns:reservation" minOccurs="0"/>
+<xs:element name="roomRate" type="tns:roomRate" minOccurs="0"/>
+<xs:element name="roomRateReservationId" type="xs:long" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="reservation">
+<xs:sequence>
+<xs:element name="checkInDate" type="xs:dateTime" minOccurs="0"/>
+<xs:element name="checkOutDate" type="xs:dateTime" minOccurs="0"/>
+<xs:element name="guest" type="tns:guest" minOccurs="0"/>
+<xs:element name="numOfRooms" type="xs:int" minOccurs="0"/>
+<xs:element name="partner" type="tns:partner" minOccurs="0"/>
+<xs:element name="reservationAmount" type="xs:decimal" minOccurs="0"/>
+<xs:element name="reservationId" type="xs:long" minOccurs="0"/>
+<xs:element name="reservationStatusEnum" type="tns:reservationStatusEnum" minOccurs="0"/>
+<xs:element name="reservationType" type="tns:reservationTypeEnum" minOccurs="0"/>
+<xs:element name="roomType" type="tns:roomType" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="guest" abstract="true">
+<xs:sequence>
+<xs:element name="email" type="xs:string" minOccurs="0"/>
+<xs:element name="firstName" type="xs:string" minOccurs="0"/>
+<xs:element name="guestId" type="xs:long" minOccurs="0"/>
+<xs:element name="lastName" type="xs:string" minOccurs="0"/>
+<xs:element name="passportNumber" type="xs:string" minOccurs="0"/>
+<xs:element name="phoneNumber" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="partner">
+<xs:sequence>
+<xs:element name="partnerId" type="xs:long" minOccurs="0"/>
+<xs:element name="password" type="xs:string" minOccurs="0"/>
+<xs:element name="username" type="xs:string" minOccurs="0"/>
 </xs:sequence>
 </xs:complexType>
 
@@ -27,12 +63,6 @@
 <xs:element name="size" type="xs:string" minOccurs="0"/>
 <xs:element name="tierNumber" type="xs:int" minOccurs="0"/>
 <xs:element name="typeName" type="xs:string" minOccurs="0"/>
-</xs:sequence>
-</xs:complexType>
-
-<xs:complexType name="getDailyRateRoomRateResponse">
-<xs:sequence>
-<xs:element name="return" type="tns:roomRate" minOccurs="0"/>
 </xs:sequence>
 </xs:complexType>
 
@@ -51,20 +81,17 @@
 </xs:sequence>
 </xs:complexType>
 
-<xs:complexType name="retrieveAllRoomRates">
-<xs:sequence/>
-</xs:complexType>
-
-<xs:complexType name="retrieveAllRoomRatesResponse">
+<xs:complexType name="createNewRoomRateReservationResponse">
 <xs:sequence>
-<xs:element name="return" type="tns:roomRate" minOccurs="0" maxOccurs="unbounded"/>
+<xs:element name="return" type="tns:roomRateReservation" minOccurs="0"/>
 </xs:sequence>
 </xs:complexType>
 
-<xs:simpleType name="roomTypeStatusEnum">
+<xs:simpleType name="reservationStatusEnum">
 <xs:restriction base="xs:string">
-<xs:enumeration value="ACTIVE"/>
-<xs:enumeration value="DISABLED"/>
+<xs:enumeration value="CONFIRMED"/>
+<xs:enumeration value="CHECKED_IN"/>
+<xs:enumeration value="CHECKED_OUT"/>
 </xs:restriction>
 </xs:simpleType>
 
@@ -72,6 +99,13 @@
 <xs:restriction base="xs:string">
 <xs:enumeration value="WALKIN"/>
 <xs:enumeration value="ONLINE"/>
+</xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="roomTypeStatusEnum">
+<xs:restriction base="xs:string">
+<xs:enumeration value="ACTIVE"/>
+<xs:enumeration value="DISABLED"/>
 </xs:restriction>
 </xs:simpleType>
 

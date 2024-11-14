@@ -34,7 +34,12 @@ import util.exception.UpdateRoomRateException;
 public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateSessionBeanLocal {
 
     @EJB
+    private RoomRateReservationSessionBeanLocal roomRateReservationSessionBeanLocal;
+
+    @EJB
     private ReservationSessionBeanLocal reservationSessionBeanLocal;
+    
+    
 
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
@@ -84,6 +89,10 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         try {
             RoomRate existingRoomRate = em.find(RoomRate.class, updatedRoomRate.getRoomRateId());
 
+            if (updatedRoomRate.getRateName() != null) {
+                existingRoomRate.setRateName(updatedRoomRate.getRateName());
+            }
+            
             if (updatedRoomRate.getRoomType() != null) {
                 existingRoomRate.setRoomType(updatedRoomRate.getRoomType());
             }
@@ -115,23 +124,25 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     }
 
     @Override
-    public void deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException {
-        //Check if existing room rate is linked to any reservations. (Get all rooms linked to that room type)
-
+    public String deleteRoomRate(RoomRate existingRoomRate) throws ReservationInUseException {
+        // Check if the existing room rate is linked to any reservations.
         RoomRate managedRoomRate = em.find(RoomRate.class, existingRoomRate.getRoomRateId());
 
-        if (reservationSessionBeanLocal.retrieveAllReservationsByRoomRate(managedRoomRate).isEmpty()) {
+        // Check if the room rate has any room rate reservations
+        if (roomRateReservationSessionBeanLocal.retrieveRoomRateReservationsByRoomRate(managedRoomRate).isEmpty()) {
             em.remove(managedRoomRate);
             em.flush();
-        } else {
-            throw new ReservationInUseException("Room type is currently in use. Unable to delete.");
+            return "Room rate has successfully been removed.\n";
+        } else {            
+            managedRoomRate.setRoomRateStatus(RoomRateStatusEnum.DISABLED);  
+            em.merge(managedRoomRate);
+            return "Room rate is not available, room rate status has been changed to 'DISABLED'.\n";
         }
-
     }
 
     @Override
     public List<RoomRate> retrieveAllRoomRates() {
-        Query query = em.createQuery("SELECT r FROM RoomRate r");
+        Query query = em.createQuery("SELECT r FROM RoomRate r ORDER BY r.roomType.tierNumber");
 
         return query.getResultList();
 

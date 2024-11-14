@@ -9,6 +9,7 @@ import ws.partner.PartnerWebService_Service;
 import ws.reservation.ReservationWebService_Service;
 import ws.room.RoomWebService_Service;
 import ws.roomrate.RoomRateWebService_Service;
+import ws.roomratereservation.RoomRateReservationWebService_Service;
 import ws.roomtype.RoomType;
 import ws.roomtype.RoomTypeWebService_Service;
 /**
@@ -28,8 +29,9 @@ public class HolidayReservationClient {
         PartnerWebService_Service partnerService = new PartnerWebService_Service();
         RoomWebService_Service roomService = new RoomWebService_Service();
         RoomRateWebService_Service roomRateService = new RoomRateWebService_Service();
+        RoomRateReservationWebService_Service roomRateReservationService = new RoomRateReservationWebService_Service();
         
-        HolidayApp holidayApp = new HolidayApp(reservationService, roomTypeService, partnerService, roomService, roomRateService);
+        HolidayApp holidayApp = new HolidayApp(reservationService, roomTypeService, partnerService, roomService, roomRateService, roomRateReservationService);
         holidayApp.runApp();
         
     }

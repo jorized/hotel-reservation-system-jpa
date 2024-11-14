@@ -5,11 +5,14 @@
 package ejb.session.stateless;
 
 import entity.ExceptionReport;
+import entity.RoomReservation;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import util.exception.InvalidExceptionReportException;
 
 /**
  *
@@ -39,5 +42,18 @@ public class ExceptionReportSessionBean implements ExceptionReportSessionBeanRem
 	
 	return query.getResultList();
     }
+    
+    @Override
+    public ExceptionReport retrieveExceptionReportByRoomReservation(RoomReservation roomReservation) throws InvalidExceptionReportException {
+        // Assuming you’re using a query to retrieve the exception report
+        try {
+            return em.createQuery("SELECT e FROM ExceptionReport e WHERE e.roomReservation = :roomReservation", ExceptionReport.class)
+                                .setParameter("roomReservation", roomReservation)
+                                .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
     
 }

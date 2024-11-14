@@ -12,6 +12,7 @@
     <class>entity.Employee</class>
     <class>entity.Guest</class>
     <class>entity.Customer</class>
+    <class>entity.RoomRateReservation</class>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/hotelreservationsystemjpa?zeroDateTimeBehavior=CONVERT_TO_NULL"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
