@@ -24,8 +24,6 @@ public class EmployeeSessionBean implements EmployeeSessionBeanRemote, EmployeeS
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
     @Override
     public Employee employeeLogin(String username, String password) throws InvalidLoginCredentialsException {
         try {
@@ -64,5 +62,4 @@ public class EmployeeSessionBean implements EmployeeSessionBeanRemote, EmployeeS
 	return query.getResultList();
     }
     
-
 }

@@ -7,14 +7,11 @@ package ejb.session.stateless;
 import entity.Guest;
 import entity.Partner;
 import entity.Reservation;
-import entity.Room;
 import entity.RoomRate;
-import entity.RoomType;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
 import util.exception.InvalidReservationIdException;
-import util.exception.UpdateRoomException;
 
 /**
  *

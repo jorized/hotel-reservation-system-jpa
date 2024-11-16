@@ -35,7 +35,6 @@ public class RoomRateReservationSessionBean implements RoomRateReservationSessio
         return em.createQuery("SELECT rrr FROM RoomRateReservation rrr WHERE rrr.roomRate.roomRateId = :roomRateId", RoomRateReservation.class)
                 .setParameter("roomRateId", roomRate.getRoomRateId())
                 .getResultList();
-    }
-    
+    }    
     
 }

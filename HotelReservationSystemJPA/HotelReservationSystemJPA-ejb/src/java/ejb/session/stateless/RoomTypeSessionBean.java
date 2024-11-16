@@ -38,8 +38,6 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     @EJB
     private RoomSessionBeanLocal roomSessionBeanLocal;
 
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
@@ -99,6 +97,10 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
             }
 
             existingRoomType.setTierNumber(newTierNumber);
+        }
+        
+        if (updatedRoomType.getTypeName()!= null && !updatedRoomType.getTypeName().isEmpty()) {
+            existingRoomType.setTypeName(updatedRoomType.getTypeName());
         }
 
         if (updatedRoomType.getSize() != null && !updatedRoomType.getSize().isEmpty()) {

@@ -8,6 +8,10 @@
 
 <xs:element name="allocateRoomsResponse" type="tns:allocateRoomsResponse"/>
 
+<xs:element name="retrieveAllAvailableAndPredictedRooms" type="tns:retrieveAllAvailableAndPredictedRooms"/>
+
+<xs:element name="retrieveAllAvailableAndPredictedRoomsResponse" type="tns:retrieveAllAvailableAndPredictedRoomsResponse"/>
+
 <xs:element name="retrieveAllAvailableRooms" type="tns:retrieveAllAvailableRooms"/>
 
 <xs:element name="retrieveAllAvailableRoomsResponse" type="tns:retrieveAllAvailableRoomsResponse"/>
@@ -20,11 +24,14 @@
 
 <xs:element name="updateRoomResponse" type="tns:updateRoomResponse"/>
 
-<xs:complexType name="retrieveAllAvailableRooms">
-<xs:sequence/>
+<xs:complexType name="retrieveAllAvailableAndPredictedRooms">
+<xs:sequence>
+<xs:element name="arg0" type="xs:dateTime" minOccurs="0"/>
+<xs:element name="arg1" type="xs:dateTime" minOccurs="0"/>
+</xs:sequence>
 </xs:complexType>
 
-<xs:complexType name="retrieveAllAvailableRoomsResponse">
+<xs:complexType name="retrieveAllAvailableAndPredictedRoomsResponse">
 <xs:sequence>
 <xs:element name="return" type="tns:room" minOccurs="0" maxOccurs="unbounded"/>
 </xs:sequence>
@@ -52,6 +59,16 @@
 <xs:element name="size" type="xs:string" minOccurs="0"/>
 <xs:element name="tierNumber" type="xs:int" minOccurs="0"/>
 <xs:element name="typeName" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllAvailableRooms">
+<xs:sequence/>
+</xs:complexType>
+
+<xs:complexType name="retrieveAllAvailableRoomsResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:room" minOccurs="0" maxOccurs="unbounded"/>
 </xs:sequence>
 </xs:complexType>
 

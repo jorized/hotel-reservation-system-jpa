@@ -14,14 +14,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Stateless;
-import javax.ejb.Timeout;
-import javax.ejb.Timer;
-import javax.ejb.TimerConfig;
-import javax.ejb.TimerService;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -43,9 +38,6 @@ import util.exception.UpdateRoomReservationException;
 @Stateless
 public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLocal {
 
-    @Resource
-    private TimerService timerService;
-
     @EJB
     private ExceptionReportSessionBeanLocal exceptionReportSessionBeanLocal;
 
@@ -55,8 +47,6 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     @EJB
     private RoomReservationSessionBeanLocal roomReservationSessionBeanLocal;
 
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
@@ -168,8 +158,7 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
                 .getResultList();
     }
 
-    //Room allocation method (EJB timer method that runs at 2am)
-    //@Schedule(hour = "*", minute = "*", second = "*/5", info = "allocateRooms")
+    //Room allocation method (EJB timer method that runs daily at 2am)
     @Schedule(hour = "2", minute = "0", second = "0", info = "allocateRooms")
     public void allocateRooms() throws InvalidRoomTypeTierNumberException {
         System.out.println("*** START ALLOCATING ROOMS ***");
@@ -190,7 +179,7 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
 
             while (roomsAllocated < roomsNeeded) {
                 List<Room> reservedRooms = retrieveAllReservedRoomsByRoomType(currentRoomType);
-
+                
                 if (!reservedRooms.isEmpty()) {
                     Room room = reservedRooms.get(0);
                     System.out.println("Allocating Reserved Room: " + room.getRoomNum());
@@ -249,7 +238,6 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
                             }
                         } catch (InvalidRoomTypeTierNumberException ex) {
                             System.out.println("Error: " + ex.getMessage());
-                            // Handle error (log, notify, or other error handling)
                         }
                     }
                 }
@@ -379,7 +367,7 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
             if (room == null) {
                 // Handle the null room case - e.g., log a message, skip, or create an exception report.
                 System.out.println("RoomReservation has no assigned room. Skipping or handling accordingly.");
-                continue; // Skip this iteration or handle it based on your logic
+                continue; 
             }
 
             // Proceed as usual if room is not null
@@ -453,7 +441,7 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
         }
 
         if (availableOrUpgradableRoomsCount < requiredRooms) {
-            return null; // Indicate insufficient rooms
+            return null; 
         }
 
         // Step 2: Only perform the actual allocation and upgrades if the pre-check confirmed sufficient rooms
@@ -508,16 +496,11 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
         return allocatedRoomsCount >= requiredRooms ? allocatedRooms : null;
     }
 
-
-
-
     private boolean checkType2ReportExists(RoomReservation roomReservation) throws InvalidExceptionReportException {
         ExceptionReport report = exceptionReportSessionBeanLocal.retrieveExceptionReportByRoomReservation(roomReservation);
         System.out.println("report: " + report);
         return report != null && report.getExceptionTypeReport()== ExceptionTypeReportEnum.TYPE_2;
     }
-
-
 
     @Override
     public List<Room> retrieveAllAvailableRooms() {
@@ -527,6 +510,35 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
         List<Room> rooms = query.getResultList();
         System.out.println("Rooms retrieved: " + rooms);
         return rooms;
+    }
+    
+    @Override
+    public List<Room> retrieveAllAvailableAndPredictedRooms(Date checkInDate, Date checkOutDate) {
+        Query query = em.createQuery(
+            "SELECT r FROM Room r " +
+            "JOIN r.roomType rt " +
+            "WHERE (r.roomStatus = :availableStatus " +
+            "       AND NOT EXISTS (SELECT res FROM Reservation res " +
+            "                       JOIN res.roomType rt2 " +
+            "                       WHERE res.checkInDate < :checkOutDate " +
+            "                         AND res.checkOutDate > :checkInDate " +
+            "                         AND rt2 = rt)) " +
+            "   OR ((r.roomStatus = :reservedStatus OR r.roomStatus = :allocatedStatus OR r.roomStatus = :occupiedStatus) " +
+            "       AND NOT EXISTS (SELECT res FROM Reservation res " +
+            "                       JOIN res.roomType rt3 " +
+            "                       WHERE res.checkInDate < :checkOutDate " +
+            "                         AND res.checkOutDate > :checkInDate " +
+            "                         AND rt3 = rt))",
+            Room.class
+        );
+        query.setParameter("availableStatus", RoomStatusEnum.AVAILABLE);
+        query.setParameter("reservedStatus", RoomStatusEnum.RESERVED);
+        query.setParameter("allocatedStatus", RoomStatusEnum.ALLOCATED);
+        query.setParameter("occupiedStatus", RoomStatusEnum.OCCUPIED);
+        query.setParameter("checkInDate", checkInDate);
+        query.setParameter("checkOutDate", checkOutDate);
+
+        return query.getResultList();
     }
 
     @Override

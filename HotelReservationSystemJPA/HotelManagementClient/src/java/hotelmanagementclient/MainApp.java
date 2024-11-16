@@ -620,7 +620,6 @@ public class MainApp {
             System.out.println("Bed: " + roomType.getBed());
             System.out.println("Description: " + roomType.getDescription());
             System.out.println("Total capacity: " + roomType.getCapacity());
-            System.out.println("Number of available rooms left: ");
             System.out.println("Amenities: " + roomType.getAmenities());
             System.out.println("Tier number: " + roomType.getTierNumber());
             System.out.println("Status: " + formatEnumString(roomType.getRoomTypeStatus().toString()) + "\n");
@@ -648,13 +647,18 @@ public class MainApp {
             System.out.println("Bed: " + existingRoomType.getBed());
             System.out.println("Description: " + existingRoomType.getDescription());
             System.out.println("Total capacity: " + existingRoomType.getCapacity());
-            System.out.println("Number of available rooms left: ");
             System.out.println("Amenities: " + existingRoomType.getAmenities());
             System.out.println("Tier number: " + existingRoomType.getTierNumber());
             System.out.println("Status: " + formatEnumString(existingRoomType.getRoomTypeStatus().toString()));
 
             RoomType updatedRoomType = new RoomType();
             updatedRoomType.setRoomTypeId(existingRoomType.getRoomTypeId());
+            
+            System.out.print("\nEnter new name (or press Enter to keep current): ");
+            String updatedName = scanner.nextLine().trim();
+            if (!updatedName.isEmpty()) {
+                updatedRoomType.setTypeName(updatedName);
+            }
 
             System.out.print("\nEnter new size (or press Enter to keep current): ");
             String updatedSize = scanner.nextLine().trim();
@@ -692,7 +696,7 @@ public class MainApp {
                 updatedRoomType.setTierNumber(Integer.parseInt(updatedTierNumber));
             }
 
-            System.out.print("Enter new status (or press Enter to keep current): ");
+            System.out.print("Enter new status (ACTIVE/DISABLED) (or press Enter to keep current): ");
             String updatedStatus = scanner.nextLine().trim();
             if (!updatedStatus.isEmpty()) {
                 updatedRoomType.setRoomTypeStatus(RoomTypeStatusEnum.valueOf(updatedStatus.toUpperCase()));
@@ -725,7 +729,6 @@ public class MainApp {
             System.out.println("Bed: " + existingRoomType.getBed());
             System.out.println("Description: " + existingRoomType.getDescription());
             System.out.println("Total capacity: " + existingRoomType.getCapacity());
-            System.out.println("Number of available rooms left: ");
             System.out.println("Amenities: " + existingRoomType.getAmenities());
             System.out.println("Tier number: " + existingRoomType.getTierNumber());
             System.out.println("Status: " + formatEnumString(existingRoomType.getRoomTypeStatus().toString()));
@@ -1108,7 +1111,7 @@ public class MainApp {
                 System.out.println("The entered date is in the past. Please enter a future date.");
             } else {
                 roomSessionBeanRemote.allocateRoomsManually(userDate);
-                System.out.println("Room allocation triggered for check-in date: " + userDate +"\n");
+                System.out.println("Room allocation triggered for check-in date: " + userDate + "\n");
             }
 
         } catch (Exception ex) {
@@ -1189,6 +1192,14 @@ public class MainApp {
 
             RoomType existingRoomType = roomTypeSessionBeanRemote.retrieveRoomTypeByName(roomTypeString);
 
+            // Retrieve existing room rates for the selected room type
+            List<RoomRate> existingRoomRatesForType = roomRateSessionBeanRemote.retrieveRoomRatesByRoomType(existingRoomType.getRoomTypeId());
+
+            boolean hasNormalRate = existingRoomRatesForType.stream()
+                    .anyMatch(rate -> rate.getRateType() == RoomRateTypeEnum.NORMAL);
+            boolean hasPublishedRate = existingRoomRatesForType.stream()
+                    .anyMatch(rate -> rate.getRateType() == RoomRateTypeEnum.PUBLISHED);
+
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
             System.out.print("Enter room rate name: ");
@@ -1201,8 +1212,20 @@ public class MainApp {
 
                 try {
                     rateType = RoomRateTypeEnum.valueOf(input);
+
+                    // Check for existing NORMAL or PUBLISHED rate
+                    if (rateType == RoomRateTypeEnum.NORMAL && hasNormalRate) {
+                        throw new InvalidRoomRateException("A NORMAL room rate already exists for this room type.");
+                    }
+                    if (rateType == RoomRateTypeEnum.PUBLISHED && hasPublishedRate) {
+                        throw new InvalidRoomRateException("A PUBLISHED room rate already exists for this room type.");
+                    }
                 } catch (IllegalArgumentException e) {
                     System.out.println("Invalid room rate type. Please enter one of the following: PUBLISHED, NORMAL, PEAK, PROMOTION.");
+                    rateType = null;
+                } catch (InvalidRoomRateException ex) {
+                    System.out.println(ex.getMessage());
+                    rateType = null;
                 }
             }
 
@@ -1234,8 +1257,10 @@ public class MainApp {
 
             System.out.println("\nNew room rate '" + name + "' has successfully been created.\n");
 
-        } catch (Exception ex) {
+        } catch (InvalidRoomRateException ex) {
             System.out.println("Error creating new room rate: " + ex.getMessage() + "\n");
+        } catch (Exception ex) {
+            System.out.println("An unexpected error occurred: " + ex.getMessage() + "\n");
         }
     }
 
@@ -1277,7 +1302,6 @@ public class MainApp {
         try {
             Scanner scanner = new Scanner(System.in);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date today = new Date();
 
             System.out.println("*** HoRS Management Client :: Update Room Rate ***\n");
 
@@ -1292,13 +1316,13 @@ public class MainApp {
             System.out.println("Room Type: " + existingRoomRate.getRoomType().getTypeName());
             System.out.println("Room Rate Type: " + formatEnumString(existingRoomRate.getRateType().toString()));
 
-            if (existingRoomRate.getRateType() == RoomRateTypeEnum.PROMOTION) {
-                System.out.println("Promotion Start Date: " + formatDate(existingRoomRate.getPromotionStartDate()));
-                System.out.println("Promotion End Date: " + formatDate(existingRoomRate.getPromotionEndDate()));
-            } else if (existingRoomRate.getRateType() == RoomRateTypeEnum.PEAK) {
-                System.out.println("Peak Start Date: " + formatDate(existingRoomRate.getPeakStartDate()));
-                System.out.println("Peak End Date: " + formatDate(existingRoomRate.getPeakEndDate()));
-            }
+            RoomType roomType = existingRoomRate.getRoomType();
+            List<RoomRate> existingRoomRatesForType = roomRateSessionBeanRemote.retrieveRoomRatesByRoomType(roomType.getRoomTypeId());
+
+            boolean hasNormalRate = existingRoomRatesForType.stream()
+                    .anyMatch(rate -> rate.getRateType() == RoomRateTypeEnum.NORMAL);
+            boolean hasPublishedRate = existingRoomRatesForType.stream()
+                    .anyMatch(rate -> rate.getRateType() == RoomRateTypeEnum.PUBLISHED);
 
             System.out.println("Rate Per Night: $" + existingRoomRate.getRatePerNight() + "\n");
 
@@ -1308,48 +1332,54 @@ public class MainApp {
             updatedRoomRate.setRoomType(existingRoomRate.getRoomType());
             updatedRoomRate.setRatePerNight(existingRoomRate.getRatePerNight());
 
-            // Prompt for updating room rate name
+            // Update room rate name
             String newRoomName;
             while (true) {
                 System.out.print("Enter new room rate name (or press Enter to keep current): ");
                 newRoomName = scanner.nextLine().trim();
                 if (newRoomName.isEmpty()) {
-                    newRoomName = existingRoomRate.getRateName(); // Keep current name if Enter is pressed
+                    newRoomName = existingRoomRate.getRateName();
                     break;
                 } else {
                     try {
                         roomRateSessionBeanRemote.retrieveRoomRateByRoomName(newRoomName);
                         System.out.println("Room rate name already exists. Please enter a different name.");
                     } catch (Exception e) {
-                        // Room name does not exist, so it's safe to use
                         break;
                     }
                 }
             }
             updatedRoomRate.setRateName(newRoomName);
 
-            displayRoomTypes();
-
-            System.out.print("\nEnter new room type (or press Enter to keep current): ");
-            String updatedRoomType = scanner.nextLine().trim();
-            if (!updatedRoomType.isEmpty()) {
-                RoomType existingRoomType = roomTypeSessionBeanRemote.retrieveRoomTypeByName(updatedRoomType);
-                updatedRoomRate.setRoomType(existingRoomType);
+            // Update rate type
+            System.out.print("Enter new rate type ");
+            if (hasNormalRate && hasPublishedRate) {
+                System.out.print("(only PROMOTION/PEAK allowed) (or press Enter to keep current): ");
+            } else if (hasNormalRate) {
+                System.out.print("(only PROMOTION/PEAK/PUBLISHED allowed) (or press Enter to keep current): ");
+            } else if (hasPublishedRate) {
+                System.out.print("(only PROMOTION/PEAK/NORMAL allowed) (or press Enter to keep current): ");
+            } else {
+                System.out.print("(PROMOTION/PEAK/PUBLISHED/NORMAL) (or press Enter to keep current): ");
             }
 
-            System.out.print("Enter new rate type (PROMOTION/PEAK/PUBLISHED/NORMAL) (or press Enter to keep current): ");
             String rateTypeInput = scanner.nextLine().trim();
             RoomRateTypeEnum newRateType = existingRoomRate.getRateType();
             if (!rateTypeInput.isEmpty()) {
                 try {
                     newRateType = RoomRateTypeEnum.valueOf(rateTypeInput.toUpperCase());
-                    updatedRoomRate.setRateType(newRateType);
+                    if ((newRateType == RoomRateTypeEnum.NORMAL && hasNormalRate)
+                            || (newRateType == RoomRateTypeEnum.PUBLISHED && hasPublishedRate)) {
+                        throw new Exception("Room type already has a " + newRateType + " rate. Please choose a different type.");
+                    } else {
+                        updatedRoomRate.setRateType(newRateType);
+                    }
                 } catch (IllegalArgumentException ex) {
                     System.out.println("Invalid rate type. Keeping current value.");
                 }
             }
 
-            // Use promptForDateUpdate to optionally update dates for PROMOTION or PEAK rate types
+            // Handle date updates for PROMOTION and PEAK rate types
             if (newRateType == RoomRateTypeEnum.PROMOTION) {
                 Date promotionStartDate = promptForDateUpdate(scanner, dateFormat, "Enter promotion start date (yyyy-MM-dd) (or press Enter to keep current): ", existingRoomRate.getPromotionStartDate());
                 Date promotionEndDate;
@@ -1358,7 +1388,6 @@ public class MainApp {
                     promotionEndDate = promptForDateUpdate(scanner, dateFormat, "Enter promotion end date (yyyy-MM-dd) (or press Enter to keep current): ", existingRoomRate.getPromotionEndDate());
                     promotionEndDate = setEndTimeToLastSecond(promotionEndDate);
 
-                    // Validate that promotionEndDate is after promotionStartDate
                     if (!promotionEndDate.before(promotionStartDate)) {
                         break;
                     } else {
@@ -1378,7 +1407,6 @@ public class MainApp {
                     peakEndDate = promptForDateUpdate(scanner, dateFormat, "Enter peak end date (yyyy-MM-dd) (or press Enter to keep current): ", existingRoomRate.getPeakEndDate());
                     peakEndDate = setEndTimeToLastSecond(peakEndDate);
 
-                    // Validate that peakEndDate is after peakStartDate
                     if (!peakEndDate.before(peakStartDate)) {
                         break;
                     } else {
@@ -1397,6 +1425,7 @@ public class MainApp {
                 updatedRoomRate.setPeakEndDate(null);
             }
 
+            // Update rate per night
             System.out.print("Enter new rate per night (or press Enter to keep current): ");
             String ratePerNightInput = scanner.nextLine().trim();
             if (!ratePerNightInput.isEmpty()) {
@@ -1408,7 +1437,7 @@ public class MainApp {
                         updatedRoomRate.setRatePerNight(newRatePerNight);
                     }
                 } catch (NumberFormatException ex) {
-                    System.out.print("Invalid input for rate per night. Keeping current value.");
+                    System.out.println("Invalid input for rate per night. Keeping current value.");
                 }
             }
 
@@ -1576,10 +1605,10 @@ public class MainApp {
             Date checkOutDate;
             while (true) {
                 checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
-                if (!checkOutDate.equals(checkInDate)) {
+                if (checkOutDate.after(checkInDate)) {
                     break;
                 }
-                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+                System.out.println("Check-out date must be after the check-in date. Please enter a valid check-out date.");
             }
 
             // Prompt for the number of rooms requested
@@ -1587,7 +1616,7 @@ public class MainApp {
             int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
             // Retrieve available rooms
-            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
+            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableAndPredictedRooms(checkInDate, checkOutDate);
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;
@@ -1614,10 +1643,10 @@ public class MainApp {
             Date checkOutDate;
             while (true) {
                 checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
-                if (!checkOutDate.equals(checkInDate)) {
+                if (checkOutDate.after(checkInDate)) {
                     break;
                 }
-                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+                System.out.println("Check-out date must be after the check-in date. Please enter a valid check-out date.");
             }
 
             //prompt for the number of rooms requested
@@ -1625,7 +1654,7 @@ public class MainApp {
             int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
             //get available rooms
-            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
+            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableAndPredictedRooms(checkInDate, checkOutDate);
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;

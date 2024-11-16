@@ -13,7 +13,6 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.jws.WebService;
 import javax.jws.WebMethod;
-import javax.jws.WebParam;
 import javax.ejb.Stateless;
 import util.enumeration.ReservationTypeEnum;
 import util.exception.InvalidRoomException;

@@ -12,8 +12,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 import util.enumeration.RoomTypeStatusEnum;
 
 /**
@@ -52,10 +50,6 @@ public class RoomType implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomTypeStatusEnum roomTypeStatus;
-    
-//    @OneToMany
-//    @JoinColumn(nullable = false)
-//    private RoomRate roomRate;
 
     public RoomType() {
     }

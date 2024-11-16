@@ -208,9 +208,6 @@ public class DataInitSessionBean {
                 System.out.println("Error creating room: " + ex.getMessage() + "\n");
             }
         }
-    }
-    
-    
-    
+    }           
 
 }

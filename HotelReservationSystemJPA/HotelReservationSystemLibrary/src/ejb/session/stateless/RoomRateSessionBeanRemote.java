@@ -42,4 +42,6 @@ public interface RoomRateSessionBeanRemote {
 
     public RoomRate getRoomRateForType(RoomType roomType, Date currentDate) throws InvalidRoomRateException;
 
+    public List<RoomRate> retrieveRoomRatesByRoomType(Long roomTypeId);
+    
 }

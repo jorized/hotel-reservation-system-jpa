@@ -83,6 +83,4 @@ public class RoomReservationSessionBean implements RoomReservationSessionBeanRem
         }
     }
 
-
-
 }

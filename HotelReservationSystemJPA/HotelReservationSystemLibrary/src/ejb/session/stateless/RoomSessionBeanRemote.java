@@ -15,7 +15,6 @@ import util.exception.InvalidRoomNumException;
 import util.exception.InvalidRoomReservationException;
 import util.exception.InvalidRoomTypeTierNumberException;
 import util.exception.RoomAlreadyExistException;
-import util.exception.RoomInUseException;
 import util.exception.UpdateRoomException;
 import util.exception.UpdateRoomReservationException;
 
@@ -54,4 +53,6 @@ public interface RoomSessionBeanRemote {
     
     public List<String> allocateAvailableRoomsOrUpgrade(Reservation reservation) throws InvalidExceptionReportException, InvalidRoomTypeTierNumberException, UpdateRoomException, UpdateRoomReservationException, InvalidRoomReservationException;
 
+    public List<Room> retrieveAllAvailableAndPredictedRooms(Date checkInDate, Date checkOutDate);
+    
 }

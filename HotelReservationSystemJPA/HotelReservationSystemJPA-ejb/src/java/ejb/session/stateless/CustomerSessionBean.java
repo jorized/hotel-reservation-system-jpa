@@ -81,8 +81,6 @@ public class CustomerSessionBean implements CustomerSessionBeanRemote, CustomerS
 
         return newCustomer;
     }
-
-
     
     @Override
     public Customer customerLogin(String username, String password) throws InvalidLoginCredentialsException {
@@ -105,11 +103,6 @@ public class CustomerSessionBean implements CustomerSessionBeanRemote, CustomerS
         } catch (NoResultException ex) {
             throw new InvalidAccountCredentialsException("Invalid account credentials");
         }
-    }
-    
-    
-    
-    
-
+    }                
     
 }

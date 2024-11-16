@@ -18,7 +18,6 @@ public interface RoomRateReservationSessionBeanRemote {
     
     public RoomRateReservation createNewRoomRateReservation(RoomRateReservation newRoomRateReservation);
     
-    public List<RoomRateReservation> retrieveRoomRateReservationsByRoomRate(RoomRate roomRate);
-    
+    public List<RoomRateReservation> retrieveRoomRateReservationsByRoomRate(RoomRate roomRate);    
     
 }

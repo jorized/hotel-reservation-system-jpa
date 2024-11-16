@@ -24,9 +24,6 @@ public class ExceptionReportSessionBean implements ExceptionReportSessionBeanRem
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
-    
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
     @Override
     public ExceptionReport createNewExceptionReport(ExceptionReport exceptionReport) {
 
@@ -45,7 +42,6 @@ public class ExceptionReportSessionBean implements ExceptionReportSessionBeanRem
     
     @Override
     public ExceptionReport retrieveExceptionReportByRoomReservation(RoomReservation roomReservation) throws InvalidExceptionReportException {
-        // Assuming you’re using a query to retrieve the exception report
         try {
             return em.createQuery("SELECT e FROM ExceptionReport e WHERE e.roomReservation = :roomReservation", ExceptionReport.class)
                                 .setParameter("roomReservation", roomReservation)
@@ -54,6 +50,5 @@ public class ExceptionReportSessionBean implements ExceptionReportSessionBeanRem
             return null;
         }
     }
-
     
 }

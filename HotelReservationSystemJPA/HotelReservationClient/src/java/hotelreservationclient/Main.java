@@ -42,7 +42,15 @@ public class Main {
     
     
     public static void main(String[] args) {
-        MainApp mainApp = new MainApp(guestSessionBeanRemote, customerSessionBeanRemote, roomSessionBeanRemote, roomRateSessionBeanRemote, roomTypeSessionBeanRemote, reservationSessionBeanRemote, roomRateReservationSessionBeanRemote);
+        MainApp mainApp = new MainApp(
+                guestSessionBeanRemote, 
+                customerSessionBeanRemote, 
+                roomSessionBeanRemote, 
+                roomRateSessionBeanRemote, 
+                roomTypeSessionBeanRemote, 
+                reservationSessionBeanRemote, 
+                roomRateReservationSessionBeanRemote
+        );
         mainApp.runApp();
     }
     

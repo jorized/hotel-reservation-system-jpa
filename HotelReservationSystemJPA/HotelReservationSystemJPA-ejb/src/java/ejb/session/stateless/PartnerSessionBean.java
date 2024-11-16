@@ -4,7 +4,6 @@
  */
 package ejb.session.stateless;
 
-import entity.Employee;
 import entity.Partner;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -25,9 +24,6 @@ public class PartnerSessionBean implements PartnerSessionBeanRemote, PartnerSess
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
-    
     @Override
     public Partner createNewPartner(Partner newPartner) throws AccountAlreadyExistException {        
 

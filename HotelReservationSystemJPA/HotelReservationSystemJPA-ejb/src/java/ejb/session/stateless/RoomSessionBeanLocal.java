@@ -53,5 +53,6 @@ public interface RoomSessionBeanLocal {
 
     public List<String> allocateAvailableRoomsOrUpgrade(Reservation reservation) throws InvalidExceptionReportException, InvalidRoomTypeTierNumberException, UpdateRoomException, UpdateRoomReservationException, InvalidRoomReservationException;
 
+    public List<Room> retrieveAllAvailableAndPredictedRooms(Date checkInDate, Date checkOutDate);
     
 }
