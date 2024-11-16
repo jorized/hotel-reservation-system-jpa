@@ -33,7 +33,6 @@ import ws.roomratereservation.RoomRateReservation;
 import ws.roomratereservation.RoomRateReservationWebService_Service;
 import ws.roomtype.ReservationTypeEnum;
 import ws.roomtype.RoomType;
-
 import ws.roomtype.RoomTypeWebService_Service;
 
 /**
@@ -55,7 +54,14 @@ public class HolidayApp {
         this.currentPartner = null;
     }
 
-    public HolidayApp(ReservationWebService_Service reservationService, RoomTypeWebService_Service roomTypeService, PartnerWebService_Service partnerService, RoomWebService_Service roomService, RoomRateWebService_Service roomRateService, RoomRateReservationWebService_Service roomRateReservationService) {
+    public HolidayApp(
+            ReservationWebService_Service reservationService, 
+            RoomTypeWebService_Service roomTypeService, 
+            PartnerWebService_Service partnerService, 
+            RoomWebService_Service roomService, 
+            RoomRateWebService_Service roomRateService, 
+            RoomRateReservationWebService_Service roomRateReservationService
+    ) {
         this();
         this.reservationService = reservationService;
         this.roomTypeService = roomTypeService;
@@ -180,15 +186,15 @@ public class HolidayApp {
             // Ensure check-out date is not the same as check-in date
             while (true) {
                 checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
-                if (!checkOutDate.equals(checkInDate)) {
+                if (checkOutDate.after(checkInDate)) {
                     break;
                 }
-                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+                System.out.println("Check-out date must be after the check-in date. Please enter a valid check-out date.");
             }
             System.out.print("Enter number of rooms you would like to book: ");
             int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
-            List<Room> availableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableRooms();
+            List<Room> availableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableAndPredictedRooms(toXMLGregorianCalendar(checkInDate), toXMLGregorianCalendar(checkOutDate));
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;
@@ -216,16 +222,16 @@ public class HolidayApp {
             Date checkOutDate;
             while (true) {
                 checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
-                if (!checkOutDate.equals(checkInDate)) {
+                if (checkOutDate.after(checkInDate)) {
                     break;
                 }
-                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+                System.out.println("Check-out date must be after the check-in date. Please enter a valid check-out date.");
             }
 
             System.out.print("Enter number of rooms you would like to book: ");
             int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
-            List<Room> availableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableRooms();
+            List<Room> availableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableAndPredictedRooms(toXMLGregorianCalendar(checkInDate), toXMLGregorianCalendar(checkOutDate));
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;
@@ -245,175 +251,6 @@ public class HolidayApp {
         }
     }
     
-//    private void reserveRooms(Date checkInDate, Date checkOutDate, int noOfRooms, List<Room> availableRooms) {
-//        try {
-//            List<RoomType> roomTypes = new ArrayList<>();
-//            List<BigDecimal> totalPerRoomAmounts = new ArrayList<>();
-//            List<List<ws.roomtype.Room>> roomsByType = new ArrayList<>();
-//
-//            // Group rooms by RoomTypeId using maps to avoid duplicates
-//            Map<Long, List<ws.roomtype.Room>> roomsByTypeIdMap = new HashMap<>();
-//            Map<Long, RoomType> roomTypeMap = new HashMap<>();
-//
-//            for (Room room : availableRooms) {
-//                RoomType roomType = convertToRoomtypeRoomType(room.getRoomType());
-//                Long roomTypeId = roomType.getRoomTypeId();
-//
-//                roomTypeMap.putIfAbsent(roomTypeId, roomType);
-//                roomsByTypeIdMap.computeIfAbsent(roomTypeId, k -> new ArrayList<>()).add(convertToRoomtypeRoom(room));
-//            }
-//
-//            // Populate roomTypes and roomsByType lists
-//            for (Long roomTypeId : roomsByTypeIdMap.keySet()) {
-//                roomTypes.add(roomTypeMap.get(roomTypeId));
-//                roomsByType.add(roomsByTypeIdMap.get(roomTypeId));
-//            }
-//
-//            // Display available room types and calculate total prices
-//            long numberOfNights = (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24);
-//            System.out.println("\nAvailable rooms for the selected dates (" + numberOfNights + " nights):\n");
-//            List<Integer> selectableIndices = new ArrayList<>();
-//
-//            for (int i = 0; i < roomTypes.size(); i++) {
-//                RoomType roomType = roomTypes.get(i);
-//                List<ws.roomtype.Room> roomsOfThisType = roomsByType.get(i);
-//
-//                if (roomsOfThisType.size() >= noOfRooms) {
-//                    selectableIndices.add(i);
-//
-//                    // Calculate the per-room price for this room type
-//                    BigDecimal totalPerRoomAmount = BigDecimal.ZERO;
-//                    Calendar calendar = Calendar.getInstance();
-//                    calendar.setTime(checkInDate);
-//
-//                    while (calendar.getTime().before(checkOutDate)) {
-//                        Date currentDate = calendar.getTime();
-//                        BigDecimal ratePerNight = roomTypeService.getRoomTypeWebServicePort()
-//                                .getLowestTierDailyRate(toXMLGregorianCalendar(currentDate), ReservationTypeEnum.ONLINE, roomsOfThisType);
-//
-//                        if (ratePerNight != null) {
-//                            totalPerRoomAmount = totalPerRoomAmount.add(ratePerNight);
-//                        }
-//                        calendar.add(Calendar.DATE, 1);
-//                    }
-//
-//                    totalPerRoomAmounts.add(totalPerRoomAmount);
-//
-//                    // Display each room type with a selection number
-//                    System.out.println((selectableIndices.size()) + ": " + roomType.getTypeName() +
-//                            " - $" + totalPerRoomAmount +
-//                            " per room, Total Reservation Amount: $" +
-//                            totalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms)) +
-//                            " for " + noOfRooms + ((noOfRooms > 1) ? " rooms" : " room"));
-//                }
-//            }
-//
-//            if (selectableIndices.isEmpty()) {
-//                System.out.println("No available room types have enough rooms for the requested number: " + noOfRooms);
-//                return;
-//            }
-//
-//            // Ask the user to select a room type from the displayed options
-//            Scanner scanner = new Scanner(System.in);
-//            System.out.print("\nPlease select a room type by entering the number: ");
-//            int roomTypeSelection = scanner.nextInt();
-//            scanner.nextLine(); // Consume newline
-//
-//            if (roomTypeSelection < 1 || roomTypeSelection > selectableIndices.size()) {
-//                System.out.println("Invalid selection. Returning to the main menu.");
-//                return;
-//            }
-//
-//            // Get the selected room type index and corresponding data
-//            int selectedIndex = selectableIndices.get(roomTypeSelection - 1);
-//            RoomType selectedRoomType = roomTypes.get(selectedIndex);
-//            BigDecimal selectedTotalPerRoomAmount = totalPerRoomAmounts.get(selectedIndex);
-//
-//            System.out.println("\nYou selected: " + selectedRoomType.getTypeName() +
-//                    " - $" + selectedTotalPerRoomAmount +
-//                    " per room, Total Reservation Amount: $" +
-//                    selectedTotalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms)) +
-//                    " for " + noOfRooms + " rooms");
-//
-//            // Proceed with reservation confirmation
-//            System.out.println("\nWould you like to proceed with reservation?");
-//            System.out.println("1: Reserve Room(s)");
-//            System.out.println("2: Go back");
-//
-//            System.out.print("\nEnter your choice > ");
-//            int response = scanner.nextInt();
-//            scanner.nextLine(); // Consume newline
-//
-//            if (response == 1) {
-//                if (currentPartner == null) {
-//                    System.out.println("Error: you must login to reserve.");
-//                    return;
-//                }
-//
-//                // Re-fetch the latest available rooms after confirmation
-//                List<Room> latestAvailableRooms = roomService.getRoomWebServicePort().retrieveAllAvailableRooms();
-//
-//                // Group the latest available rooms by RoomTypeId
-//                Map<Long, List<Room>> latestRoomsByTypeIdMap = new HashMap<>();
-//                for (Room room : latestAvailableRooms) {
-//                    ws.roomtype.RoomType convertedRoomType = convertToRoomtypeRoomType(room.getRoomType());
-//                    Long roomTypeId = convertedRoomType.getRoomTypeId();
-//                    latestRoomsByTypeIdMap.computeIfAbsent(roomTypeId, k -> new ArrayList<>()).add(room);
-//                }
-//
-//                // Calculate total reservation amount based on the selected room type and total number of rooms
-//                BigDecimal totalReservationAmount = selectedTotalPerRoomAmount.multiply(BigDecimal.valueOf(noOfRooms));
-//
-//                int roomsToBook = noOfRooms;
-//                List<Room> roomsToReserve = new ArrayList<>();
-//
-//                // Attempt to reserve rooms in the selected room type only
-//                List<Room> latestRoomsOfSelectedType = latestRoomsByTypeIdMap.getOrDefault(selectedRoomType.getRoomTypeId(), new ArrayList<>());
-//                int availableRoomsOfSelectedType = latestRoomsOfSelectedType.size();
-//
-//                int roomsToBookFromSelectedType = Math.min(roomsToBook, availableRoomsOfSelectedType);
-//                roomsToBook -= roomsToBookFromSelectedType;
-//
-//                // Mark rooms as RESERVED
-//                for (int j = 0; j < roomsToBookFromSelectedType; j++) {
-//                    Room room = latestRoomsOfSelectedType.get(j);
-//                    room.setRoomStatus(RoomStatusEnum.RESERVED);
-//                    roomService.getRoomWebServicePort().updateRoom(room);
-//                    roomsToReserve.add(room);
-//                }
-//
-//                Reservation reservation = new Reservation();
-//                reservation.setCheckInDate(toXMLGregorianCalendar(checkInDate));
-//                reservation.setCheckOutDate(toXMLGregorianCalendar(checkOutDate));
-//                reservation.setNumOfRooms(noOfRooms);
-//                reservation.setReservationType(convertToReservationTypeEnum(ReservationTypeEnum.ONLINE));
-//                reservation.setReservationAmount(totalReservationAmount);
-//                reservation.setReservationStatusEnum(ReservationStatusEnum.CONFIRMED);
-//                reservation.setRoomType(convertToReservationRoomType(selectedRoomType));
-//                reservation.setPartner(convertToReservationPartner(currentPartner));
-//
-//                reservationService.getReservationWebServicePort().createNewReservation(reservation);
-//
-//                // Immediate allocation if applicable
-//                if (stripTime(convertToDate(reservation.getCheckInDate())).equals(stripTime(new Date()))) {
-//                    Calendar currentTime = Calendar.getInstance();
-//                    int currentHour = currentTime.get(Calendar.HOUR_OF_DAY);
-//                    if (currentHour >= 2) {
-//                        roomService.getRoomWebServicePort().allocateRooms();
-//                    }
-//                }
-//
-//                System.out.println("Your reservation has successfully been made!\n");
-//            } else if (response == 2) {
-//                System.out.println("Returning to the main menu...");
-//            } else {
-//                System.out.println("Invalid option. Please try again.");
-//            }
-//        } catch (Exception ex) {
-//            System.out.println("Error reserving hotel room: " + ex.getMessage());
-//            ex.printStackTrace();
-//        }
-//    }
     
     
     private void reserveRooms(Date checkInDate, Date checkOutDate, int noOfRooms, List<Room> availableRooms) {
@@ -671,11 +508,11 @@ public class HolidayApp {
 
             // Display detailed reservation information
             System.out.println("\nReservation Details:");
-            System.out.println("Check-in Date: " + stripTime(convertToDate(selectedReservation.getCheckInDate())));
-            System.out.println("Check-out Date: " + stripTime(convertToDate(selectedReservation.getCheckOutDate())));
+            System.out.println("Check-in Date: " + formatDate(convertToDate(selectedReservation.getCheckInDate())));
+            System.out.println("Check-out Date: " + formatDate(convertToDate(selectedReservation.getCheckOutDate())));
             System.out.println("Room Type: " + selectedReservation.getRoomType().getTypeName());
             System.out.println("Number of Rooms: " + selectedReservation.getNumOfRooms());
-            System.out.println("Total Amount: $" + selectedReservation.getReservationAmount());
+            System.out.println("Total Amount: $" + selectedReservation.getReservationAmount() + "\n");
 
         } catch (Exception ex) {
             System.out.println("Error viewing reservation details: " + ex.getMessage() + "\n");
@@ -686,7 +523,7 @@ public class HolidayApp {
     private void doViewAllMyReservations() {
         try {
             System.out.println("*** Holiday Reservation System :: View all reservations***\n");
-            System.out.printf("%-5s %-40s %-40s %-20s %-20s %-20s\n",
+            System.out.printf("%-5s %-20s %-20s %-20s %-20s %-20s\n",
                     "No.", "Check-in Date", "Check-out Date", "Room Type", "Number of Rooms", "Total Amount");
             System.out.println("---------------------------------------------------------------------------------------------------------");
             int index = 1;
@@ -697,10 +534,10 @@ public class HolidayApp {
                 System.out.println("No reservations found.");
             } else {
                 for (Reservation reservation : reservations) {
-                    System.out.printf("%-5s %-40s %-40s %-20s %-20s %-20s\n",
+                    System.out.printf("%-5s %-20s %-20s %-20s %-20s %-20s\n",
                             index++,
-                            stripTime(convertToDate(reservation.getCheckInDate())),
-                            stripTime(convertToDate(reservation.getCheckOutDate())),
+                            formatDate(convertToDate(reservation.getCheckInDate())),
+                            formatDate(convertToDate(reservation.getCheckOutDate())),
                             reservation.getRoomType().getTypeName(),
                             reservation.getNumOfRooms(),
                             "$" + reservation.getReservationAmount());
@@ -785,15 +622,13 @@ public class HolidayApp {
         
         return newRoomType;
     }
-   
-   
+      
    
    private ws.roomtype.Room convertToRoomtypeRoom(ws.room.Room room) {
         ws.roomtype.Room convertedRoom = new ws.roomtype.Room();
         convertedRoom.setRoomType(convertToRoomtypeRoomType(room.getRoomType()));
         convertedRoom.setRoomNum(room.getRoomNum());
         convertedRoom.setRoomStatus(convertToRoomtypeRoomStatusEnum(room.getRoomStatus()));
-        // Add other necessary fields
         return convertedRoom;
     }
    
@@ -808,7 +643,6 @@ public class HolidayApp {
         convertedRoomType.setCapacity(roomType.getCapacity());
         convertedRoomType.setSize(roomType.getSize());
         convertedRoomType.setRoomTypeStatus(convertToReservationRoomTypeStatusEnum(roomType.getRoomTypeStatus()));
-        // Map other fields as necessary
         return convertedRoomType;
     }
 
@@ -838,9 +672,6 @@ public class HolidayApp {
         return convertedPartner;
     }
 
-
-
-    // Conversion from ws.roomtype.RoomType to ws.roomrate.RoomType
     private ws.roomrate.RoomType convertToRoomRateRoomType(ws.roomtype.RoomType roomType) {
         if (roomType == null) {
             return null;
@@ -853,12 +684,11 @@ public class HolidayApp {
         roomRateRoomType.setDescription(roomType.getDescription());
         roomRateRoomType.setCapacity(roomType.getCapacity());
         roomRateRoomType.setAmenities(roomType.getAmenities());
-        roomRateRoomType.setRoomTypeStatus(convertToRoomRateRoomTypeStatus(roomType.getRoomTypeStatus())); // Ensure the enum conversion
+        roomRateRoomType.setRoomTypeStatus(convertToRoomRateRoomTypeStatus(roomType.getRoomTypeStatus())); 
         roomRateRoomType.setTierNumber(roomType.getTierNumber());
         return roomRateRoomType;
     }
 
-    // Helper to convert RoomTypeStatusEnum from ws.roomtype to ws.roomrate
     private ws.roomrate.RoomTypeStatusEnum convertToRoomRateRoomTypeStatus(ws.roomtype.RoomTypeStatusEnum roomTypeStatus) {
         if (roomTypeStatus == null) {
             return null;
@@ -868,14 +698,11 @@ public class HolidayApp {
                 return ws.roomrate.RoomTypeStatusEnum.ACTIVE;
             case DISABLED:
                 return ws.roomrate.RoomTypeStatusEnum.DISABLED;
-            // Add other cases as needed based on your enum values
             default:
                 throw new IllegalArgumentException("Unknown RoomTypeStatusEnum: " + roomTypeStatus);
         }
     }
 
-
-    // Convert ws.roomtype.ReservationTypeEnum to ws.roomrate.ReservationTypeEnum
     private ws.roomrate.ReservationTypeEnum convertToRoomRateReservationTypeEnum(ws.roomtype.ReservationTypeEnum reservationType) {
         if (reservationType == null) {
             return null;
@@ -885,14 +712,11 @@ public class HolidayApp {
                 return ws.roomrate.ReservationTypeEnum.ONLINE;
             case WALKIN:
                 return ws.roomrate.ReservationTypeEnum.WALKIN;
-            // Add other cases as needed based on your enum values
             default:
                 throw new IllegalArgumentException("Unknown ReservationTypeEnum: " + reservationType);
         }
     }
 
-
-    // Convert ws.roomrate.RoomRate to ws.roomratereservation.RoomRate
     private ws.roomratereservation.RoomRate convertToRoomRateReservationRoomRate(ws.roomrate.RoomRate roomRate) {
         if (roomRate == null) {
             return null;
@@ -900,27 +724,18 @@ public class HolidayApp {
         ws.roomratereservation.RoomRate roomRateReservation = new ws.roomratereservation.RoomRate();
         roomRateReservation.setRoomRateId(roomRate.getRoomRateId());
         roomRateReservation.setRateName(roomRate.getRateName());
-
-        // Convert and set rateType using helper method
         roomRateReservation.setRateType(convertToRoomRateReservationRoomRateTypeEnum(roomRate.getRateType()));
-
         roomRateReservation.setRatePerNight(roomRate.getRatePerNight());
-
-        // Convert and set roomRateStatus using helper method
         roomRateReservation.setRoomRateStatus(convertToRoomRateReservationRoomRateStatusEnum(roomRate.getRoomRateStatus()));
-
         roomRateReservation.setPromotionStartDate(roomRate.getPromotionStartDate());
         roomRateReservation.setPromotionEndDate(roomRate.getPromotionEndDate());
         roomRateReservation.setPeakStartDate(roomRate.getPeakStartDate());
         roomRateReservation.setPeakEndDate(roomRate.getPeakEndDate());
-
-        // Convert and set RoomType if needed
         roomRateReservation.setRoomType(convertToRoomRateReservationRoomType(roomRate.getRoomType()));
 
         return roomRateReservation;
     }
     
-    // Convert ws.roomrate.RoomRateStatusEnum to ws.roomratereservation.RoomRateStatusEnum
     private ws.roomratereservation.RoomRateStatusEnum convertToRoomRateReservationRoomRateStatusEnum(ws.roomrate.RoomRateStatusEnum roomRateStatus) {
         if (roomRateStatus == null) {
             return null;
@@ -932,15 +747,11 @@ public class HolidayApp {
                 return ws.roomratereservation.RoomRateStatusEnum.DISABLED;
             case NOT_AVAILABLE:
                 return ws.roomratereservation.RoomRateStatusEnum.NOT_AVAILABLE;
-            // Add other cases as necessary for your enum values
             default:
                 throw new IllegalArgumentException("Unknown RoomRateStatusEnum: " + roomRateStatus);
         }
     }
 
-
-    
-    // Convert ws.roomrate.RoomRateTypeEnum to ws.roomratereservation.RoomRateTypeEnum
     private ws.roomratereservation.RoomRateTypeEnum convertToRoomRateReservationRoomRateTypeEnum(ws.roomrate.RoomRateTypeEnum rateType) {
         if (rateType == null) {
             return null;
@@ -954,13 +765,11 @@ public class HolidayApp {
                 return ws.roomratereservation.RoomRateTypeEnum.PEAK;
             case PROMOTION:
                 return ws.roomratereservation.RoomRateTypeEnum.PROMOTION;
-            // Add other cases as necessary for your enum values
             default:
                 throw new IllegalArgumentException("Unknown RoomRateTypeEnum: " + rateType);
         }
     }
 
-    // Helper method to convert ws.roomrate.RoomType to ws.roomratereservation.RoomType
     private ws.roomratereservation.RoomType convertToRoomRateReservationRoomType(ws.roomrate.RoomType roomType) {
         if (roomType == null) {
             return null;
@@ -974,14 +783,11 @@ public class HolidayApp {
         roomTypeReservation.setCapacity(roomType.getCapacity());
         roomTypeReservation.setAmenities(roomType.getAmenities());
         roomTypeReservation.setTierNumber(roomType.getTierNumber());
-
-        // Convert and set RoomTypeStatusEnum if necessary
         roomTypeReservation.setRoomTypeStatus(convertToRoomRateReservationRoomTypeStatus(roomType.getRoomTypeStatus()));
 
         return roomTypeReservation;
     }
 
-    // Helper method to convert RoomTypeStatusEnum from ws.roomrate to ws.roomratereservation
     private ws.roomratereservation.RoomTypeStatusEnum convertToRoomRateReservationRoomTypeStatus(ws.roomrate.RoomTypeStatusEnum roomTypeStatus) {
         if (roomTypeStatus == null) {
             return null;
@@ -991,14 +797,11 @@ public class HolidayApp {
                 return ws.roomratereservation.RoomTypeStatusEnum.ACTIVE;
             case DISABLED:
                 return ws.roomratereservation.RoomTypeStatusEnum.DISABLED;
-            // Add other cases as necessary for your enum values
             default:
                 throw new IllegalArgumentException("Unknown RoomTypeStatusEnum: " + roomTypeStatus);
         }
     }
 
-
-    // Convert ws.reservation.Reservation to ws.roomratereservation.Reservation
     private ws.roomratereservation.Reservation convertToRoomRateReservation(ws.reservation.Reservation reservation) {
         if (reservation == null) {
             return null;
@@ -1011,15 +814,11 @@ public class HolidayApp {
         reservationForRoomRate.setReservationType(convertToRoomRateReservationTypeEnum(reservation.getReservationType()));
         reservationForRoomRate.setReservationAmount(reservation.getReservationAmount());
         reservationForRoomRate.setReservationStatusEnum(convertToRoomRateReservationStatusEnum(reservation.getReservationStatusEnum()));
-
-        // Convert and set RoomType if needed
         reservationForRoomRate.setRoomType(convertReservationRoomTypeToRoomRateReservationRoomType(reservation.getRoomType()));
 
-        // Add any additional fields as necessary
         return reservationForRoomRate;
     }
 
-    // Convert ws.reservation.ReservationTypeEnum to ws.roomratereservation.ReservationTypeEnum
     private ws.roomratereservation.ReservationTypeEnum convertToRoomRateReservationTypeEnum(ws.reservation.ReservationTypeEnum reservationType) {
         if (reservationType == null) {
             return null;
@@ -1029,13 +828,11 @@ public class HolidayApp {
                 return ws.roomratereservation.ReservationTypeEnum.ONLINE;
             case WALKIN:
                 return ws.roomratereservation.ReservationTypeEnum.WALKIN;
-            // Add other cases as necessary for your enum values
             default:
                 throw new IllegalArgumentException("Unknown ReservationTypeEnum: " + reservationType);
         }
     }
 
-    // Convert ws.reservation.ReservationStatusEnum to ws.roomratereservation.ReservationStatusEnum
     private ws.roomratereservation.ReservationStatusEnum convertToRoomRateReservationStatusEnum(ws.reservation.ReservationStatusEnum reservationStatus) {
         if (reservationStatus == null) {
             return null;
@@ -1047,50 +844,11 @@ public class HolidayApp {
                 return ws.roomratereservation.ReservationStatusEnum.CHECKED_IN;
             case CHECKED_OUT:
                 return ws.roomratereservation.ReservationStatusEnum.CHECKED_OUT;
-            // Add other cases as needed for your enum values
             default:
                 throw new IllegalArgumentException("Unknown ReservationStatusEnum: " + reservationStatus);
         }
     }
 
-    // Convert ws.reservation.RoomType to ws.roomrate.RoomType
-    private ws.roomrate.RoomType convertReservationRoomTypeToRoomRateRoomType(ws.reservation.RoomType reservationRoomType) {
-        if (reservationRoomType == null) {
-            return null;
-        }
-        ws.roomrate.RoomType roomRateRoomType = new ws.roomrate.RoomType();
-        roomRateRoomType.setRoomTypeId(reservationRoomType.getRoomTypeId());
-        roomRateRoomType.setTypeName(reservationRoomType.getTypeName());
-        roomRateRoomType.setSize(reservationRoomType.getSize());
-        roomRateRoomType.setBed(reservationRoomType.getBed());
-        roomRateRoomType.setCapacity(reservationRoomType.getCapacity());
-        roomRateRoomType.setAmenities(reservationRoomType.getAmenities());
-        roomRateRoomType.setDescription(reservationRoomType.getDescription());
-        roomRateRoomType.setTierNumber(reservationRoomType.getTierNumber());
-
-        // Convert and set RoomTypeStatusEnum
-        roomRateRoomType.setRoomTypeStatus(convertToRoomRateRoomTypeStatus(reservationRoomType.getRoomTypeStatus()));
-
-        return roomRateRoomType;
-    }
-
-    // Helper method to convert RoomTypeStatusEnum from ws.reservation to ws.roomrate
-    private ws.roomrate.RoomTypeStatusEnum convertToRoomRateRoomTypeStatus(ws.reservation.RoomTypeStatusEnum roomTypeStatus) {
-        if (roomTypeStatus == null) {
-            return null;
-        }
-        switch (roomTypeStatus) {
-            case ACTIVE:
-                return ws.roomrate.RoomTypeStatusEnum.ACTIVE;
-            case DISABLED:
-                return ws.roomrate.RoomTypeStatusEnum.DISABLED;
-            // Add other cases as necessary for your enum values
-            default:
-                throw new IllegalArgumentException("Unknown RoomTypeStatusEnum: " + roomTypeStatus);
-        }
-    }
-
-    // Convert ws.reservation.RoomType to ws.roomratereservation.RoomType
     private ws.roomratereservation.RoomType convertReservationRoomTypeToRoomRateReservationRoomType(ws.reservation.RoomType reservationRoomType) {
         if (reservationRoomType == null) {
             return null;
@@ -1104,14 +862,11 @@ public class HolidayApp {
         roomRateReservationRoomType.setAmenities(reservationRoomType.getAmenities());
         roomRateReservationRoomType.setDescription(reservationRoomType.getDescription());
         roomRateReservationRoomType.setTierNumber(reservationRoomType.getTierNumber());
-
-        // Convert and set RoomTypeStatusEnum
         roomRateReservationRoomType.setRoomTypeStatus(convertToRoomRateReservationRoomTypeStatus(reservationRoomType.getRoomTypeStatus()));
 
         return roomRateReservationRoomType;
     }
 
-    // Helper method to convert RoomTypeStatusEnum from ws.reservation to ws.roomratereservation
     private ws.roomratereservation.RoomTypeStatusEnum convertToRoomRateReservationRoomTypeStatus(ws.reservation.RoomTypeStatusEnum roomTypeStatus) {
         if (roomTypeStatus == null) {
             return null;
@@ -1121,10 +876,13 @@ public class HolidayApp {
                 return ws.roomratereservation.RoomTypeStatusEnum.ACTIVE;
             case DISABLED:
                 return ws.roomratereservation.RoomTypeStatusEnum.DISABLED;
-            // Add other cases as necessary for your enum values
             default:
                 throw new IllegalArgumentException("Unknown RoomTypeStatusEnum: " + roomTypeStatus);
         }
+    }
+    
+    private String formatDate(Date date) {
+        return date != null ? new SimpleDateFormat("dd-MM-yyyy").format(date) : "N/A";
     }
 
 }

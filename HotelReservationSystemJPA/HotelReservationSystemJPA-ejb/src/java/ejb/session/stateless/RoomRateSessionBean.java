@@ -4,11 +4,9 @@
  */
 package ejb.session.stateless;
 
-import entity.Room;
 import entity.RoomRate;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
@@ -38,14 +36,10 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
 
     @EJB
     private ReservationSessionBeanLocal reservationSessionBeanLocal;
-    
-    
 
     @PersistenceContext(unitName = "HotelReservationSystemJPA-ejbPU")
     private EntityManager em;
 
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
     @Override
     public RoomRate createNewRoomRate(RoomRate newRoomRate) throws RoomRateAlreadyExistException {
 
@@ -92,7 +86,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
             if (updatedRoomRate.getRateName() != null) {
                 existingRoomRate.setRateName(updatedRoomRate.getRateName());
             }
-            
+
             if (updatedRoomRate.getRoomType() != null) {
                 existingRoomRate.setRoomType(updatedRoomRate.getRoomType());
             }
@@ -133,8 +127,8 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
             em.remove(managedRoomRate);
             em.flush();
             return "Room rate has successfully been removed.\n";
-        } else {            
-            managedRoomRate.setRoomRateStatus(RoomRateStatusEnum.DISABLED);  
+        } else {
+            managedRoomRate.setRoomRateStatus(RoomRateStatusEnum.DISABLED);
             em.merge(managedRoomRate);
             return "Room rate is not available, room rate status has been changed to 'DISABLED'.\n";
         }
@@ -145,7 +139,6 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         Query query = em.createQuery("SELECT r FROM RoomRate r ORDER BY r.roomType.tierNumber");
 
         return query.getResultList();
-
     }
 
     @Override
@@ -188,18 +181,18 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
 
         for (RoomRate roomRate : roomRates) {
             if (roomRate.getRoomRateStatus() == RoomRateStatusEnum.ACTIVE && roomRate.getRoomType().equals(roomType)) {
-                
+
                 if (reservationTypeEnum == ReservationTypeEnum.ONLINE) {
                     if (roomRate.getRateType() == RoomRateTypeEnum.PROMOTION
                             && isWithinPeriod(date, roomRate.getPromotionStartDate(), roomRate.getPromotionEndDate())) {
-                        return roomRate; 
+                        return roomRate;
                     }
                     if (roomRate.getRateType() == RoomRateTypeEnum.PEAK
                             && isWithinPeriod(date, roomRate.getPeakStartDate(), roomRate.getPeakEndDate())) {
-                        selectedRoomRate = roomRate; 
+                        selectedRoomRate = roomRate;
                     }
                     if (roomRate.getRateType() == RoomRateTypeEnum.NORMAL && selectedRoomRate == null) {
-                        selectedRoomRate = roomRate; 
+                        selectedRoomRate = roomRate;
                     }
                 }
 
@@ -221,6 +214,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         return !date.before(startDate) && !date.after(endDate);
     }
 
+    @Override
     public RoomRate getRoomRateForType(RoomType roomType, Date currentDate) throws InvalidRoomRateException {
         List<RoomRate> roomRates = retrieveAllRoomRates();
 
@@ -246,6 +240,13 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         }
         throw new InvalidRoomRateException("No valid rate found for RoomType: " + roomType.getTypeName() + " on date: " + currentDate);
 
+    }
+
+    @Override
+    public List<RoomRate> retrieveRoomRatesByRoomType(Long roomTypeId) {
+        return em.createQuery("SELECT rr FROM RoomRate rr WHERE rr.roomType.roomTypeId = :roomTypeId", RoomRate.class)
+                 .setParameter("roomTypeId", roomTypeId)
+                 .getResultList();
     }
 
 }

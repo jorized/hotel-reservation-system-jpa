@@ -36,6 +36,11 @@ public class RoomWebService {
         return roomSessionBeanLocal.retrieveAllAvailableRooms();
     }
     
+    @WebMethod(operationName = "retrieveAllAvailableAndPredictedRooms")
+    public List<Room> retrieveAllAvailableAndPredictedRooms(Date checkInDate, Date checkOutDate) {
+        return roomSessionBeanLocal.retrieveAllAvailableAndPredictedRooms(checkInDate, checkOutDate);
+    }
+    
     @WebMethod(operationName = "updateRoom")
     public Room updateRoom(Room updatedRoom) throws UpdateRoomException {
         return roomSessionBeanLocal.updateRoom(updatedRoom);

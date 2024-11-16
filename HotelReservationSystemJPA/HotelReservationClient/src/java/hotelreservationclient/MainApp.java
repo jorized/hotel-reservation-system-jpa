@@ -229,15 +229,15 @@ public class MainApp {
             // Ensure check-out date is not the same as check-in date
             while (true) {
                 checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
-                if (!checkOutDate.equals(checkInDate)) {
+                if (checkOutDate.after(checkInDate)) {
                     break;
                 }
-                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+                System.out.println("Check-out date must be after the check-in date. Please enter a valid check-out date.");
             }
             System.out.print("Enter number of rooms you would like to book: ");
             int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
-            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
+            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableAndPredictedRooms(checkInDate, checkOutDate);
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;
@@ -258,23 +258,21 @@ public class MainApp {
 
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-            // Prompt for check-in date
             Date checkInDate = promptForDate(scanner, dateFormat, "Enter check-in date (yyyy-MM-dd): ");
 
-            // Prompt for check-out date and ensure it's not the same as check-in date
             Date checkOutDate;
             while (true) {
                 checkOutDate = promptForDate(scanner, dateFormat, "Enter check-out date (yyyy-MM-dd): ");
-                if (!checkOutDate.equals(checkInDate)) {
+                if (checkOutDate.after(checkInDate)) {
                     break;
                 }
-                System.out.println("Check-out date cannot be the same as the check-in date. Please enter a different check-out date.");
+                System.out.println("Check-out date must be after the check-in date. Please enter a valid check-out date.");
             }
 
             System.out.print("Enter number of rooms you would like to book: ");
             int noOfRooms = Integer.parseInt(scanner.nextLine().trim());
 
-            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableRooms();
+            List<Room> availableRooms = roomSessionBeanRemote.retrieveAllAvailableAndPredictedRooms(checkInDate, checkOutDate);
             if (availableRooms == null || availableRooms.isEmpty()) {
                 System.out.println("\nNo available rooms found for the selected dates.");
                 return;
@@ -455,8 +453,6 @@ public class MainApp {
         }
     }
 
-
-
     private void doViewMyReservationDetails() {
         try {
             Scanner scanner = new Scanner(System.in);
@@ -508,9 +504,6 @@ public class MainApp {
             System.out.println("Error viewing reservation details: " + ex.getMessage() + "\n");
         }
     }
-
-
-
 
     private void doViewAllMyReservations() {
         try {
@@ -582,6 +575,5 @@ public class MainApp {
     private String formatDate(Date date) {
         return date != null ? new SimpleDateFormat("dd-MM-yyyy").format(date) : "N/A";
     }
-
 
 }
